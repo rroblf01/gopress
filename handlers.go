@@ -15,7 +15,6 @@ func ServeEditor(db *sql.DB) fiber.Handler {
 
 func SavePageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		fmt.Println("Recibiendo datos de la página...")
 
 		var pageData PageData
 

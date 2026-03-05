@@ -17,7 +17,7 @@ func InitDB(dbURL string) (*sql.DB, error) {
 		return nil, fmt.Errorf("error al hacer ping a la base de datos: %w", err)
 	}
 
-	fmt.Println("✓ Conectado a PostgreSQL")
+	log.Println("✓ Conectado a PostgreSQL")
 	return db, nil
 }
 
@@ -37,7 +37,7 @@ func CreateTable(db *sql.DB) error {
 	if _, err := db.Exec(createTableSQL); err != nil {
 		return fmt.Errorf("error creando tabla: %w", err)
 	}
-	fmt.Println("✓ Tabla de páginas lista")
+	log.Println("✓ Tabla de páginas lista")
 	return nil
 }
 
@@ -62,7 +62,7 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("error insertando página: %w", err)
 		}
-		fmt.Printf("✓ Página creada (ID: %d): %s (%d bloques)\n", pageID, pageData.Title, len(pageData.Blocks))
+		log.Printf("✓ Página creada (ID: %d): %s (%d bloques)", pageID, pageData.Title, len(pageData.Blocks))
 	} else {
 		err := db.QueryRow(`
 		UPDATE pages 
@@ -74,7 +74,7 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 		if err != nil {
 			return 0, fmt.Errorf("error actualizando página: %w", err)
 		}
-		fmt.Printf("✓ Página actualizada (ID: %d): %s (%d bloques)\n", pageID, pageData.Title, len(pageData.Blocks))
+		log.Printf("✓ Page updated (ID: %d): %s (%d blocks)", pageID, pageData.Title, len(pageData.Blocks))
 	}
 
 	return pageID, nil
