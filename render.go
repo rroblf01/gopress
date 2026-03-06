@@ -80,7 +80,13 @@ func RenderBlock(block Block) string {
 		html.WriteString(blockClass)
 		html.WriteString(` { `)
 		html.WriteString(block.CustomCSS)
-		html.WriteString(` }</style>`)
+		html.WriteString(` } `)
+		html.WriteString(generateResponsiveCSS(block, blockClass))
+		html.WriteString(`</style>`)
+	} else {
+		html.WriteString(`<style>`)
+		html.WriteString(generateResponsiveCSS(block, blockClass))
+		html.WriteString(`</style>`)
 	}
 
 	switch block.Type {
@@ -107,16 +113,104 @@ func RenderBlock(block Block) string {
 	return html.String()
 }
 
+func generateResponsiveCSS(block Block, blockClass string) string {
+	var css strings.Builder
+	
+	// Desktop (base) - Dirección para contenedores primero
+	if block.Type == "container" {
+		baseDirection := block.DirectionDesktop
+		if baseDirection == "" {
+			baseDirection = block.Direction
+		}
+		if baseDirection != "" {
+			flexDir := "column"
+			if baseDirection == "horizontal" {
+				flexDir = "row"
+			}
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: %s; gap: 12px; ", blockClass, flexDir))
+		} else {
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: column; gap: 12px; ", blockClass))
+		}
+	}
+	
+	// Dimensiones desktop
+	desktopStyles := []string{}
+	if block.WidthDesktop != "" && block.WidthDesktop != "auto" {
+		desktopStyles = append(desktopStyles, fmt.Sprintf("width: %s", block.WidthDesktop))
+	}
+	if block.HeightDesktop != "" && block.HeightDesktop != "auto" {
+		desktopStyles = append(desktopStyles, fmt.Sprintf("height: %s", block.HeightDesktop))
+	}
+	if block.Width != "" && block.Width != "auto" {
+		desktopStyles = append(desktopStyles, fmt.Sprintf("width: %s", block.Width))
+	}
+	if block.Height != "" && block.Height != "auto" {
+		desktopStyles = append(desktopStyles, fmt.Sprintf("height: %s", block.Height))
+	}
+	
+	if len(desktopStyles) > 0 {
+		if block.Type == "container" {
+			css.WriteString(strings.Join(desktopStyles, "; "))
+			css.WriteString("; } ")
+		} else {
+			css.WriteString(fmt.Sprintf(".%s { %s; } ", blockClass, strings.Join(desktopStyles, "; ")))
+		}
+	} else if block.Type == "container" {
+		css.WriteString("} ")
+	}
+	
+	// Tablet - dimensiones
+	tabletStyles := []string{}
+	if block.WidthTablet != "" && block.WidthTablet != "auto" {
+		tabletStyles = append(tabletStyles, fmt.Sprintf("width: %s", block.WidthTablet))
+	}
+	if block.HeightTablet != "" && block.HeightTablet != "auto" {
+		tabletStyles = append(tabletStyles, fmt.Sprintf("height: %s", block.HeightTablet))
+	}
+	
+	if len(tabletStyles) > 0 {
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) { .%s { %s; } } ", blockClass, strings.Join(tabletStyles, "; ")))
+	}
+	
+	// Dirección tablet para contenedores
+	if block.Type == "container" && block.DirectionTablet != "" {
+		flexDir := "column"
+		if block.DirectionTablet == "horizontal" {
+			flexDir = "row"
+		}
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+	}
+	
+	// Mobile - dimensiones
+	mobileStyles := []string{}
+	if block.WidthMobile != "" && block.WidthMobile != "auto" {
+		mobileStyles = append(mobileStyles, fmt.Sprintf("width: %s", block.WidthMobile))
+	}
+	if block.HeightMobile != "" && block.HeightMobile != "auto" {
+		mobileStyles = append(mobileStyles, fmt.Sprintf("height: %s", block.HeightMobile))
+	}
+	
+	if len(mobileStyles) > 0 {
+		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { %s; } } ", blockClass, strings.Join(mobileStyles, "; ")))
+	}
+	
+	// Dirección móvil para contenedores
+	if block.Type == "container" && block.DirectionMobile != "" {
+		flexDir := "column"
+		if block.DirectionMobile == "horizontal" {
+			flexDir = "row"
+		}
+		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+	}
+	
+	return css.String()
+}
+
 func renderContainer(html *strings.Builder, block Block, blockClass string) string {
 	var innerHTML strings.Builder
 
 	for _, child := range block.Children {
 		innerHTML.WriteString(RenderBlock(child))
-	}
-
-	flexDirection := "column"
-	if block.Direction == "horizontal" {
-		flexDirection = "row"
 	}
 
 	html.WriteString(`<div class="`)
@@ -136,9 +230,7 @@ func renderContainer(html *strings.Builder, block Block, blockClass string) stri
 	html.WriteString(block.BackgroundColor)
 	html.WriteString(`; color: `)
 	html.WriteString(block.TextColor)
-	html.WriteString(`; padding: 16px; border-radius: 4px; margin: 24px 0; display: flex; flex-direction: `)
-	html.WriteString(flexDirection)
-	html.WriteString(`; gap: 12px;">`)
+	html.WriteString(`; padding: 16px; border-radius: 4px; margin: 24px 0;">`)
 	html.WriteString(innerHTML.String())
 	html.WriteString(`</div>`)
 

@@ -13,6 +13,11 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <div class="toolbar-title">📄 Editor Visual</div>
+            <div class="responsive-selector">
+                <button class="responsive-btn" data-device="desktop" onclick="setResponsiveMode('desktop')" title="Ordenador">🖥️</button>
+                <button class="responsive-btn" data-device="tablet" onclick="setResponsiveMode('tablet')" title="Tablet">📱</button>
+                <button class="responsive-btn" data-device="mobile" onclick="setResponsiveMode('mobile')" title="Móvil">📲</button>
+            </div>
         </div>
         <div class="toolbar-right">
             <button class="toolbar-btn" id="goToWebBtn">Ir a la Web</button>
@@ -126,19 +131,20 @@
     <script>
         const state = {
             page: { title: '', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '', padding: '', globalCSS: '' } },
-            selectedBlockId: null
+            selectedBlockId: null,
+            responsiveMode: 'desktop' // 'mobile', 'tablet', 'desktop'
         };
 
         const blockTemplates = {
-            container: { type: 'container', direction: 'vertical', children: [], backgroundColor: '', textColor: '', customCSS: '' },
-            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '' },
-            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '' },
-            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '' },
-            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '' },
-            cards: { type: 'cards', items: [], customCSS: '' },
-            carousel: { type: 'carousel', slides: [], customCSS: '' },
-            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '' },
-            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '' }
+            container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '' },
+            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '' },
+            cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
+            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' }
         };
 
         document.addEventListener('DOMContentLoaded', initializeEditor);
@@ -147,6 +153,7 @@
             loadPageData();
             setupDragAndDrop();
             setupEventListeners();
+            setResponsiveMode('desktop');
         }
 
         function loadPageData() {
@@ -220,6 +227,18 @@
             document.getElementById('saveBtn').addEventListener('click', savePage);
             document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
             document.getElementById('goToWebBtn').addEventListener('click', () => { window.open('/', '_blank'); });
+        }
+
+        function setResponsiveMode(mode) {
+            state.responsiveMode = mode;
+            document.querySelectorAll('.responsive-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.device === mode);
+            });
+            const canvasWrapper = document.querySelector('.canvas-wrapper');
+            canvasWrapper.classList.remove('desktop', 'tablet', 'mobile');
+            canvasWrapper.classList.add(mode);
+            renderBlocks();
+            renderProperties();
         }
 
         function addBlock(type, parentId = null) {
@@ -297,42 +316,125 @@
             let preview = '';
             const blockClass = `block-${block.id}`;
             const cssId = `css-${block.id}`;
-            
-            // Función helper para generar estilo de dimensiones (solo si hay valor)
-            const dimensionStyle = () => {
-                let style = '';
-                if (block.width && block.width !== '' && block.width !== 'auto') style += `width: ${block.width}; `;
-                if (block.height && block.height !== '' && block.height !== 'auto') style += `height: ${block.height}; `;
-                return style;
+
+            // Generar estilos responsive con media queries
+            const generateResponsiveCSS = () => {
+                let css = '';
+                
+                // Desktop (base)
+                let desktopStyles = [];
+                if (block.widthDesktop && block.widthDesktop !== '' && block.widthDesktop !== 'auto') desktopStyles.push(`width: ${block.widthDesktop}`);
+                if (block.heightDesktop && block.heightDesktop !== '' && block.heightDesktop !== 'auto') desktopStyles.push(`height: ${block.heightDesktop}`);
+                if (block.width && block.width !== '' && block.width !== 'auto') desktopStyles.push(`width: ${block.width}`);
+                if (block.height && block.height !== '' && block.height !== 'auto') desktopStyles.push(`height: ${block.height}`);
+                
+                // Tablet
+                let tabletStyles = [];
+                if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
+                if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
+                
+                // Mobile
+                let mobileStyles = [];
+                if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
+                if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);
+                
+                if (desktopStyles.length > 0) {
+                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
+                }
+                if (tabletStyles.length > 0) {
+                    css += `@media (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                }
+                if (mobileStyles.length > 0) {
+                    css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
+                }
+                
+                return css;
             };
 
+            // Generar dirección responsive para contenedores
+            const generateDirectionCSS = () => {
+                if (block.type !== 'container') return '';
+
+                let css = '';
+
+                // Dirección base (desktop)
+                const baseDirection = block.directionDesktop || block.direction;
+                if (baseDirection) {
+                    css += `.${blockClass} { display: flex; flex-direction: ${baseDirection === 'horizontal' ? 'row' : 'column'}; gap: 12px; } `;
+                } else {
+                    css += `.${blockClass} { display: flex; flex-direction: column; gap: 12px; } `;
+                }
+
+                // Tablet
+                if (block.directionTablet) {
+                    css += `@media (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
+                }
+
+                // Mobile
+                if (block.directionMobile) {
+                    css += `@media (max-width: 768px) { .${blockClass} { flex-direction: ${block.directionMobile === 'horizontal' ? 'row' : 'column'}; } } `;
+                }
+
+                return css;
+            };
+
+            const responsiveCSS = generateResponsiveCSS();
+            const directionCSS = generateDirectionCSS();
+            const allCSS = responsiveCSS + directionCSS;
+
+            // Obtener dirección para el modo actual (para preview en editor)
+            const getCurrentDirection = () => {
+                if (block.type !== 'container') return '';
+                const mode = state.responsiveMode;
+                if (mode === 'mobile' && block.directionMobile) return block.directionMobile;
+                if (mode === 'tablet' && block.directionTablet) return block.directionTablet;
+                return block.directionDesktop || block.direction;
+            };
+            const currentDirection = getCurrentDirection();
+            const directionStyle = currentDirection ? `flex-direction: ${currentDirection === 'horizontal' ? 'row' : 'column'};` : '';
+
             if (block.type === 'container') {
-                preview = `<div class="block-container-drop" data-parent-id="${block.id}" style="min-height:32px; border: 1.5px dashed #2563eb; margin-bottom: 8px; background: #f8fafc; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px; padding: 12px; ${dimensionStyle()}">${(block.children && block.children.length > 0) ? block.children.map(child => createBlockHTML(child)).join('') : '<span style=\"color:#94a3b8;font-size:13px;\">Arrastra aquí bloques</span>'}</div>`;
+                const childrenContent = (block.children && block.children.length > 0) 
+                    ? block.children.map(child => createBlockHTML(child)).join('') 
+                    : '<span style="color:#94a3b8;font-size:13px;">Arrastra aquí bloques</span>';
+                
+                preview = `
+                    <style id="${cssId}">
+                        .${blockClass} { ${block.customCSS} ${allCSS} }
+                        .${blockClass} .block-container-drop { 
+                            border: 1.5px dashed #2563eb !important; 
+                            margin-bottom: 8px; 
+                            background: #f8fafc !important; 
+                            padding: 12px;
+                            min-height: 32px;
+                        }
+                    </style>
+                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:32px; margin-bottom: 8px; padding: 12px; display: flex; ${directionStyle} gap: 12px;">${childrenContent}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
                         break;
                     case 'heading':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><h2 class="${blockClass}" style="${dimensionStyle()}margin: 16px 0;">${block.content}</h2>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
                         break;
                     case 'paragraph':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><p class="${blockClass}" style="${dimensionStyle()}line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
                         break;
                     case 'image':
-                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="${dimensionStyle()}border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
+                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
                         break;
                     case 'cards':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
                         break;
                     case 'carousel':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
                         break;
                     case 'button':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="${dimensionStyle()}padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
                         break;
                     case 'divider':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
                         break;
                 }
             }
@@ -454,7 +556,7 @@
             switch (block.type) {
                 case 'container':
                     html += `<div class="property-group">
-                        <label class="property-label">Dirección</label>
+                        <label class="property-label">Dirección base (Ordenador)</label>
                         <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
                             <option value="vertical" ${block.direction === 'vertical' ? 'selected' : ''}>Vertical</option>
                             <option value="horizontal" ${block.direction === 'horizontal' ? 'selected' : ''}>Horizontal</option>
@@ -485,7 +587,21 @@
                     html += `<div class="property-group"><label class="property-label">Contenido</label><input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)"></div><div class="property-group"><label class="property-label">Nivel</label><select class="property-select" onchange="updateBlockProperty('level', this.value)"><option value="1" ${block.level === 1 ? 'selected' : ''}>H1</option><option value="2" ${block.level === 2 ? 'selected' : ''}>H2</option><option value="3" ${block.level === 3 ? 'selected' : ''}>H3</option><option value="4" ${block.level === 4 ? 'selected' : ''}>H4</option></select></div>`;
                     break;
                 case 'image':
-                    html += `<div class="property-group"><label class="property-label">URL de Imagen</label><input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" onchange="updateBlockProperty('src', this.value)"></div><div class="property-group"><label class="property-label">Alt Text</label><input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)"></div>`;
+                    html += `<div class="property-group">
+                        <label class="property-label">Imagen</label>
+                        <div style="margin-bottom: 8px;">
+                            <input type="file" accept="image/*" onchange="handleImageUpload(event)" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px;">
+                        </div>
+                        ${block.src ? `<img src="${block.src}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); margin-top: 8px;">` : '<div style="background: var(--secondary); height: 120px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 12px;">Sin imagen</div>'}
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">URL de Imagen</label>
+                        <input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" onchange="updateBlockProperty('src', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Alt Text</label>
+                        <input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)">
+                    </div>`;
                     break;
                 case 'cards':
                     html += `<div class="property-group"><label class="property-label">Tarjetas (${block.items.length})</label><div style="margin-bottom: 8px;">${block.items.map((item, idx) => `<div class="card-item"><input type="text" class="card-item-input" value="${item.title}" placeholder="Título" onchange="updateCardItem(${idx}, 'title', this.value)"><input type="text" class="card-item-input" value="${item.description}" placeholder="Descripción" onchange="updateCardItem(${idx}, 'description', this.value)"><div class="card-item-buttons"><button class="card-item-btn danger" onclick="deleteCardItem(${idx})">Eliminar</button></div></div>`).join('')}</div><button class="property-input" style="background: var(--primary); color: white; padding: 8px; cursor: pointer;" onclick="addCardItem()">+ Añadir Tarjeta</button></div>`;
@@ -512,6 +628,11 @@
         }
 
         function createDimensionProperties(block) {
+            const mode = state.responsiveMode;
+            const widthProp = `width${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const heightProp = `height${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const directionProp = `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            
             // Parsear width y height para extraer valor y unidad
             const parseDimension = (value) => {
                 if (!value || value === '') return { value: '', unit: 'px' };
@@ -523,23 +644,24 @@
                 return { value: value, unit: 'px' };
             };
 
-            const widthParsed = parseDimension(block.width);
-            const heightParsed = parseDimension(block.height);
+            const widthParsed = parseDimension(block[widthProp]);
+            const heightParsed = parseDimension(block[heightProp]);
+            const currentDirection = block[directionProp] || (mode === 'desktop' ? block.direction : '');
 
             let html = `<div class="property-group">
-                <label class="property-label">Dimensiones</label>
+                <label class="property-label">Dimensiones - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div>
                         <label style="font-size: 11px; color: var(--text-secondary);">Ancho</label>
                         <div style="display: flex; gap: 4px;">
-                            <input type="number" value="${widthParsed.value}" 
-                                class="property-input" 
+                            <input type="number" value="${widthParsed.value}"
+                                class="property-input"
                                 style="width: 70px;"
-                                onchange="updateDimension('width', this.value, document.getElementById('widthUnit').value)">
-                            <select id="widthUnit" 
-                                class="property-select" 
+                                onchange="updateResponsiveDimension('width', this.value, document.getElementById('widthUnit').value)">
+                            <select id="widthUnit"
+                                class="property-select"
                                 style="width: 65px; font-size: 12px;"
-                                onchange="updateDimension('width', document.getElementById('widthValue').value, this.value)">
+                                onchange="updateResponsiveDimension('width', document.getElementById('widthValue').value, this.value)">
                                 <option value="px" ${widthParsed.unit === 'px' ? 'selected' : ''}>px</option>
                                 <option value="%" ${widthParsed.unit === '%' ? 'selected' : ''}>%</option>
                                 <option value="rem" ${widthParsed.unit === 'rem' ? 'selected' : ''}>rem</option>
@@ -553,14 +675,14 @@
                     <div>
                         <label style="font-size: 11px; color: var(--text-secondary);">Alto</label>
                         <div style="display: flex; gap: 4px;">
-                            <input type="number" value="${heightParsed.value}" 
-                                class="property-input" 
+                            <input type="number" value="${heightParsed.value}"
+                                class="property-input"
                                 style="width: 70px;"
-                                onchange="updateDimension('height', this.value, document.getElementById('heightUnit').value)">
-                            <select id="heightUnit" 
-                                class="property-select" 
+                                onchange="updateResponsiveDimension('height', this.value, document.getElementById('heightUnit').value)">
+                            <select id="heightUnit"
+                                class="property-select"
                                 style="width: 65px; font-size: 12px;"
-                                onchange="updateDimension('height', document.getElementById('heightValue').value, this.value)">
+                                onchange="updateResponsiveDimension('height', document.getElementById('heightValue').value, this.value)">
                                 <option value="px" ${heightParsed.unit === 'px' ? 'selected' : ''}>px</option>
                                 <option value="%" ${heightParsed.unit === '%' ? 'selected' : ''}>%</option>
                                 <option value="rem" ${heightParsed.unit === 'rem' ? 'selected' : ''}>rem</option>
@@ -572,28 +694,61 @@
                         </div>
                     </div>
                 </div>
+                <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;">Usa los iconos de arriba para cambiar de dispositivo</p>
             </div>`;
+            
+            // Añadir dirección solo para contenedores
+            if (block.type === 'container') {
+                html += `<div class="property-group">
+                    <label class="property-label">Dirección - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
+                    <select class="property-select" onchange="updateResponsiveDirection(this.value)">
+                        <option value="" ${currentDirection === '' ? 'selected' : ''}>${mode === 'desktop' ? 'Igual que base' : 'Heredar'}</option>
+                        <option value="vertical" ${currentDirection === 'vertical' ? 'selected' : ''}>Vertical</option>
+                        <option value="horizontal" ${currentDirection === 'horizontal' ? 'selected' : ''}>Horizontal</option>
+                    </select>
+                </div>`;
+            }
+            
             return html;
         }
 
-        function updateDimension(prop, value, unit) {
+        function updateResponsiveDimension(prop, value, unit) {
+            const mode = state.responsiveMode;
+            const propProp = `${prop}${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
             const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block) {
                 if (unit === 'auto') {
-                    block[prop] = 'auto';
+                    block[propProp] = 'auto';
                 } else if (value === '' || value === null || value === undefined) {
-                    block[prop] = '';
+                    block[propProp] = '';
                 } else {
-                    block[prop] = value + unit;
+                    block[propProp] = value + unit;
                 }
                 renderBlocks();
+            }
+        }
+
+        function updateResponsiveDirection(value) {
+            const mode = state.responsiveMode;
+            const prop = `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            if (block && block.type === 'container') {
+                block[prop] = value;
+                renderBlocks();
+                renderProperties();
             }
         }
 
         function updateBlockProperty(prop, value) {
             const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block) {
-                block[prop] = value;
+                // Si es la dirección y el bloque es contenedor, guardar también en directionDesktop
+                if (prop === 'direction' && block.type === 'container') {
+                    block.direction = value;
+                    block.directionDesktop = value;
+                } else {
+                    block[prop] = value;
+                }
                 renderBlocks();
                 renderProperties();
             }
@@ -664,6 +819,22 @@
             }
         }
 
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+                    if (block && block.type === 'image') {
+                        block.src = e.target.result;
+                        renderBlocks();
+                        renderProperties();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function handleCarouselImageUpload(idx, event) {
             const file = event.target.files[0];
             if (file) {
@@ -687,49 +858,106 @@
             previewContent.innerHTML = `<style>body { font-family: ${styles.fontFamily}; background: ${styles.backgroundColor}; color: ${styles.textColor}; }${state.page.blocks.map(b => `.block-${b.id} { ${b.customCSS} }`).join('\n')}${styles.globalCSS}</style>${state.page.blocks.map(block => renderBlockPreview(block)).join('')}`;
             modal.classList.add('active');
         }
-
         function renderBlockPreview(block) {
             const blockClass = `block-${block.id}`;
+            const cssId = `css-preview-${block.id}`;
             let html = '';
-            
-            // Función helper para generar estilo de dimensiones (solo si hay valor)
-            const dimensionStyle = () => {
-                let style = '';
-                if (block.width && block.width !== '' && block.width !== 'auto') style += `width: ${block.width}; `;
-                if (block.height && block.height !== '' && block.height !== 'auto') style += `height: ${block.height}; `;
-                return style;
+
+            // Generar estilos responsive con media queries
+            const generateResponsiveCSS = () => {
+                let css = '';
+                
+                // Desktop (base)
+                let desktopStyles = [];
+                if (block.widthDesktop && block.widthDesktop !== '' && block.widthDesktop !== 'auto') desktopStyles.push(`width: ${block.widthDesktop}`);
+                if (block.heightDesktop && block.heightDesktop !== '' && block.heightDesktop !== 'auto') desktopStyles.push(`height: ${block.heightDesktop}`);
+                if (block.width && block.width !== '' && block.width !== 'auto') desktopStyles.push(`width: ${block.width}`);
+                if (block.height && block.height !== '' && block.height !== 'auto') desktopStyles.push(`height: ${block.height}`);
+                
+                // Tablet
+                let tabletStyles = [];
+                if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
+                if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
+                
+                // Mobile
+                let mobileStyles = [];
+                if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
+                if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);
+                
+                if (desktopStyles.length > 0) {
+                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
+                }
+                if (tabletStyles.length > 0) {
+                    css += `@media (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                }
+                if (mobileStyles.length > 0) {
+                    css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
+                }
+                
+                return css;
             };
+
+            // Generar dirección responsive para contenedores
+            const generateDirectionCSS = () => {
+                if (block.type !== 'container') return '';
+
+                let css = '';
+
+                // Dirección base (desktop)
+                const baseDirection = block.directionDesktop || block.direction;
+                if (baseDirection) {
+                    css += `.${blockClass} { display: flex; flex-direction: ${baseDirection === 'horizontal' ? 'row' : 'column'}; gap: 12px; } `;
+                } else {
+                    css += `.${blockClass} { display: flex; flex-direction: column; gap: 12px; } `;
+                }
+
+                // Tablet
+                if (block.directionTablet) {
+                    css += `@media (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
+                }
+
+                // Mobile
+                if (block.directionMobile) {
+                    css += `@media (max-width: 768px) { .${blockClass} { flex-direction: ${block.directionMobile === 'horizontal' ? 'row' : 'column'}; } } `;
+                }
+
+                return css;
+            };
+
+            const responsiveCSS = generateResponsiveCSS();
+            const directionCSS = generateDirectionCSS();
+            const allCSS = responsiveCSS + directionCSS;
 
             if (block.type === 'container') {
                 const childrenHtml = (block.children && block.children.length > 0)
                     ? block.children.map(child => renderBlockPreview(child)).join('')
                     : '';
-                html = `<div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px;">${childrenHtml}</div>`;
+                html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px;">${childrenHtml}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
-                        html = `<div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
                         break;
                     case 'heading':
-                        html = `<h2 class="${blockClass}" style="${dimensionStyle()}margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><h2 class="${blockClass}" style="margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
                         break;
                     case 'paragraph':
-                        html = `<p class="${blockClass}" style="${dimensionStyle()}line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><p class="${blockClass}" style="line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
                         break;
                     case 'image':
-                        html = block.src ? `<img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="${dimensionStyle()}border-radius: 4px; max-width: 100%; margin-bottom: 24px;">` : '';
+                        html = block.src ? `<style id="${cssId}">${block.customCSS} ${allCSS}</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; object-fit: cover; margin-bottom: 24px;">` : '';
                         break;
                     case 'cards':
-                        html = `<div class="${blockClass}" style="${dimensionStyle()}display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
                         break;
                     case 'carousel':
-                        html = `<div class="${blockClass}" style="${dimensionStyle()}margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
                         break;
                     case 'button':
-                        html = `<a class="${blockClass}" href="${block.link}" style="${dimensionStyle()}display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><a class="${blockClass}" href="${block.link}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
                         break;
                     case 'divider':
-                        html = `<hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; background: ${block.borderColor || 'transparent'}; margin: 32px 0;">`;
+                        html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; background: ${block.borderColor || 'transparent'}; margin: 32px 0;">`;
                         break;
                 }
             }

@@ -10,6 +10,12 @@ type Block struct {
 	Alt             string                `json:"alt"`
 	Width           string                `json:"width"`
 	Height          string                `json:"height"`
+	WidthMobile     string                `json:"widthMobile"`
+	HeightMobile    string                `json:"heightMobile"`
+	WidthTablet     string                `json:"widthTablet"`
+	HeightTablet    string                `json:"heightTablet"`
+	WidthDesktop    string                `json:"widthDesktop"`
+	HeightDesktop   string                `json:"heightDesktop"`
 	Text            string                `json:"text"`
 	Link            string                `json:"link"`
 	Items           []map[string]string   `json:"items"`
@@ -21,6 +27,9 @@ type Block struct {
 	CustomCSS       string                `json:"customCSS"`
 	Children        []Block               `json:"children"`
 	Direction       string                `json:"direction"`
+	DirectionMobile string                `json:"directionMobile"`
+	DirectionTablet string                `json:"directionTablet"`
+	DirectionDesktop string               `json:"directionDesktop"`
 }
 
 type Styles struct {
