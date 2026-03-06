@@ -115,24 +115,17 @@ func RenderBlock(block Block) string {
 
 func generateResponsiveCSS(block Block, blockClass string) string {
 	var css strings.Builder
-	
-	// Desktop (base) - Dirección para contenedores primero
-	if block.Type == "container" {
-		baseDirection := block.DirectionDesktop
-		if baseDirection == "" {
-			baseDirection = block.Direction
-		}
-		if baseDirection != "" {
-			flexDir := "column"
-			if baseDirection == "horizontal" {
-				flexDir = "row"
-			}
-			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: %s; gap: 12px; ", blockClass, flexDir))
-		} else {
-			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: column; gap: 12px; ", blockClass))
-		}
+
+	// Desktop (base) - Colores base primero
+	css.WriteString(fmt.Sprintf(".%s { ", blockClass))
+	if block.BackgroundColor != "" {
+		css.WriteString(fmt.Sprintf("background: %s; ", block.BackgroundColor))
 	}
-	
+	if block.TextColor != "" {
+		css.WriteString(fmt.Sprintf("color: %s; ", block.TextColor))
+	}
+	css.WriteString("} ")
+
 	// Dimensiones desktop
 	desktopStyles := []string{}
 	if block.WidthDesktop != "" && block.WidthDesktop != "auto" {
@@ -147,18 +140,28 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	if block.Height != "" && block.Height != "auto" {
 		desktopStyles = append(desktopStyles, fmt.Sprintf("height: %s", block.Height))
 	}
-	
+
 	if len(desktopStyles) > 0 {
-		if block.Type == "container" {
-			css.WriteString(strings.Join(desktopStyles, "; "))
-			css.WriteString("; } ")
-		} else {
-			css.WriteString(fmt.Sprintf(".%s { %s; } ", blockClass, strings.Join(desktopStyles, "; ")))
-		}
-	} else if block.Type == "container" {
-		css.WriteString("} ")
+		css.WriteString(fmt.Sprintf(".%s { %s; } ", blockClass, strings.Join(desktopStyles, "; ")))
 	}
-	
+
+	// Dirección para contenedores
+	if block.Type == "container" {
+		baseDirection := block.DirectionDesktop
+		if baseDirection == "" {
+			baseDirection = block.Direction
+		}
+		if baseDirection != "" {
+			flexDir := "column"
+			if baseDirection == "horizontal" {
+				flexDir = "row"
+			}
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: %s; gap: 12px; } ", blockClass, flexDir))
+		} else {
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: column; gap: 12px; } ", blockClass))
+		}
+	}
+
 	// Tablet - dimensiones
 	tabletStyles := []string{}
 	if block.WidthTablet != "" && block.WidthTablet != "auto" {
@@ -167,20 +170,20 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	if block.HeightTablet != "" && block.HeightTablet != "auto" {
 		tabletStyles = append(tabletStyles, fmt.Sprintf("height: %s", block.HeightTablet))
 	}
-	
+
 	if len(tabletStyles) > 0 {
-		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) { .%s { %s; } } ", blockClass, strings.Join(tabletStyles, "; ")))
+		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { %s; } } ", blockClass, strings.Join(tabletStyles, "; ")))
 	}
-	
+
 	// Dirección tablet para contenedores
 	if block.Type == "container" && block.DirectionTablet != "" {
 		flexDir := "column"
 		if block.DirectionTablet == "horizontal" {
 			flexDir = "row"
 		}
-		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
 	}
-	
+
 	// Mobile - dimensiones
 	mobileStyles := []string{}
 	if block.WidthMobile != "" && block.WidthMobile != "auto" {
@@ -189,11 +192,11 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	if block.HeightMobile != "" && block.HeightMobile != "auto" {
 		mobileStyles = append(mobileStyles, fmt.Sprintf("height: %s", block.HeightMobile))
 	}
-	
+
 	if len(mobileStyles) > 0 {
 		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { %s; } } ", blockClass, strings.Join(mobileStyles, "; ")))
 	}
-	
+
 	// Dirección móvil para contenedores
 	if block.Type == "container" && block.DirectionMobile != "" {
 		flexDir := "column"
@@ -202,7 +205,7 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		}
 		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
 	}
-	
+
 	// Hidden para cada dispositivo con rangos específicos
 	if block.HiddenDesktop {
 		// Ocultar solo en desktop (pantallas grandes > 1024px)
@@ -216,7 +219,19 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		// Ocultar solo en móvil (<= 768px)
 		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { display: none !important; } } ", blockClass))
 	}
-	
+
+	// Hover styles
+	if block.HoverBackgroundColor != "" || block.HoverTextColor != "" {
+		css.WriteString(fmt.Sprintf(".%s:hover { ", blockClass))
+		if block.HoverBackgroundColor != "" {
+			css.WriteString(fmt.Sprintf("background: %s !important; ", block.HoverBackgroundColor))
+		}
+		if block.HoverTextColor != "" {
+			css.WriteString(fmt.Sprintf("color: %s !important; ", block.HoverTextColor))
+		}
+		css.WriteString("} ")
+	}
+
 	return css.String()
 }
 
@@ -240,11 +255,7 @@ func renderContainer(html *strings.Builder, block Block, blockClass string) stri
 		html.WriteString(block.Height)
 		html.WriteString(`; `)
 	}
-	html.WriteString(`background: `)
-	html.WriteString(block.BackgroundColor)
-	html.WriteString(`; color: `)
-	html.WriteString(block.TextColor)
-	html.WriteString(`; padding: 16px; border-radius: 4px; margin: 24px 0;">`)
+	html.WriteString(`padding: 16px; border-radius: 4px; margin: 24px 0;">`)
 	html.WriteString(innerHTML.String())
 	html.WriteString(`</div>`)
 
@@ -265,11 +276,7 @@ func renderHero(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(block.Height)
 		html.WriteString(`; `)
 	}
-	html.WriteString(`background: `)
-	html.WriteString(block.BackgroundColor)
-	html.WriteString(`; color: `)
-	html.WriteString(block.TextColor)
-	html.WriteString(`; padding: 60px 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0;">
+	html.WriteString(`padding: 60px 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0;">
         <h1 style="font-size: 48px; margin-bottom: 16px;">`)
 	html.WriteString(EscapeHTML(block.Content))
 	html.WriteString(`</h1>

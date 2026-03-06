@@ -33,6 +33,8 @@ type Block struct {
 	HiddenMobile    bool                  `json:"hiddenMobile"`
 	HiddenTablet    bool                  `json:"hiddenTablet"`
 	HiddenDesktop   bool                  `json:"hiddenDesktop"`
+	HoverBackgroundColor string           `json:"hoverBackgroundColor"`
+	HoverTextColor  string                `json:"hoverTextColor"`
 }
 
 type Styles struct {

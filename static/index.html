@@ -132,19 +132,20 @@
         const state = {
             page: { title: '', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '', padding: '', globalCSS: '' } },
             selectedBlockId: null,
-            responsiveMode: 'desktop' // 'mobile', 'tablet', 'desktop'
+            responsiveMode: 'desktop',
+            hoverMode: false
         };
 
         const blockTemplates = {
-            container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
-            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false }
+            container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' },
+            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '' }
         };
 
         document.addEventListener('DOMContentLoaded', initializeEditor);
@@ -320,34 +321,53 @@
             // Generar estilos responsive con media queries
             const generateResponsiveCSS = () => {
                 let css = '';
+
+                // Desktop (base) - Colores base
+                let baseStyles = [];
+                if (block.backgroundColor) baseStyles.push(`background: ${block.backgroundColor}`);
+                if (block.textColor) baseStyles.push(`color: ${block.textColor}`);
                 
-                // Desktop (base)
+                if (baseStyles.length > 0) {
+                    css += `.${blockClass} { ${baseStyles.join('; ')}; } `;
+                }
+
+                // Dimensiones Desktop
                 let desktopStyles = [];
                 if (block.widthDesktop && block.widthDesktop !== '' && block.widthDesktop !== 'auto') desktopStyles.push(`width: ${block.widthDesktop}`);
                 if (block.heightDesktop && block.heightDesktop !== '' && block.heightDesktop !== 'auto') desktopStyles.push(`height: ${block.heightDesktop}`);
                 if (block.width && block.width !== '' && block.width !== 'auto') desktopStyles.push(`width: ${block.width}`);
                 if (block.height && block.height !== '' && block.height !== 'auto') desktopStyles.push(`height: ${block.height}`);
-                
+
+                if (desktopStyles.length > 0) {
+                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
+                }
+
                 // Tablet
                 let tabletStyles = [];
                 if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
                 if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
-                
+
+                if (tabletStyles.length > 0) {
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                }
+
                 // Mobile
                 let mobileStyles = [];
                 if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
                 if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);
-                
-                if (desktopStyles.length > 0) {
-                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
-                }
-                if (tabletStyles.length > 0) {
-                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
-                }
+
                 if (mobileStyles.length > 0) {
                     css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
                 }
-                
+
+                // Hover styles (al final para tener prioridad)
+                if (block.hoverBackgroundColor || block.hoverTextColor) {
+                    css += `.${blockClass}:hover { `;
+                    if (block.hoverBackgroundColor) css += `background: ${block.hoverBackgroundColor} !important; `;
+                    if (block.hoverTextColor) css += `color: ${block.hoverTextColor} !important; `;
+                    css += `} `;
+                }
+
                 return css;
             };
 
@@ -425,28 +445,28 @@
             } else {
                 switch (block.type) {
                     case 'hero':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#1f2937'}; }</style><div class="${blockClass}" style="padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
                         break;
                     case 'heading':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} color: ${block.textColor || '#1f2937'}; }</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
                         break;
                     case 'paragraph':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} color: ${block.textColor || '#1f2937'}; }</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0;">${block.content}</p>`;
                         break;
                     case 'image':
-                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
+                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
                         break;
                     case 'cards':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
                         break;
                     case 'carousel':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
                         break;
                     case 'button':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#ffffff'}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#ffffff'}; }</style><button class="${blockClass}" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
                         break;
                     case 'divider':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
                         break;
                 }
             }
@@ -575,17 +595,26 @@
                         </select>
                     </div>
                     <div class="property-group">
-                        <label class="property-label">Color de Fondo</label>
+                        <label style="display: flex; align-items: center; justify-content: space-between;">
+                            <span class="property-label" style="margin: 0;">Estado Hover</span>
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()" style="width: 36px; height: 20px; margin-right: 8px;">
+                                <span style="font-size: 11px; color: var(--text-secondary);">${state.hoverMode ? 'ON' : 'OFF'}</span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Color de Fondo ${state.hoverMode ? '(Hover)' : ''}</label>
                         <div class="color-input">
-                            <input type="color" value="${block.backgroundColor || '#ffffff'}" onchange="updateBlockProperty('backgroundColor', this.value)">
-                            <input type="text" value="${block.backgroundColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)">
+                            <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}" onchange="updateColorProperty('backgroundColor', this.value)">
+                            <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}" class="property-input" onchange="updateColorProperty('backgroundColor', this.value)">
                         </div>
                     </div>
                     <div class="property-group">
-                        <label class="property-label">Color de Texto</label>
+                        <label class="property-label">Color de Texto ${state.hoverMode ? '(Hover)' : ''}</label>
                         <div class="color-input">
-                            <input type="color" value="${block.textColor || '#1f2937'}" onchange="updateBlockProperty('textColor', this.value)">
-                            <input type="text" value="${block.textColor || '#1f2937'}" class="property-input" onchange="updateBlockProperty('textColor', this.value)">
+                            <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}" onchange="updateColorProperty('textColor', this.value)">
+                            <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}" class="property-input" onchange="updateColorProperty('textColor', this.value)">
                         </div>
                     </div>`;
                     break;
@@ -622,7 +651,16 @@
                     html += `<div class="property-group"><label class="property-label">Slides (${block.slides.length})</label><div style="margin-bottom: 8px;">${block.slides.map((slide, idx) => `<div class="carousel-slide"><input type="text" class="carousel-slide-input" value="${slide.title}" placeholder="Título" onchange="updateCarouselSlide(${idx}, 'title', this.value)"><div class="carousel-image-upload"><input type="file" accept="image/*" onchange="handleCarouselImageUpload(${idx}, event)"></div>${slide.image ? `<img src="${slide.image}" class="carousel-image-preview" alt="preview">` : '<div style="background: var(--border); height: 120px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 12px;">Sin imagen</div>'}<input type="text" class="carousel-slide-input" value="${slide.description || ''}" placeholder="Descripción" onchange="updateCarouselSlide(${idx}, 'description', this.value)"><div class="carousel-slide-buttons"><button class="carousel-slide-btn danger" onclick="deleteCarouselSlide(${idx})">Eliminar</button></div></div>`).join('')}</div><button class="property-input" style="background: var(--primary); color: white; padding: 8px; cursor: pointer;" onclick="addCarouselSlide()">+ Añadir Slide</button></div>`;
                     break;
                 case 'button':
-                    html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor || '#2563eb'}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor || '#2563eb'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"><button class="property-input" style="width: auto; cursor: pointer;" onclick="updateBlockProperty('backgroundColor', 'transparent')">Transparente</button></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor || '#ffffff'}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
+                    html += `<div class="property-group">
+                        <label style="display: flex; align-items: center; justify-content: space-between;">
+                            <span class="property-label" style="margin: 0;">Estado Hover</span>
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()" style="width: 36px; height: 20px; margin-right: 8px;">
+                                <span style="font-size: 11px; color: var(--text-secondary);">${state.hoverMode ? 'ON' : 'OFF'}</span>
+                            </label>
+                        </label>
+                    </div>
+                    <div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo ${state.hoverMode ? '(Hover)' : ''}</label><div class="color-input"><input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}" onchange="updateColorProperty('backgroundColor', this.value)"><input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}" class="property-input" onchange="updateColorProperty('backgroundColor', this.value)"><button class="property-input" style="width: auto; cursor: pointer;" onclick="updateColorProperty('backgroundColor', 'transparent')">Transparente</button></div></div><div class="property-group"><label class="property-label">Color de Texto ${state.hoverMode ? '(Hover)' : ''}</label><div class="color-input"><input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}" onchange="updateColorProperty('textColor', this.value)"><input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}" class="property-input" onchange="updateColorProperty('textColor', this.value)"></div></div>`;
                     break;
                 case 'divider':
                     html += `<div class="property-group">
@@ -769,6 +807,24 @@
             }
         }
 
+        function toggleHoverMode() {
+            state.hoverMode = !state.hoverMode;
+            renderProperties();
+        }
+
+        function updateColorProperty(prop, value) {
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            if (block) {
+                if (state.hoverMode) {
+                    block[`hover${prop.charAt(0).toUpperCase() + prop.slice(1)}`] = value;
+                } else {
+                    block[prop] = value;
+                }
+                renderBlocks();
+                renderProperties();
+            }
+        }
+
         function updateBlockProperty(prop, value) {
             const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block) {
@@ -896,34 +952,53 @@
             // Generar estilos responsive con media queries
             const generateResponsiveCSS = () => {
                 let css = '';
+
+                // Desktop (base) - Colores base
+                let baseStyles = [];
+                if (block.backgroundColor) baseStyles.push(`background: ${block.backgroundColor}`);
+                if (block.textColor) baseStyles.push(`color: ${block.textColor}`);
                 
-                // Desktop (base)
+                if (baseStyles.length > 0) {
+                    css += `.${blockClass} { ${baseStyles.join('; ')}; } `;
+                }
+
+                // Dimensiones Desktop
                 let desktopStyles = [];
                 if (block.widthDesktop && block.widthDesktop !== '' && block.widthDesktop !== 'auto') desktopStyles.push(`width: ${block.widthDesktop}`);
                 if (block.heightDesktop && block.heightDesktop !== '' && block.heightDesktop !== 'auto') desktopStyles.push(`height: ${block.heightDesktop}`);
                 if (block.width && block.width !== '' && block.width !== 'auto') desktopStyles.push(`width: ${block.width}`);
                 if (block.height && block.height !== '' && block.height !== 'auto') desktopStyles.push(`height: ${block.height}`);
-                
+
+                if (desktopStyles.length > 0) {
+                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
+                }
+
                 // Tablet
                 let tabletStyles = [];
                 if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
                 if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
-                
+
+                if (tabletStyles.length > 0) {
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                }
+
                 // Mobile
                 let mobileStyles = [];
                 if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
                 if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);
-                
-                if (desktopStyles.length > 0) {
-                    css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
-                }
-                if (tabletStyles.length > 0) {
-                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
-                }
+
                 if (mobileStyles.length > 0) {
                     css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
                 }
-                
+
+                // Hover styles (al final para tener prioridad)
+                if (block.hoverBackgroundColor || block.hoverTextColor) {
+                    css += `.${blockClass}:hover { `;
+                    if (block.hoverBackgroundColor) css += `background: ${block.hoverBackgroundColor} !important; `;
+                    if (block.hoverTextColor) css += `color: ${block.hoverTextColor} !important; `;
+                    css += `} `;
+                }
+
                 return css;
             };
 
