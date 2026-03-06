@@ -300,34 +300,42 @@
             let preview = '';
             const blockClass = `block-${block.id}`;
             const cssId = `css-${block.id}`;
+            
+            // Función helper para generar estilo de dimensiones (solo si hay valor)
+            const dimensionStyle = () => {
+                let style = '';
+                if (block.width && block.width !== '' && block.width !== 'auto') style += `width: ${block.width}; `;
+                if (block.height && block.height !== '' && block.height !== 'auto') style += `height: ${block.height}; `;
+                return style;
+            };
 
             if (block.type === 'container') {
-                preview = `<div class="block-container-drop" data-parent-id="${block.id}" style="min-height:32px; border: 1.5px dashed #2563eb; margin-bottom: 8px; background: #f8fafc; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px; padding: 12px;">${(block.children && block.children.length > 0) ? block.children.map(child => createBlockHTML(child)).join('') : '<span style=\"color:#94a3b8;font-size:13px;\">Arrastra aquí bloques</span>'}</div>`;
+                preview = `<div class="block-container-drop" data-parent-id="${block.id}" style="min-height:32px; border: 1.5px dashed #2563eb; margin-bottom: 8px; background: #f8fafc; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px; padding: 12px; ${dimensionStyle()}">${(block.children && block.children.length > 0) ? block.children.map(child => createBlockHTML(child)).join('') : '<span style=\"color:#94a3b8;font-size:13px;\">Arrastra aquí bloques</span>'}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
                         break;
                     case 'heading':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><h2 class="${blockClass}" style="${dimensionStyle()}margin: 16px 0;">${block.content}</h2>`;
                         break;
                     case 'paragraph':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><p class="${blockClass}" style="${dimensionStyle()}line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
                         break;
                     case 'image':
-                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
+                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="${dimensionStyle()}border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
                         break;
                     case 'cards':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
                         break;
                     case 'carousel':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="${dimensionStyle()}background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
                         break;
                     case 'button':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="${dimensionStyle()}padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
                         break;
                     case 'divider':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor}; margin: 20px 0;">`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor}; margin: 20px 0;">`;
                         break;
                 }
             }
@@ -407,10 +415,13 @@
             if (idx !== -1 && newIdx >= 0 && newIdx < state.page.blocks.length) {
                 [state.page.blocks[idx], state.page.blocks[newIdx]] = [state.page.blocks[newIdx], state.page.blocks[idx]];
                 renderBlocks();
+                renderProperties();
                 return;
             }
 
             moveBlockFromChildren(state.page.blocks, blockId, direction);
+            renderBlocks();
+            renderProperties();
         }
 
         function moveBlockFromChildren(blocks, blockId, direction) {
@@ -440,6 +451,11 @@
             if (!block) return;
             let html = `<div class="property-group"><label class="property-label">Tipo de Bloque</label><input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);"></div>`;
 
+            // Añadir propiedades de dimensiones para todos los bloques excepto divider
+            if (block.type !== 'divider') {
+                html += createDimensionProperties(block);
+            }
+
             switch (block.type) {
                 case 'container':
                     html += `<div class="property-group">
@@ -462,14 +478,10 @@
                             <input type="color" value="${block.textColor || '#1f2937'}" onchange="updateBlockProperty('textColor', this.value)">
                             <input type="text" value="${block.textColor || '#1f2937'}" class="property-input" onchange="updateBlockProperty('textColor', this.value)">
                         </div>
-                    </div>
-                    <div class="property-group">
-                        <label class="property-label">Bloques hijos</label>
-                        <p style="font-size:12px;color:var(--text-secondary);">Arrastra bloques dentro de este contenedor desde la lista de bloques. (Funcionalidad anidada pendiente de implementar)</p>
                     </div>`;
                     break;
                 case 'hero':
-                    html += `<div class="property-group"><label class="property-label">Título</label><input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)"></div><div class="property-group"><label class="property-label">Subtítulo</label><input type="text" value="${block.subContent}" class="property-input" onchange="updateBlockProperty('subContent', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div><div class="property-group"><label class="property-label">Altura (px)</label><input type="text" value="${block.height}" class="property-input" onchange="updateBlockProperty('height', this.value)"></div>`;
+                    html += `<div class="property-group"><label class="property-label">Título</label><input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)"></div><div class="property-group"><label class="property-label">Subtítulo</label><input type="text" value="${block.subContent}" class="property-input" onchange="updateBlockProperty('subContent', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
                     break;
                 case 'paragraph':
                     html += `<div class="property-group"><label class="property-label">Contenido</label><textarea class="property-textarea" onchange="updateBlockProperty('content', this.value)">${block.content}</textarea></div>`;
@@ -478,7 +490,7 @@
                     html += `<div class="property-group"><label class="property-label">Contenido</label><input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)"></div><div class="property-group"><label class="property-label">Nivel</label><select class="property-select" onchange="updateBlockProperty('level', this.value)"><option value="1" ${block.level === 1 ? 'selected' : ''}>H1</option><option value="2" ${block.level === 2 ? 'selected' : ''}>H2</option><option value="3" ${block.level === 3 ? 'selected' : ''}>H3</option><option value="4" ${block.level === 4 ? 'selected' : ''}>H4</option></select></div>`;
                     break;
                 case 'image':
-                    html += `<div class="property-group"><label class="property-label">URL de Imagen</label><input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" onchange="updateBlockProperty('src', this.value)"></div><div class="property-group"><label class="property-label">Alt Text</label><input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)"></div><div class="property-group"><label class="property-label">Ancho</label><input type="text" value="${block.width}" class="property-input" onchange="updateBlockProperty('width', this.value)"></div>`;
+                    html += `<div class="property-group"><label class="property-label">URL de Imagen</label><input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" onchange="updateBlockProperty('src', this.value)"></div><div class="property-group"><label class="property-label">Alt Text</label><input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)"></div>`;
                     break;
                 case 'cards':
                     html += `<div class="property-group"><label class="property-label">Tarjetas (${block.items.length})</label><div style="margin-bottom: 8px;">${block.items.map((item, idx) => `<div class="card-item"><input type="text" class="card-item-input" value="${item.title}" placeholder="Título" onchange="updateCardItem(${idx}, 'title', this.value)"><input type="text" class="card-item-input" value="${item.description}" placeholder="Descripción" onchange="updateCardItem(${idx}, 'description', this.value)"><div class="card-item-buttons"><button class="card-item-btn danger" onclick="deleteCardItem(${idx})">Eliminar</button></div></div>`).join('')}</div><button class="property-input" style="background: var(--primary); color: white; padding: 8px; cursor: pointer;" onclick="addCardItem()">+ Añadir Tarjeta</button></div>`;
@@ -487,7 +499,7 @@
                     html += `<div class="property-group"><label class="property-label">Slides (${block.slides.length})</label><div style="margin-bottom: 8px;">${block.slides.map((slide, idx) => `<div class="carousel-slide"><input type="text" class="carousel-slide-input" value="${slide.title}" placeholder="Título" onchange="updateCarouselSlide(${idx}, 'title', this.value)"><div class="carousel-image-upload"><input type="file" accept="image/*" onchange="handleCarouselImageUpload(${idx}, event)"></div>${slide.image ? `<img src="${slide.image}" class="carousel-image-preview" alt="preview">` : '<div style="background: var(--border); height: 120px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 12px;">Sin imagen</div>'}<input type="text" class="carousel-slide-input" value="${slide.description || ''}" placeholder="Descripción" onchange="updateCarouselSlide(${idx}, 'description', this.value)"><div class="carousel-slide-buttons"><button class="carousel-slide-btn danger" onclick="deleteCarouselSlide(${idx})">Eliminar</button></div></div>`).join('')}</div><button class="property-input" style="background: var(--primary); color: white; padding: 8px; cursor: pointer;" onclick="addCarouselSlide()">+ Añadir Slide</button></div>`;
                     break;
                 case 'button':
-                    html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div>`;
+                    html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
                     break;
                 case 'divider':
                     html += `<div class="property-group"><label class="property-label">Color de Línea</label><div class="color-input"><input type="color" value="${block.borderColor}" onchange="updateBlockProperty('borderColor', this.value)"><input type="text" value="${block.borderColor}" class="property-input" onchange="updateBlockProperty('borderColor', this.value)"></div></div>`;
@@ -495,6 +507,85 @@
             }
             html += `<div class="property-group"><label class="property-label">CSS Personalizado</label><textarea class="property-textarea" onchange="updateBlockProperty('customCSS', this.value)" placeholder=".block { /* Tu CSS aquí */ }">${block.customCSS || ''}</textarea></div>`;
             panel.innerHTML = html;
+        }
+
+        function createDimensionProperties(block) {
+            // Parsear width y height para extraer valor y unidad
+            const parseDimension = (value) => {
+                if (!value || value === '') return { value: '', unit: 'px' };
+                if (value === 'auto') return { value: '', unit: 'auto' };
+                const match = value.match(/^(\d*\.?\d*)(px|rem|em|vh|vw|%)?$/);
+                if (match) {
+                    return { value: match[1] || '', unit: match[2] || 'px' };
+                }
+                return { value: value, unit: 'px' };
+            };
+
+            const widthParsed = parseDimension(block.width);
+            const heightParsed = parseDimension(block.height);
+
+            let html = `<div class="property-group">
+                <label class="property-label">Dimensiones</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-secondary);">Ancho</label>
+                        <div style="display: flex; gap: 4px;">
+                            <input type="number" value="${widthParsed.value}" 
+                                class="property-input" 
+                                style="width: 70px;"
+                                onchange="updateDimension('width', this.value, document.getElementById('widthUnit').value)">
+                            <select id="widthUnit" 
+                                class="property-select" 
+                                style="width: 65px; font-size: 12px;"
+                                onchange="updateDimension('width', document.getElementById('widthValue').value, this.value)">
+                                <option value="px" ${widthParsed.unit === 'px' ? 'selected' : ''}>px</option>
+                                <option value="%" ${widthParsed.unit === '%' ? 'selected' : ''}>%</option>
+                                <option value="rem" ${widthParsed.unit === 'rem' ? 'selected' : ''}>rem</option>
+                                <option value="em" ${widthParsed.unit === 'em' ? 'selected' : ''}>em</option>
+                                <option value="vh" ${widthParsed.unit === 'vh' ? 'selected' : ''}>vh</option>
+                                <option value="vw" ${widthParsed.unit === 'vw' ? 'selected' : ''}>vw</option>
+                                <option value="auto" ${widthParsed.unit === 'auto' ? 'selected' : ''}>auto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-secondary);">Alto</label>
+                        <div style="display: flex; gap: 4px;">
+                            <input type="number" value="${heightParsed.value}" 
+                                class="property-input" 
+                                style="width: 70px;"
+                                onchange="updateDimension('height', this.value, document.getElementById('heightUnit').value)">
+                            <select id="heightUnit" 
+                                class="property-select" 
+                                style="width: 65px; font-size: 12px;"
+                                onchange="updateDimension('height', document.getElementById('heightValue').value, this.value)">
+                                <option value="px" ${heightParsed.unit === 'px' ? 'selected' : ''}>px</option>
+                                <option value="%" ${heightParsed.unit === '%' ? 'selected' : ''}>%</option>
+                                <option value="rem" ${heightParsed.unit === 'rem' ? 'selected' : ''}>rem</option>
+                                <option value="em" ${heightParsed.unit === 'em' ? 'selected' : ''}>em</option>
+                                <option value="vh" ${heightParsed.unit === 'vh' ? 'selected' : ''}>vh</option>
+                                <option value="vw" ${heightParsed.unit === 'vw' ? 'selected' : ''}>vw</option>
+                                <option value="auto" ${heightParsed.unit === 'auto' ? 'selected' : ''}>auto</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            return html;
+        }
+
+        function updateDimension(prop, value, unit) {
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            if (block) {
+                if (unit === 'auto') {
+                    block[prop] = 'auto';
+                } else if (value === '' || value === null || value === undefined) {
+                    block[prop] = '';
+                } else {
+                    block[prop] = value + unit;
+                }
+                renderBlocks();
+            }
         }
 
         function updateBlockProperty(prop, value) {
@@ -598,37 +689,45 @@
         function renderBlockPreview(block) {
             const blockClass = `block-${block.id}`;
             let html = '';
+            
+            // Función helper para generar estilo de dimensiones (solo si hay valor)
+            const dimensionStyle = () => {
+                let style = '';
+                if (block.width && block.width !== '' && block.width !== 'auto') style += `width: ${block.width}; `;
+                if (block.height && block.height !== '' && block.height !== 'auto') style += `height: ${block.height}; `;
+                return style;
+            };
 
             if (block.type === 'container') {
                 const childrenHtml = (block.children && block.children.length > 0)
                     ? block.children.map(child => renderBlockPreview(child)).join('')
                     : '';
-                html = `<div class="${blockClass}" style="background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px;">${childrenHtml}</div>`;
+                html = `<div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px;">${childrenHtml}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
-                        html = `<div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
+                        html = `<div class="${blockClass}" style="${dimensionStyle()}background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
                         break;
                     case 'heading':
-                        html = `<h2 class="${blockClass}" style="margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
+                        html = `<h2 class="${blockClass}" style="${dimensionStyle()}margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
                         break;
                     case 'paragraph':
-                        html = `<p class="${blockClass}" style="line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
+                        html = `<p class="${blockClass}" style="${dimensionStyle()}line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
                         break;
                     case 'image':
-                        html = block.src ? `<img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%; margin-bottom: 24px;">` : '';
+                        html = block.src ? `<img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="${dimensionStyle()}border-radius: 4px; max-width: 100%; margin-bottom: 24px;">` : '';
                         break;
                     case 'cards':
-                        html = `<div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
+                        html = `<div class="${blockClass}" style="${dimensionStyle()}display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
                         break;
                     case 'carousel':
-                        html = `<div class="${blockClass}" style="margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
+                        html = `<div class="${blockClass}" style="${dimensionStyle()}margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
                         break;
                     case 'button':
-                        html = `<a class="${blockClass}" href="${block.link}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
+                        html = `<a class="${blockClass}" href="${block.link}" style="${dimensionStyle()}display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
                         break;
                     case 'divider':
-                        html = `<hr class="${blockClass}" style="border: none; border-top: 2px solid ${block.borderColor}; margin: 32px 0;">`;
+                        html = `<hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 2px solid ${block.borderColor}; margin: 32px 0;">`;
                         break;
                 }
             }

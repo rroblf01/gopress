@@ -48,7 +48,6 @@ func BuildPageHTML(page PageData) string {
         h3 { font-size: 24px; margin: 20px 0 12px; }
         h4 { font-size: 20px; margin: 16px 0 8px; }
         p { margin-bottom: 16px; line-height: 1.8; }
-        img { max-width: 100%; height: auto; border-radius: 4px; margin: 20px 0; }
         a { color: `)
 	html.WriteString(page.Styles.PrimaryColor)
 	html.WriteString(`; text-decoration: none; }
@@ -119,19 +118,30 @@ func RenderBlock(block Block) string {
 
 func renderContainer(html *strings.Builder, block Block, blockClass string) string {
 	var innerHTML strings.Builder
-	
+
 	for _, child := range block.Children {
 		innerHTML.WriteString(RenderBlock(child))
 	}
-	
+
 	flexDirection := "column"
 	if block.Direction == "horizontal" {
 		flexDirection = "row"
 	}
-	
+
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="background: `)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`background: `)
 	html.WriteString(block.BackgroundColor)
 	html.WriteString(`; color: `)
 	html.WriteString(block.TextColor)
@@ -140,20 +150,29 @@ func renderContainer(html *strings.Builder, block Block, blockClass string) stri
 	html.WriteString(`; gap: 12px;">`)
 	html.WriteString(innerHTML.String())
 	html.WriteString(`</div>`)
-	
+
 	return html.String()
 }
 
 func renderHero(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="background: `)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`background: `)
 	html.WriteString(block.BackgroundColor)
 	html.WriteString(`; color: `)
 	html.WriteString(block.TextColor)
-	html.WriteString(`; padding: 60px 40px; border-radius: 4px; height: `)
-	html.WriteString(block.Height)
-	html.WriteString(`; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0;">
+	html.WriteString(`; padding: 60px 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0;">
         <h1 style="font-size: 48px; margin-bottom: 16px;">`)
 	html.WriteString(EscapeHTML(block.Content))
 	html.WriteString(`</h1>
@@ -188,7 +207,18 @@ func renderHeading(html *strings.Builder, block Block, blockClass string) {
 func renderParagraph(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<p class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`">`)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`line-height: 1.6; margin-bottom: 16px;">`)
 	html.WriteString(EscapeHTML(block.Content))
 	html.WriteString(`</p>`)
 }
@@ -200,9 +230,18 @@ func renderImage(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(block.Src)
 	html.WriteString(`" alt="`)
 	html.WriteString(EscapeHTML(block.Alt))
-	html.WriteString(`" style="width: `)
-	html.WriteString(block.Width)
-	html.WriteString(`;">`)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`object-fit: cover;">`)
 }
 
 func renderButton(html *strings.Builder, block Block, blockClass string) {
@@ -210,7 +249,18 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(blockClass)
 	html.WriteString(`" href="`)
 	html.WriteString(block.Link)
-	html.WriteString(`" style="display: inline-block; padding: 12px 24px; background: `)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`display: inline-block; padding: 12px 24px; background: `)
 	html.WriteString(block.BackgroundColor)
 	html.WriteString(`; color: `)
 	html.WriteString(block.TextColor)
@@ -222,7 +272,18 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 func renderCards(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(` grid-3">`)
+	html.WriteString(` grid-3" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`">`)
 	for _, item := range block.Items {
 		html.WriteString(`<div class="card"><h3>`)
 		html.WriteString(EscapeHTML(item["title"]))
@@ -236,7 +297,18 @@ func renderCards(html *strings.Builder, block Block, blockClass string) {
 func renderCarousel(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; } .carousel-container::-webkit-scrollbar { height: 8px; } .carousel-container::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; } .carousel-container::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 10px; } .carousel-container::-webkit-scrollbar-thumb:hover { background: #1e40af; }</style><div class="carousel-container">`)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; } .carousel-container::-webkit-scrollbar { height: 8px; } .carousel-container::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; } .carousel-container::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 10px; } .carousel-container::-webkit-scrollbar-thumb:hover { background: #1e40af; }</style><div class="carousel-container">`)
 	if len(block.Slides) > 0 {
 		for _, slide := range block.Slides {
 			html.WriteString(`<div class="carousel-item">`)
