@@ -168,6 +168,10 @@
             responsiveMode: 'desktop',
             hoverMode: false
         };
+        
+        // Variables globales para drag and drop
+        let isDraggingBlock = false;
+        let draggedBlockId = null;
 
         const blockTemplates = {
             container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
@@ -298,28 +302,67 @@
 
         function setupDragAndDrop() {
             const blocksContainer = document.getElementById('blocksContainer');
+            
+            // Configurar drag en los botones de la sidebar para añadir nuevos bloques
             document.querySelectorAll('.block-btn').forEach(btn => {
                 btn.addEventListener('dragstart', (e) => {
                     e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('text/plain', btn.dataset.blockType);
                     e.dataTransfer.setData('blockType', btn.dataset.blockType);
+                    e.dataTransfer.setData('application/x-drag-source', 'sidebar');
                 });
             });
+            
+            // Configurar drag en bloques existentes para moverlos a contenedores
+            document.addEventListener('dragstart', (e) => {
+                const block = e.target.closest('.block');
+                if (block && !e.target.closest('.block-action-btn')) {
+                    isDraggingBlock = true;
+                    draggedBlockId = block.dataset.blockId;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('application/x-drag-source', 'existing-block');
+                    e.dataTransfer.setData('blockId', block.dataset.blockId);
+                }
+            });
+            
+            document.addEventListener('dragend', () => {
+                isDraggingBlock = false;
+                draggedBlockId = null;
+            });
+            
+            // Drag over en el canvas principal (solo si no es sobre una dropzone o un bloque)
             blocksContainer.addEventListener('dragover', (e) => {
+                // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
+                if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+                    return;
+                }
+                // Solo permitir drop desde la sidebar (no desde bloques existentes)
+                const dragSource = e.dataTransfer.getData('application/x-drag-source');
+                if (dragSource !== 'sidebar') {
+                    return;
+                }
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
                 blocksContainer.style.background = 'rgba(37, 99, 235, 0.05)';
             });
-            blocksContainer.addEventListener('dragleave', () => { blocksContainer.style.background = ''; });
+            blocksContainer.addEventListener('dragleave', () => { 
+                blocksContainer.style.background = ''; 
+            });
             blocksContainer.addEventListener('drop', (e) => {
+                // Si el drop es en una dropzone o en un bloque, no hacer nada
+                if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+                    return;
+                }
+                // Solo procesar si es desde la sidebar
+                const dragSource = e.dataTransfer.getData('application/x-drag-source');
+                if (dragSource !== 'sidebar') {
+                    return;
+                }
                 e.preventDefault();
                 blocksContainer.style.background = '';
-                addBlock(e.dataTransfer.getData('blockType'));
-            });
-            Sortable.create(blocksContainer, {
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onEnd: () => {
-                    const blocks = Array.from(blocksContainer.querySelectorAll('.block'));
-                    state.page.blocks = blocks.map(el => state.page.blocks.find(b => b.id === parseInt(el.dataset.blockId)));
+                const blockType = e.dataTransfer.getData('text/plain');
+                if (blockType && blockTemplates[blockType]) {
+                    addBlock(blockType);
                 }
             });
         }
@@ -343,6 +386,12 @@
         }
 
         function addBlock(type, parentId = null) {
+            // Validar que el tipo es válido
+            if (!type || !blockTemplates[type]) {
+                console.error('Tipo de bloque no válido:', type);
+                return;
+            }
+            
             const template = JSON.parse(JSON.stringify(blockTemplates[type]));
             template.id = Date.now();
             if (parentId) {
@@ -357,6 +406,44 @@
             renderBlocks();
         }
 
+        function moveBlockToContainer(blockId, parentId) {
+            // Buscar el bloque y removerlo de su ubicación actual
+            let blockToRemove = null;
+            
+            // Buscar en root level
+            const rootIndex = state.page.blocks.findIndex(b => b.id === blockId);
+            if (rootIndex !== -1) {
+                blockToRemove = state.page.blocks.splice(rootIndex, 1)[0];
+            } else {
+                // Buscar en contenedores anidados
+                blockToRemove = findAndRemoveBlockFromChildren(state.page.blocks, blockId);
+            }
+            
+            if (blockToRemove) {
+                // Añadir al contenedor destino
+                const parent = findBlockById(state.page.blocks, parentId);
+                if (parent && parent.type === 'container') {
+                    parent.children = parent.children || [];
+                    parent.children.push(blockToRemove);
+                    renderBlocks();
+                }
+            }
+        }
+
+        function findAndRemoveBlockFromChildren(blocks, blockId) {
+            for (const block of blocks) {
+                if (block.type === 'container' && block.children) {
+                    const childIndex = block.children.findIndex(b => b.id === blockId);
+                    if (childIndex !== -1) {
+                        return block.children.splice(childIndex, 1)[0];
+                    }
+                    const found = findAndRemoveBlockFromChildren(block.children, blockId);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
         function renderBlocks() {
             const container = document.getElementById('blocksContainer');
             if (state.page.blocks.length === 0) {
@@ -364,14 +451,23 @@
                 return;
             }
             container.innerHTML = state.page.blocks.map(block => createBlockHTML(block)).join('');
+
+            // Eventos para selección de bloques (solo si no se está arrastrando)
             document.querySelectorAll('.block').forEach(el => {
                 el.addEventListener('click', (e) => {
+                    // Si se acaba de hacer un drag, no seleccionar
+                    if (draggedBlockId) {
+                        e.stopPropagation();
+                        return;
+                    }
                     e.stopPropagation();
                     if (!e.target.closest('.block-action-btn')) {
                         selectBlock(parseInt(el.dataset.blockId));
                     }
                 });
             });
+            
+            // Eventos para acciones de bloques
             document.querySelectorAll('.block-action-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -384,22 +480,54 @@
                 });
             });
 
+            // Inicializar eventos para las áreas de drop de los contenedores
             document.querySelectorAll('.block-container-drop').forEach(dropZone => {
                 dropZone.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropZone.style.background = 'rgba(37,99,235,0.07)';
+                    const dragSource = e.dataTransfer.getData('application/x-drag-source');
+                    // Permitir drop desde sidebar o desde bloques existentes
+                    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+                        return;
+                    }
+                    e.dataTransfer.dropEffect = dragSource === 'sidebar' ? 'copy' : 'move';
+                    dropZone.style.background = '#e0f2fe';
+                    dropZone.style.borderColor = '#0284c7';
                 });
-                dropZone.addEventListener('dragleave', () => {
-                    dropZone.style.background = '';
+
+                dropZone.addEventListener('dragleave', (e) => {
+                    if (e.target === dropZone) {
+                        dropZone.style.background = '#f0f9ff';
+                        dropZone.style.borderColor = '#2563eb';
+                    }
                 });
+
                 dropZone.addEventListener('drop', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropZone.style.background = '';
-                    const type = e.dataTransfer.getData('blockType');
+                    const dragSource = e.dataTransfer.getData('application/x-drag-source');
+                    // Solo procesar si es desde sidebar o bloque existente
+                    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+                        return;
+                    }
+                    dropZone.style.background = '#f0f9ff';
+                    dropZone.style.borderColor = '#2563eb';
+
                     const parentId = parseInt(dropZone.dataset.parentId);
-                    addBlock(type, parentId);
+
+                    if (dragSource === 'sidebar') {
+                        // Añadir nuevo bloque desde sidebar
+                        const blockType = e.dataTransfer.getData('text/plain');
+                        if (blockType && blockTemplates[blockType]) {
+                            addBlock(blockType, parentId);
+                        }
+                    } else {
+                        // Mover bloque existente al contenedor
+                        const blockId = parseInt(e.dataTransfer.getData('blockId'));
+                        if (blockId && parentId) {
+                            moveBlockToContainer(blockId, parentId);
+                        }
+                    }
                 });
 
                 dropZone.addEventListener('click', (e) => {
@@ -550,21 +678,27 @@
             if (block.type === 'container') {
                 const childrenContent = (block.children && block.children.length > 0)
                     ? block.children.map(child => createBlockHTML(child)).join('')
-                    : '<span style="color:#94a3b8;font-size:13px;">Arrastra aquí bloques</span>';
+                    : '<div style="display: flex; align-items: center; justify-content: center; min-height: 80px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; margin: 8px;">📦 Arrastra bloques aquí</div>';
 
                 preview = `
                     <style id="${cssId}">
                         .${blockClass} { ${block.customCSS} ${allCSS} }
-                        .${blockClass} .block-container-drop { 
-                            border: 1.5px dashed #2563eb !important; 
-                            margin-bottom: 8px; 
-                            background: #f8fafc !important; 
-                            padding: 12px;
-                            min-height: 32px;
+                        .${blockClass} .block-container-drop {
+                            border: 2px dashed #2563eb !important;
+                            margin-bottom: 8px;
+                            background: #f0f9ff !important;
+                            padding: 16px;
+                            min-height: 100px;
+                            border-radius: 8px;
+                            transition: all 0.2s;
+                        }
+                        .${blockClass} .block-container-drop:hover {
+                            background: #e0f2fe !important;
+                            border-color: #0284c7 !important;
                         }
                         ${isHidden ? `.${blockClass} { display: none !important; }` : ''}
                     </style>
-                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:32px; margin-bottom: 8px; padding: 12px; display: flex; ${directionStyle} gap: 12px; ${hiddenStyle}">${childrenContent}</div>`;
+                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} gap: 12px; ${hiddenStyle}">${childrenContent}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
@@ -623,7 +757,7 @@
                         break;
                 }
             }
-            return `<div class="block ${state.selectedBlockId === block.id ? 'selected' : ''}" data-block-id="${block.id}" data-block-type="${block.type}"><div class="block-header"><span class="block-type">${block.type}</span><div class="block-actions"><button class="block-action-btn" data-action="up" title="Subir">↑</button><button class="block-action-btn" data-action="down" title="Bajar">↓</button><button class="block-action-btn" data-action="duplicate" title="Duplicar">⎘</button><button class="block-action-btn danger" data-action="delete" title="Eliminar">🗑️</button></div></div><div style="margin-top: 12px;">${preview}</div></div>`;
+            return `<div class="block ${state.selectedBlockId === block.id ? 'selected' : ''}" data-block-id="${block.id}" data-block-type="${block.type}" draggable="true"><div class="block-header"><span class="block-type">${block.type}</span><div class="block-actions"><button class="block-action-btn" data-action="up" title="Subir">↑</button><button class="block-action-btn" data-action="down" title="Bajar">↓</button><button class="block-action-btn" data-action="duplicate" title="Duplicar">⎘</button><button class="block-action-btn danger" data-action="delete" title="Eliminar">🗑️</button></div></div><div style="margin-top: 12px;">${preview}</div></div>`;
         }
 
         function selectBlock(blockId) {
