@@ -30,6 +30,7 @@ func main() {
 
 	app.Get("/cms", ServeEditor(db))
 	app.Post("/cms", SavePageHandler(db))
+	app.Get("/preview", ServePreview(db))
 	app.Get("/", RenderPageHandler(db))
 	app.Get("/api/page", GetPageHandler(db))
 	app.Use("/static", static.New("./static"))

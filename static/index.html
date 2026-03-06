@@ -33,7 +33,7 @@
         </div>
         <div class="toolbar-right">
             <button class="toolbar-btn" id="goToWebBtn">Ir a la Web</button>
-            <button class="toolbar-btn" id="previewBtn">👁️ Vista Previa</button>
+            <button class="toolbar-btn" id="previewBtn">👁️ Vistas</button>
             <button class="toolbar-btn primary" id="saveBtn">💾 Guardar</button>
         </div>
     </div>
@@ -133,9 +133,29 @@
     </div>
 
     <div class="modal" id="previewModal">
-        <div class="modal-content" style="position: relative;">
+        <div class="modal-content-preview" style="position: relative;">
             <button class="modal-close" onclick="closePreviewModal()">×</button>
-            <div id="previewContent"></div>
+            <h2 style="margin-bottom: 20px; text-align: center;">Vista Previa Responsive</h2>
+            <div class="preview-container">
+                <div class="preview-device desktop">
+                    <div class="device-label">🖥️ Ordenador</div>
+                    <div class="device-frame desktop-frame">
+                        <div id="previewDesktop"></div>
+                    </div>
+                </div>
+                <div class="preview-device tablet">
+                    <div class="device-label">📱 Tablet</div>
+                    <div class="device-frame tablet-frame">
+                        <div id="previewTablet"></div>
+                    </div>
+                </div>
+                <div class="preview-device mobile">
+                    <div class="device-label">📲 Móvil</div>
+                    <div class="device-frame mobile-frame">
+                        <div id="previewMobile"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -170,7 +190,16 @@
         }
 
         function loadPageData() {
-            fetch('/api/page').then(res => res.json()).then(data => {
+            fetch('/api/page').then(res => {
+                if (res.status === 404) {
+                    // No hay página guardada, usar valores por defecto
+                    console.log('Nueva página - no hay datos guardados');
+                    loadGlobalStyles();
+                    renderBlocks();
+                    return;
+                }
+                return res.json();
+            }).then(data => {
                 if (data && data.title) {
                     state.page = { title: data.title, blocks: data.blocks || [], styles: data.styles || state.page.styles, favicon: data.favicon || '' };
                     document.getElementById('siteTitle').value = data.title;
@@ -188,7 +217,9 @@
                     renderBlocks();
                     showToast('Página cargada', 'success');
                 }
-            }).catch(() => console.log('Nueva página'));
+            }).catch(err => {
+                console.log('Nueva página - error al cargar:', err);
+            });
         }
 
         function updateSiteTitle(value) {
@@ -388,16 +419,16 @@
                     css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
                 }
 
-                // Tablet
+                // Tablet (769px - 1024px)
                 let tabletStyles = [];
                 if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
                 if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
 
                 if (tabletStyles.length > 0) {
-                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                    css += `@media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
                 }
 
-                // Mobile
+                // Mobile (<= 768px)
                 let mobileStyles = [];
                 if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
                 if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);
@@ -984,11 +1015,7 @@
         }
 
         function openPreviewModal() {
-            const modal = document.getElementById('previewModal');
-            const previewContent = document.getElementById('previewContent');
-            const styles = state.page.styles;
-            previewContent.innerHTML = `<style>body { font-family: ${styles.fontFamily}; background: ${styles.backgroundColor}; color: ${styles.textColor}; }${state.page.blocks.map(b => `.block-${b.id} { ${b.customCSS} }`).join('\n')}${styles.globalCSS}</style>${state.page.blocks.map(block => renderBlockPreview(block)).join('')}`;
-            modal.classList.add('active');
+            window.open('/preview', '_blank');
         }
         function renderBlockPreview(block) {
             const blockClass = `block-${block.id}`;
@@ -1019,16 +1046,16 @@
                     css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
                 }
 
-                // Tablet
+                // Tablet (769px - 1024px)
                 let tabletStyles = [];
                 if (block.widthTablet && block.widthTablet !== '' && block.widthTablet !== 'auto') tabletStyles.push(`width: ${block.widthTablet}`);
                 if (block.heightTablet && block.heightTablet !== '' && block.heightTablet !== 'auto') tabletStyles.push(`height: ${block.heightTablet}`);
 
                 if (tabletStyles.length > 0) {
-                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                    css += `@media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
                 }
 
-                // Mobile
+                // Mobile (<= 768px)
                 let mobileStyles = [];
                 if (block.widthMobile && block.widthMobile !== '' && block.widthMobile !== 'auto') mobileStyles.push(`width: ${block.widthMobile}`);
                 if (block.heightMobile && block.heightMobile !== '' && block.heightMobile !== 'auto') mobileStyles.push(`height: ${block.heightMobile}`);

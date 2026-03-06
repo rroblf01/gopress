@@ -168,7 +168,7 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		}
 	}
 
-	// Tablet - dimensiones
+	// Tablet (769px - 1024px)
 	tabletStyles := []string{}
 	if block.WidthTablet != "" && block.WidthTablet != "auto" {
 		tabletStyles = append(tabletStyles, fmt.Sprintf("width: %s", block.WidthTablet))
@@ -178,7 +178,7 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	}
 
 	if len(tabletStyles) > 0 {
-		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { %s; } } ", blockClass, strings.Join(tabletStyles, "; ")))
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) and (min-width: 769px) { .%s { %s; } } ", blockClass, strings.Join(tabletStyles, "; ")))
 	}
 
 	// Dirección tablet para contenedores
@@ -187,10 +187,10 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		if block.DirectionTablet == "horizontal" {
 			flexDir = "row"
 		}
-		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) and (min-width: 769px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
 	}
 
-	// Mobile - dimensiones
+	// Mobile (<= 768px)
 	mobileStyles := []string{}
 	if block.WidthMobile != "" && block.WidthMobile != "auto" {
 		mobileStyles = append(mobileStyles, fmt.Sprintf("width: %s", block.WidthMobile))
@@ -219,7 +219,7 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	}
 	if block.HiddenTablet {
 		// Ocultar solo en tablet (entre 769px y 1024px)
-		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { display: none !important; } } ", blockClass))
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) and (min-width: 769px) { .%s { display: none !important; } } ", blockClass))
 	}
 	if block.HiddenMobile {
 		// Ocultar solo en móvil (<= 768px)

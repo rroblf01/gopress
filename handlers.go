@@ -13,6 +13,12 @@ func ServeEditor(db *sql.DB) fiber.Handler {
 	}
 }
 
+func ServePreview(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		return c.SendFile("./static/preview.html")
+	}
+}
+
 func SavePageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
 
