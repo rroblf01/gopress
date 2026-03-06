@@ -19,6 +19,8 @@ type Block struct {
 	BackgroundColor string                `json:"backgroundColor"`
 	TextColor       string                `json:"textColor"`
 	CustomCSS       string                `json:"customCSS"`
+	Children        []Block               `json:"children"`
+	Direction       string                `json:"direction"`
 }
 
 type Styles struct {
