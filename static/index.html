@@ -331,7 +331,7 @@
                 });
             });
             
-            // Configurar drag en bloques existentes para moverlos a contenedores
+            // Configurar drag en bloques existentes para moverlos
             document.addEventListener('dragstart', (e) => {
                 const block = e.target.closest('.block');
                 if (block && !e.target.closest('.block-action-btn')) {
@@ -340,6 +340,13 @@
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('application/x-drag-source', 'existing-block');
                     e.dataTransfer.setData('blockId', block.dataset.blockId);
+                    // Crear una imagen de drag más clara
+                    const dragImage = block.cloneNode(true);
+                    dragImage.style.position = 'absolute';
+                    dragImage.style.top = '-1000px';
+                    document.body.appendChild(dragImage);
+                    e.dataTransfer.setDragImage(dragImage, 20, 20);
+                    setTimeout(() => document.body.removeChild(dragImage), 0);
                 }
             });
             
@@ -348,19 +355,19 @@
                 draggedBlockId = null;
             });
             
-            // Drag over en el canvas principal (solo si no es sobre una dropzone o un bloque)
+            // Drag over en el canvas principal
             blocksContainer.addEventListener('dragover', (e) => {
                 // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
                 if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
                     return;
                 }
-                // Solo permitir drop desde la sidebar (no desde bloques existentes)
+                // Solo permitir drop desde la sidebar o bloques existentes
                 const dragSource = e.dataTransfer.getData('application/x-drag-source');
-                if (dragSource !== 'sidebar') {
+                if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
                     return;
                 }
                 e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
+                e.dataTransfer.dropEffect = dragSource === 'sidebar' ? 'copy' : 'move';
                 blocksContainer.style.background = 'rgba(37, 99, 235, 0.05)';
             });
             blocksContainer.addEventListener('dragleave', () => { 
@@ -371,16 +378,26 @@
                 if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
                     return;
                 }
-                // Solo procesar si es desde la sidebar
+                // Solo procesar si es desde la sidebar o bloque existente
                 const dragSource = e.dataTransfer.getData('application/x-drag-source');
-                if (dragSource !== 'sidebar') {
+                if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
                     return;
                 }
                 e.preventDefault();
                 blocksContainer.style.background = '';
-                const blockType = e.dataTransfer.getData('text/plain');
-                if (blockType && blockTemplates[blockType]) {
-                    addBlock(blockType);
+                
+                if (dragSource === 'sidebar') {
+                    // Añadir nuevo bloque desde sidebar
+                    const blockType = e.dataTransfer.getData('text/plain');
+                    if (blockType && blockTemplates[blockType]) {
+                        addBlock(blockType);
+                    }
+                } else {
+                    // Mover bloque existente al root level
+                    const blockId = parseInt(e.dataTransfer.getData('blockId'));
+                    if (blockId) {
+                        moveBlockToRoot(blockId);
+                    }
                 }
             });
         }
@@ -447,6 +464,25 @@
                     renderBlocks();
                 }
             }
+        }
+
+        function moveBlockToRoot(blockId) {
+            // Buscar el bloque en contenedores anidados
+            let blockToRemove = findAndRemoveBlockFromChildren(state.page.blocks, blockId);
+            
+            // Si no está en contenedores, ya está en root
+            if (!blockToRemove) {
+                const rootIndex = state.page.blocks.findIndex(b => b.id === blockId);
+                if (rootIndex !== -1) {
+                    // Ya está en root, no hacer nada
+                    return;
+                }
+                return;
+            }
+            
+            // Añadir al root level
+            state.page.blocks.push(blockToRemove);
+            renderBlocks();
         }
 
         function findAndRemoveBlockFromChildren(blocks, blockId) {
@@ -544,7 +580,16 @@
                         // Mover bloque existente al contenedor
                         const blockId = parseInt(e.dataTransfer.getData('blockId'));
                         if (blockId && parentId) {
-                            moveBlockToContainer(blockId, parentId);
+                            // Verificar que no es el mismo contenedor
+                            const parentBlock = findBlockById(state.page.blocks, parentId);
+                            if (parentBlock && parentBlock.children) {
+                                const alreadyInContainer = parentBlock.children.some(b => b.id === blockId);
+                                if (!alreadyInContainer) {
+                                    moveBlockToContainer(blockId, parentId);
+                                }
+                            } else {
+                                moveBlockToContainer(blockId, parentId);
+                            }
                         }
                     }
                 });
@@ -692,7 +737,6 @@
             const currentDirection = getCurrentDirection();
             const isHidden = getIsHidden();
             const directionStyle = currentDirection ? `flex-direction: ${currentDirection === 'horizontal' ? 'row' : 'column'};` : '';
-            const hiddenStyle = isHidden ? 'display: none; opacity: 0.5;' : '';
 
             if (block.type === 'container') {
                 const childrenContent = (block.children && block.children.length > 0)
@@ -715,9 +759,9 @@
                             background: #e0f2fe !important;
                             border-color: #0284c7 !important;
                         }
-                        ${isHidden ? `.${blockClass} { display: none !important; }` : ''}
+                        ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
                     </style>
-                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} gap: 12px; ${hiddenStyle}">${childrenContent}</div>`;
+                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} gap: 12px;">${childrenContent}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
