@@ -63,10 +63,7 @@ func BuildPageHTML(page PageData) string {
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>`)
-	html.WriteString(EscapeHTML(page.Title))
-	html.WriteString(`</h1>`)
+    <div class="container">`)
 
 	for _, block := range page.Blocks {
 		html.WriteString(RenderBlock(block))
@@ -340,8 +337,29 @@ func renderCarousel(html *strings.Builder, block Block, blockClass string) {
 func renderDivider(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<hr class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="border-top: 2px solid `)
-	html.WriteString(block.BorderColor)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`border: none; border-top: 1px solid `)
+	if block.BorderColor != "" && block.BorderColor != "transparent" {
+		html.WriteString(block.BorderColor)
+	} else {
+		html.WriteString(`transparent`)
+	}
+	html.WriteString(`; background: `)
+	if block.BorderColor != "" && block.BorderColor != "transparent" {
+		html.WriteString(block.BorderColor)
+	} else {
+		html.WriteString(`transparent`)
+	}
 	html.WriteString(`;">`)
 }
 

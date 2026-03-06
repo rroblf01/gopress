@@ -335,7 +335,7 @@
                         preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="${dimensionStyle()}padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
                         break;
                     case 'divider':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor}; margin: 20px 0;">`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
                         break;
                 }
             }
@@ -451,10 +451,8 @@
             if (!block) return;
             let html = `<div class="property-group"><label class="property-label">Tipo de Bloque</label><input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);"></div>`;
 
-            // Añadir propiedades de dimensiones para todos los bloques excepto divider
-            if (block.type !== 'divider') {
-                html += createDimensionProperties(block);
-            }
+            // Añadir propiedades de dimensiones para todos los bloques
+            html += createDimensionProperties(block);
 
             switch (block.type) {
                 case 'container':
@@ -502,7 +500,14 @@
                     html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
                     break;
                 case 'divider':
-                    html += `<div class="property-group"><label class="property-label">Color de Línea</label><div class="color-input"><input type="color" value="${block.borderColor}" onchange="updateBlockProperty('borderColor', this.value)"><input type="text" value="${block.borderColor}" class="property-input" onchange="updateBlockProperty('borderColor', this.value)"></div></div>`;
+                    html += `<div class="property-group">
+                        <label class="property-label">Color</label>
+                        <div class="color-input">
+                            <input type="color" value="${block.borderColor || '#e5e7eb'}" onchange="updateBlockProperty('borderColor', this.value)">
+                            <input type="text" value="${block.borderColor || '#e5e7eb'}" class="property-input" onchange="updateBlockProperty('borderColor', this.value)">
+                            <button class="property-input" style="width: auto; cursor: pointer;" onclick="updateBlockProperty('borderColor', 'transparent')">Transparente</button>
+                        </div>
+                    </div>`;
                     break;
             }
             html += `<div class="property-group"><label class="property-label">CSS Personalizado</label><textarea class="property-textarea" onchange="updateBlockProperty('customCSS', this.value)" placeholder=".block { /* Tu CSS aquí */ }">${block.customCSS || ''}</textarea></div>`;
@@ -727,7 +732,7 @@
                         html = `<a class="${blockClass}" href="${block.link}" style="${dimensionStyle()}display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
                         break;
                     case 'divider':
-                        html = `<hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 2px solid ${block.borderColor}; margin: 32px 0;">`;
+                        html = `<hr class="${blockClass}" style="${dimensionStyle()}border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; background: ${block.borderColor || 'transparent'}; margin: 32px 0;">`;
                         break;
                 }
             }
