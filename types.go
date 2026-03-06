@@ -71,3 +71,9 @@ type PageData struct {
 	Favicon   string  `json:"favicon"`
 	CreatedAt string  `json:"createdAt"`
 }
+
+type TemplateInfo struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"createdAt"`
+}

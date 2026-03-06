@@ -32,17 +32,27 @@ func CreateTable(db *sql.DB) error {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+	CREATE TABLE IF NOT EXISTS templates (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		blocks JSONB,
+		styles JSONB,
+		favicon TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
 	CREATE INDEX IF NOT EXISTS idx_pages_created_at ON pages(created_at);
+	CREATE INDEX IF NOT EXISTS idx_templates_created_at ON templates(created_at);
 	`
 
 	if _, err := db.Exec(createTableSQL); err != nil {
-		return fmt.Errorf("error creando tabla: %w", err)
+		return fmt.Errorf("error creando tablas: %w", err)
 	}
 	log.Println("✓ Tabla de páginas lista")
+	log.Println("✓ Tabla de plantillas lista")
 
 	// Añadir columna favicon si no existe (para bases de datos existentes)
 	alterTableSQL := `
-	ALTER TABLE pages 
+	ALTER TABLE pages
 	ADD COLUMN IF NOT EXISTS favicon TEXT;
 	`
 
@@ -52,6 +62,101 @@ func CreateTable(db *sql.DB) error {
 		log.Println("✓ Columna favicon añadida")
 	}
 
+	return nil
+}
+
+// Template functions
+func SaveTemplateToDB(db *sql.DB, name string, pageData PageData) (int64, error) {
+	blocksJSON, _ := json.Marshal(pageData.Blocks)
+	stylesJSON, _ := json.Marshal(pageData.Styles)
+
+	var templateID int64
+	err := db.QueryRow(`
+		INSERT INTO templates (name, blocks, styles, favicon, created_at)
+		VALUES ($1, $2, $3, $4, NOW())
+		RETURNING id
+	`, name, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&templateID)
+
+	if err != nil {
+		return 0, fmt.Errorf("error guardando plantilla: %w", err)
+	}
+	log.Printf("✓ Plantilla guardada (ID: %d): %s", templateID, name)
+	return templateID, nil
+}
+
+func GetTemplatesFromDB(db *sql.DB) ([]TemplateInfo, error) {
+	query := `
+	SELECT id, name, created_at
+	FROM templates
+	ORDER BY created_at DESC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo plantillas: %w", err)
+	}
+	defer rows.Close()
+
+	var templates []TemplateInfo
+	for rows.Next() {
+		var t TemplateInfo
+		if err := rows.Scan(&t.ID, &t.Name, &t.CreatedAt); err != nil {
+			return nil, fmt.Errorf("error escaneando plantilla: %w", err)
+		}
+		templates = append(templates, t)
+	}
+	return templates, nil
+}
+
+func GetTemplateFromDB(db *sql.DB, id int64) (*PageData, error) {
+	query := `
+	SELECT name, blocks, styles, favicon, created_at
+	FROM templates
+	WHERE id = $1
+	`
+
+	var name string
+	var blocksJSON, stylesJSON []byte
+	var favicon sql.NullString
+	var createdAt string
+
+	err := db.QueryRow(query, id).Scan(&name, &blocksJSON, &stylesJSON, &favicon, &createdAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("plantilla no encontrada")
+	} else if err != nil {
+		return nil, fmt.Errorf("error obteniendo plantilla: %w", err)
+	}
+
+	pageData := &PageData{
+		Title:     name,
+		Favicon:   favicon.String,
+		CreatedAt: createdAt,
+	}
+
+	if err := json.Unmarshal(blocksJSON, &pageData.Blocks); err != nil {
+		log.Println("Error decodificando bloques de plantilla:", err)
+		pageData.Blocks = []Block{}
+	}
+
+	if stylesJSON != nil && len(stylesJSON) > 0 {
+		if err := json.Unmarshal(stylesJSON, &pageData.Styles); err != nil {
+			log.Println("Error decodificando estilos de plantilla:", err)
+			pageData.Styles = Styles{}
+		}
+	} else {
+		pageData.Styles = Styles{}
+	}
+
+	return pageData, nil
+}
+
+func DeleteTemplateFromDB(db *sql.DB, id int64) error {
+	_, err := db.Exec(`DELETE FROM templates WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("error eliminando plantilla: %w", err)
+	}
+	log.Printf("✓ Plantilla eliminada (ID: %d)", id)
 	return nil
 }
 

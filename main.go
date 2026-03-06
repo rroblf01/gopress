@@ -33,6 +33,13 @@ func main() {
 	app.Get("/preview", ServePreview(db))
 	app.Get("/", RenderPageHandler(db))
 	app.Get("/api/page", GetPageHandler(db))
+	
+	// Template routes
+	app.Post("/api/templates", SaveTemplateHandler(db))
+	app.Get("/api/templates", GetTemplatesHandler(db))
+	app.Get("/api/templates/:id", GetTemplateHandler(db))
+	app.Delete("/api/templates/:id", DeleteTemplateHandler(db))
+	
 	app.Use("/static", static.New("./static"))
 
 	fmt.Println("🚀 Servidor iniciado en http://localhost:3000")
