@@ -136,15 +136,15 @@
         };
 
         const blockTemplates = {
-            container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '' },
-            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '' },
-            cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' },
-            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '' }
+            container: { type: 'container', direction: 'vertical', directionMobile: '', directionTablet: '', directionDesktop: '', children: [], backgroundColor: '', textColor: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false },
+            divider: { type: 'divider', borderColor: '#e5e7eb', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false }
         };
 
         document.addEventListener('DOMContentLoaded', initializeEditor);
@@ -342,7 +342,7 @@
                     css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
                 }
                 if (tabletStyles.length > 0) {
-                    css += `@media (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
                 }
                 if (mobileStyles.length > 0) {
                     css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
@@ -365,12 +365,12 @@
                     css += `.${blockClass} { display: flex; flex-direction: column; gap: 12px; } `;
                 }
 
-                // Tablet
+                // Tablet (entre 769px y 1024px)
                 if (block.directionTablet) {
-                    css += `@media (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
                 }
 
-                // Mobile
+                // Mobile (<= 768px)
                 if (block.directionMobile) {
                     css += `@media (max-width: 768px) { .${blockClass} { flex-direction: ${block.directionMobile === 'horizontal' ? 'row' : 'column'}; } } `;
                 }
@@ -390,8 +390,19 @@
                 if (mode === 'tablet' && block.directionTablet) return block.directionTablet;
                 return block.directionDesktop || block.direction;
             };
+            
+            // Obtener si está oculto en el modo actual
+            const getIsHidden = () => {
+                const mode = state.responsiveMode;
+                if (mode === 'mobile') return block.hiddenMobile;
+                if (mode === 'tablet') return block.hiddenTablet;
+                return block.hiddenDesktop;
+            };
+            
             const currentDirection = getCurrentDirection();
+            const isHidden = getIsHidden();
             const directionStyle = currentDirection ? `flex-direction: ${currentDirection === 'horizontal' ? 'row' : 'column'};` : '';
+            const hiddenStyle = isHidden ? 'display: none; opacity: 0.5;' : '';
 
             if (block.type === 'container') {
                 const childrenContent = (block.children && block.children.length > 0) 
@@ -408,8 +419,9 @@
                             padding: 12px;
                             min-height: 32px;
                         }
+                        ${isHidden ? `.${blockClass} { display: none !important; }` : ''}
                     </style>
-                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:32px; margin-bottom: 8px; padding: 12px; display: flex; ${directionStyle} gap: 12px;">${childrenContent}</div>`;
+                    <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:32px; margin-bottom: 8px; padding: 12px; display: flex; ${directionStyle} gap: 12px; ${hiddenStyle}">${childrenContent}</div>`;
             } else {
                 switch (block.type) {
                     case 'hero':
@@ -431,7 +443,7 @@
                         preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
                         break;
                     case 'button':
-                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#ffffff'}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
                         break;
                     case 'divider':
                         preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS}</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
@@ -610,7 +622,7 @@
                     html += `<div class="property-group"><label class="property-label">Slides (${block.slides.length})</label><div style="margin-bottom: 8px;">${block.slides.map((slide, idx) => `<div class="carousel-slide"><input type="text" class="carousel-slide-input" value="${slide.title}" placeholder="Título" onchange="updateCarouselSlide(${idx}, 'title', this.value)"><div class="carousel-image-upload"><input type="file" accept="image/*" onchange="handleCarouselImageUpload(${idx}, event)"></div>${slide.image ? `<img src="${slide.image}" class="carousel-image-preview" alt="preview">` : '<div style="background: var(--border); height: 120px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 12px;">Sin imagen</div>'}<input type="text" class="carousel-slide-input" value="${slide.description || ''}" placeholder="Descripción" onchange="updateCarouselSlide(${idx}, 'description', this.value)"><div class="carousel-slide-buttons"><button class="carousel-slide-btn danger" onclick="deleteCarouselSlide(${idx})">Eliminar</button></div></div>`).join('')}</div><button class="property-input" style="background: var(--primary); color: white; padding: 8px; cursor: pointer;" onclick="addCarouselSlide()">+ Añadir Slide</button></div>`;
                     break;
                 case 'button':
-                    html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
+                    html += `<div class="property-group"><label class="property-label">Texto</label><input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)"></div><div class="property-group"><label class="property-label">Link</label><input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor || '#2563eb'}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor || '#2563eb'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"><button class="property-input" style="width: auto; cursor: pointer;" onclick="updateBlockProperty('backgroundColor', 'transparent')">Transparente</button></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor || '#ffffff'}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div>`;
                     break;
                 case 'divider':
                     html += `<div class="property-group">
@@ -647,6 +659,8 @@
             const widthParsed = parseDimension(block[widthProp]);
             const heightParsed = parseDimension(block[heightProp]);
             const currentDirection = block[directionProp] || (mode === 'desktop' ? block.direction : '');
+            const hiddenProp = `hidden${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const isHidden = block[hiddenProp] || false;
 
             let html = `<div class="property-group">
                 <label class="property-label">Dimensiones - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
@@ -694,6 +708,12 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="property-group" style="margin-top: 12px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" ${isHidden ? 'checked' : ''} onchange="updateHiddenProperty(this.checked)" style="width: 16px; height: 16px;">
+                    <span style="font-size: 12px; color: var(--text-primary);">Ocultar en ${mode === 'desktop' ? 'Ordenador' : mode === 'tablet' ? 'Tablet' : 'Móvil'}</span>
+                </label>
                 <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;">Usa los iconos de arriba para cambiar de dispositivo</p>
             </div>`;
             
@@ -736,6 +756,16 @@
                 block[prop] = value;
                 renderBlocks();
                 renderProperties();
+            }
+        }
+
+        function updateHiddenProperty(value) {
+            const mode = state.responsiveMode;
+            const prop = `hidden${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            if (block) {
+                block[prop] = value;
+                renderBlocks();
             }
         }
 
@@ -888,7 +918,7 @@
                     css += `.${blockClass} { ${desktopStyles.join('; ')}; } `;
                 }
                 if (tabletStyles.length > 0) {
-                    css += `@media (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
                 }
                 if (mobileStyles.length > 0) {
                     css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
@@ -911,12 +941,12 @@
                     css += `.${blockClass} { display: flex; flex-direction: column; gap: 12px; } `;
                 }
 
-                // Tablet
+                // Tablet (entre 769px y 1024px)
                 if (block.directionTablet) {
-                    css += `@media (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
+                    css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
                 }
 
-                // Mobile
+                // Mobile (<= 768px)
                 if (block.directionMobile) {
                     css += `@media (max-width: 768px) { .${blockClass} { flex-direction: ${block.directionMobile === 'horizontal' ? 'row' : 'column'}; } } `;
                 }

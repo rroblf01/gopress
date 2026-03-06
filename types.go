@@ -30,6 +30,9 @@ type Block struct {
 	DirectionMobile string                `json:"directionMobile"`
 	DirectionTablet string                `json:"directionTablet"`
 	DirectionDesktop string               `json:"directionDesktop"`
+	HiddenMobile    bool                  `json:"hiddenMobile"`
+	HiddenTablet    bool                  `json:"hiddenTablet"`
+	HiddenDesktop   bool                  `json:"hiddenDesktop"`
 }
 
 type Styles struct {

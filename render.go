@@ -203,6 +203,20 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
 	}
 	
+	// Hidden para cada dispositivo con rangos específicos
+	if block.HiddenDesktop {
+		// Ocultar solo en desktop (pantallas grandes > 1024px)
+		css.WriteString(fmt.Sprintf("@media (min-width: 1025px) { .%s { display: none !important; } } ", blockClass))
+	}
+	if block.HiddenTablet {
+		// Ocultar solo en tablet (entre 769px y 1024px)
+		css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { display: none !important; } } ", blockClass))
+	}
+	if block.HiddenMobile {
+		// Ocultar solo en móvil (<= 768px)
+		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { display: none !important; } } ", blockClass))
+	}
+	
 	return css.String()
 }
 
@@ -339,6 +353,15 @@ func renderImage(html *strings.Builder, block Block, blockClass string) {
 }
 
 func renderButton(html *strings.Builder, block Block, blockClass string) {
+	bgColor := block.BackgroundColor
+	if bgColor == "" {
+		bgColor = "transparent"
+	}
+	textColor := block.TextColor
+	if textColor == "" {
+		textColor = "#ffffff"
+	}
+	
 	html.WriteString(`<a class="`)
 	html.WriteString(blockClass)
 	html.WriteString(`" href="`)
@@ -355,10 +378,10 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(`; `)
 	}
 	html.WriteString(`display: inline-block; padding: 12px 24px; background: `)
-	html.WriteString(block.BackgroundColor)
+	html.WriteString(bgColor)
 	html.WriteString(`; color: `)
-	html.WriteString(block.TextColor)
-	html.WriteString(`; border-radius: 4px; text-decoration: none; font-weight: 500;">`)
+	html.WriteString(textColor)
+	html.WriteString(`; border: none; border-radius: 4px; text-decoration: none; font-weight: 500;">`)
 	html.WriteString(EscapeHTML(block.Text))
 	html.WriteString(`</a>`)
 }
