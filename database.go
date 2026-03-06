@@ -28,6 +28,7 @@ func CreateTable(db *sql.DB) error {
 		title VARCHAR(255),
 		blocks JSONB,
 		styles JSONB,
+		favicon TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
@@ -38,6 +39,19 @@ func CreateTable(db *sql.DB) error {
 		return fmt.Errorf("error creando tabla: %w", err)
 	}
 	log.Println("✓ Tabla de páginas lista")
+
+	// Añadir columna favicon si no existe (para bases de datos existentes)
+	alterTableSQL := `
+	ALTER TABLE pages 
+	ADD COLUMN IF NOT EXISTS favicon TEXT;
+	`
+
+	if _, err := db.Exec(alterTableSQL); err != nil {
+		log.Println("Nota: columna favicon ya existe o no se pudo añadir:", err)
+	} else {
+		log.Println("✓ Columna favicon añadida")
+	}
+
 	return nil
 }
 
@@ -54,10 +68,10 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 
 	if count == 0 {
 		err := db.QueryRow(`
-		INSERT INTO pages (title, blocks, styles, created_at, updated_at) 
-		VALUES ($1, $2, $3, NOW(), NOW())
+		INSERT INTO pages (title, blocks, styles, favicon, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, NOW(), NOW())
 		RETURNING id
-		`, pageData.Title, string(blocksJSON), string(stylesJSON)).Scan(&pageID)
+		`, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&pageID)
 
 		if err != nil {
 			return 0, fmt.Errorf("error insertando página: %w", err)
@@ -65,11 +79,11 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 		log.Printf("✓ Página creada (ID: %d): %s (%d bloques)", pageID, pageData.Title, len(pageData.Blocks))
 	} else {
 		err := db.QueryRow(`
-		UPDATE pages 
-		SET title = $1, blocks = $2, styles = $3, updated_at = NOW() 
+		UPDATE pages
+		SET title = $1, blocks = $2, styles = $3, favicon = $4, updated_at = NOW()
 		WHERE id = (SELECT MAX(id) FROM pages)
 		RETURNING id
-		`, pageData.Title, string(blocksJSON), string(stylesJSON)).Scan(&pageID)
+		`, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&pageID)
 
 		if err != nil {
 			return 0, fmt.Errorf("error actualizando página: %w", err)
@@ -82,17 +96,18 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 
 func GetPageFromDB(db *sql.DB) (*PageData, error) {
 	query := `
-	SELECT title, blocks, styles, created_at 
-	FROM pages 
-	ORDER BY updated_at DESC 
+	SELECT title, blocks, styles, favicon, created_at
+	FROM pages
+	ORDER BY updated_at DESC
 	LIMIT 1
 	`
 
 	var title string
 	var blocksJSON, stylesJSON []byte
+	var favicon string
 	var createdAt string
 
-	err := db.QueryRow(query).Scan(&title, &blocksJSON, &stylesJSON, &createdAt)
+	err := db.QueryRow(query).Scan(&title, &blocksJSON, &stylesJSON, &favicon, &createdAt)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("no hay página guardada")
@@ -102,6 +117,7 @@ func GetPageFromDB(db *sql.DB) (*PageData, error) {
 
 	pageData := &PageData{
 		Title:     title,
+		Favicon:   favicon,
 		CreatedAt: createdAt,
 	}
 

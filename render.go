@@ -15,7 +15,13 @@ func BuildPageHTML(page PageData) string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>`)
 	html.WriteString(EscapeHTML(page.Title))
-	html.WriteString(`</title>
+	html.WriteString(`</title>`)
+	if page.Favicon != "" {
+		html.WriteString(`<link rel="icon" href="`)
+		html.WriteString(page.Favicon)
+		html.WriteString(`">`)
+	}
+	html.WriteString(`
     <style>
         * {
             margin: 0;

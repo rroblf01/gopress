@@ -51,5 +51,6 @@ type PageData struct {
 	Title     string  `json:"title"`
 	Blocks    []Block `json:"blocks"`
 	Styles    Styles  `json:"styles"`
+	Favicon   string  `json:"favicon"`
 	CreatedAt string  `json:"createdAt"`
 }

@@ -13,6 +13,8 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <div class="toolbar-title">📄 Editor Visual</div>
+            <input type="text" id="siteTitle" class="toolbar-input" placeholder="Título del sitio" onchange="updateSiteTitle(this.value)">
+            <input type="file" id="siteFavicon" class="toolbar-input" accept="image/*" onchange="updateSiteFavicon(event)" title="Subir Favicon">
             <div class="responsive-selector">
                 <button class="responsive-btn" data-device="desktop" onclick="setResponsiveMode('desktop')" title="Ordenador">🖥️</button>
                 <button class="responsive-btn" data-device="tablet" onclick="setResponsiveMode('tablet')" title="Tablet">📱</button>
@@ -130,7 +132,7 @@
     <script src="static/sortablejs@1.15.7.js"></script>
     <script>
         const state = {
-            page: { title: '', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '', padding: '', globalCSS: '' } },
+            page: { title: '', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '', padding: '', globalCSS: '' }, favicon: '' },
             selectedBlockId: null,
             responsiveMode: 'desktop',
             hoverMode: false
@@ -160,12 +162,38 @@
         function loadPageData() {
             fetch('/api/page').then(res => res.json()).then(data => {
                 if (data && data.title) {
-                    state.page = { title: data.title, blocks: data.blocks || [], styles: data.styles || state.page.styles };
+                    state.page = { title: data.title, blocks: data.blocks || [], styles: data.styles || state.page.styles, favicon: data.favicon || '' };
+                    document.getElementById('siteTitle').value = data.title;
+                    if (data.favicon) {
+                        const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+                        link.rel = 'icon';
+                        link.href = data.favicon;
+                        document.head.appendChild(link);
+                    }
                     loadGlobalStyles();
                     renderBlocks();
                     showToast('Página cargada', 'success');
                 }
             }).catch(() => console.log('Nueva página'));
+        }
+
+        function updateSiteTitle(value) {
+            state.page.title = value;
+        }
+
+        function updateSiteFavicon(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.page.favicon = e.target.result;
+                    const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+                    link.rel = 'icon';
+                    link.href = e.target.result;
+                    document.head.appendChild(link);
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function loadGlobalStyles() {
@@ -1078,6 +1106,7 @@
                 title: state.page.title,
                 blocks: state.page.blocks,
                 styles: state.page.styles,
+                favicon: state.page.favicon,
                 createdAt: new Date().toISOString()
             };
             try {
