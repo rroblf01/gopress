@@ -46,6 +46,7 @@
             <button class="block-btn" draggable="true" data-block-type="paragraph">📝 Párrafo</button>
             <button class="block-btn" draggable="true" data-block-type="heading">📌 Encabezado</button>
             <button class="block-btn" draggable="true" data-block-type="image">🖼️ Imagen</button>
+            <button class="block-btn" draggable="true" data-block-type="icon">😊 Icono</button>
             <button class="block-btn" draggable="true" data-block-type="cards">🎴 Tarjetas</button>
             <button class="block-btn" draggable="true" data-block-type="carousel">🎠 Carrusel</button>
             <button class="block-btn" draggable="true" data-block-type="button">🔘 Botón</button>
@@ -174,6 +175,7 @@
             paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
             heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
             image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
+            icon: { type: 'icon', emoji: '😀', fontSize: '48', color: '#2563eb', customCSS: '', fontSizeTablet: '', fontSizeMobile: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
             cards: { type: 'cards', items: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
             carousel: { type: 'carousel', slides: [], customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
             button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '', widthMobile: '', heightMobile: '', widthTablet: '', heightTablet: '', widthDesktop: '', heightDesktop: '', width: '', height: '', hiddenMobile: false, hiddenTablet: false, hiddenDesktop: false, hoverBackgroundColor: '', hoverTextColor: '', paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '', paddingTopTablet: '', paddingRightTablet: '', paddingBottomTablet: '', paddingLeftTablet: '', paddingTopMobile: '', paddingRightMobile: '', paddingBottomMobile: '', paddingLeftMobile: '' },
@@ -221,7 +223,7 @@
                         if (block.hoverBackgroundColor === undefined) block.hoverBackgroundColor = '';
                         if (block.hoverTextColor === undefined) block.hoverTextColor = '';
                     });
-                    
+
                     state.page = { title: data.title, blocks: blocks, styles: data.styles || state.page.styles, favicon: data.favicon || '' };
                     document.getElementById('siteTitle').value = data.title;
                     if (data.favicon) {
@@ -479,7 +481,7 @@
                 if (paddingTopTablet || paddingRightTablet || paddingBottomTablet || paddingLeftTablet) {
                     css += `@media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { padding: ${paddingTopTablet || 0}px ${paddingRightTablet || 0}px ${paddingBottomTablet || 0}px ${paddingLeftTablet || 0}px; } } `;
                 }
-                
+
                 // Padding responsive - Mobile
                 const paddingTopMobile = block.paddingTopMobile || block.paddingTop;
                 const paddingRightMobile = block.paddingRightMobile || block.paddingRight;
@@ -576,6 +578,36 @@
                         break;
                     case 'image':
                         preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
+                        break;
+                    case 'icon':
+                        // Para iconos, usamos fontSize del modo actual
+                        const mode = state.responsiveMode;
+                        const fontSizeProp = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+                        const iconSize = block[fontSizeProp] || block.fontSize || '48';
+                        const iconColor = block.color || '#2563eb';
+                        // No usamos allCSS porque contiene width/height que no queremos
+                        let iconCSS = `${block.customCSS || ''}`;
+                        // Añadir padding si existe
+                        if (block.paddingTop || block.paddingRight || block.paddingBottom || block.paddingLeft) {
+                            iconCSS += ` padding: ${block.paddingTop || 0}px ${block.paddingRight || 0}px ${block.paddingBottom || 0}px ${block.paddingLeft || 0}px;`;
+                        }
+                        // Añadir padding responsive tablet
+                        if (block.paddingTopTablet || block.paddingRightTablet || block.paddingBottomTablet || block.paddingLeftTablet) {
+                            const pt = block.paddingTopTablet || block.paddingTop || '0';
+                            const pr = block.paddingRightTablet || block.paddingRight || '0';
+                            const pb = block.paddingBottomTablet || block.paddingBottom || '0';
+                            const pl = block.paddingLeftTablet || block.paddingLeft || '0';
+                            iconCSS += ` @media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { padding: ${pt}px ${pr}px ${pb}px ${pl}px; } }`;
+                        }
+                        // Añadir padding responsive mobile
+                        if (block.paddingTopMobile || block.paddingRightMobile || block.paddingBottomMobile || block.paddingLeftMobile) {
+                            const pt = block.paddingTopMobile || block.paddingTop || '0';
+                            const pr = block.paddingRightMobile || block.paddingRight || '0';
+                            const pb = block.paddingBottomMobile || block.paddingBottom || '0';
+                            const pl = block.paddingLeftMobile || block.paddingLeft || '0';
+                            iconCSS += ` @media (max-width: 768px) { .${blockClass} { padding: ${pt}px ${pr}px ${pb}px ${pl}px; } }`;
+                        }
+                        preview = `<style id="${cssId}">.${blockClass} { ${iconCSS} font-size: ${iconSize}px !important; color: ${iconColor} !important; display: inline-block !important; } </style><span class="${blockClass}">${block.emoji || '😀'}</span>`;
                         break;
                     case 'cards':
                         preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
@@ -704,7 +736,9 @@
             let html = `<div class="property-group"><label class="property-label">Tipo de Bloque</label><input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);"></div>`;
 
             // Añadir propiedades de dimensiones para todos los bloques
-            html += createDimensionProperties(block);
+            if (block.type !== 'icon') {
+                html += createDimensionProperties(block);
+            }
 
             // Añadir propiedades de padding para todos los bloques
             html += createPaddingProperties(block);
@@ -766,6 +800,28 @@
                     <div class="property-group">
                         <label class="property-label">Alt Text</label>
                         <input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)">
+                    </div>`;
+                    break;
+                case 'icon':
+                    const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '☺️', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🙈', '🙉', '🙊', '💋', '💌', '💘', '💝', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '💔', '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💯', '💢', '💥', '💫', '💦', '💨', '🕳️', '💣', '💬', '👁️‍🗨️', '🗨️', '🗯️', '💭', '💤', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄', '👶', '🧒', '👦', '👧', '🧑', '👱', '👨', '🧔', '👨‍🦰', '👨‍🦱', '👨‍🦳', '👨‍🦲', '👩', '👩‍🦰', '🧑‍🦰', '👩‍🦱', '🧑‍🦱', '👩‍🦳', '🧑‍🦳', '👩‍🦲', '🧑‍🦲', '👱‍♀️', '👱‍♂️', '🧓', '👴', '👵', '🙍', '🙍‍♂️', '🙍‍♀️', '🙎', '🙎‍♂️', '🙎‍♀️', '🙅', '🙅‍♂️', '🙅‍♀️', '🙆', '🙆‍♂️', '🙆‍♀️', '💁', '💁‍♂️', '💁‍♀️', '🙋', '🙋‍♂️', '🙋‍♀️', '🧏', '🧏‍♂️', '🧏‍♀️', '🙇', '🙇‍♂️', '🙇‍♀️', '🤦', '🤦‍♂️', '🤦‍♀️', '🤷', '🤷‍♂️', '🤷‍♀️', '🎉', '🎊', '🎈', '🎁', '🎀', '🎂', '🎄', '🎃', '🎆', '🎇', '🧨', '✨', '🎋', '🎍', '🎎', '🎏', '🎐', '🎑', '🧧', '🎗️', '🎟️', '🎫', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉', '🎾', '🥏', '🎳', '🏏', '🏑', '🏒', '🥍', '🏓', '🏸', '🥊', '🥋', '🥅', '⛳', '⛸️', '🎣', '🤿', '🎽', '🎿', '🛷', '🥌', '🎯', '🪀', '🪁', '🎱', '🔮', '🪄', '🧿', '🎮', '🕹️', '🎰', '🎲', '🧩', '🧸', '🪅', '🪆', '♠️', '♥️', '♦️', '♣️', '♟️', '🃏', '🀄', '🎴', '🎭', '🖼️', '🎨', '🧵', '🪡', '🧶', '🪢', '👓', '🕶️', '🥽', '🥼', '🦺', '👔', '👕', '👖', '🧣', '🧤', '🧥', '🧦', '👗', '👘', '🥻', '🩱', '🩲', '🩳', '👙', '👚', '👛', '👜', '👝', '🛍️', '🎒', '🩴', '👞', '👟', '🥾', '🥿', '👠', '👡', '🩰', '👢', '👑', '👒', '🎩', '🎓', '🧢', '🪖', '⛑️', '📿', '💄', '💍', '💎', '🔇', '🔈', '🔉', '🔊', '📢', '📣', '📯', '🔔', '🔕', '🎼', '🎵', '🎶', '🎙️', '🎚️', '🎛️', '🎤', '🎧', '📻', '🎷', '🪗', '🎸', '🎹', '🎺', '🎻', '🪕', '🥁', '🪘', '📱', '📲', '☎️', '📞', '📟', '📠', '🔋', '🔌', '💻', '🖥️', '🖨️', '⌨️', '🖱️', '🖲️', '💽', '💾', '💿', '📀', '🧮', '🎥', '🎞️', '📽️', '🎬', '📺', '📷', '📸', '📹', '📼', '🔍', '🔎', '🕯️', '💡', '🔦', '🏮', '🪔', '📔', '📕', '📖', '📗', '📘', '📙', '📚', '📓', '📒', '📃', '📜', '📄', '📰', '🗞️', '📑', '🔖', '🏷️', '💰', '🪙', '💴', '💵', '💶', '💷', '💸', '💳', '🧾', '💹', '✉️', '📧', '📨', '📩', '📤', '📥', '📦', '📫', '📪', '📬', '📭', '📮', '🗳️', '✏️', '✒️', '🖋️', '🖊️', '🖌️', '🖍️', '📝', '💼', '📁', '📂', '🗂️', '📅', '📆', '🗒️', '🗓️', '📇', '📈', '📉', '📊', '📋', '📌', '📍', '📎', '🖇️', '📏', '📐', '✂️', '🗃️', '🗄️', '🗑️', '🔒', '🔓', '🔏', '🔐', '🔑', '🗝️', '🔨', '🪓', '⛏️', '⚒️', '🛠️', '🗡️', '⚔️', '🔫', '🪃', '🏹', '🛡️', '🪚', '🔧', '🪛', '🔩', '⚙️', '🗜️', '⚖️', '🦯', '🔗', '⛓️', '🪝', '🧰', '🧲', '🪜', '⚗️', '🧪', '🧫', '🧬', '🔬', '🔭', '📡', '💉', '🩸', '💊', '🩹', '🩺', '🚪', '🛗', '🪞', '🪟', '🛏️', '🛋️', '🪑', '🚽', '🪠', '🚿', '🛁', '🪤', '🪒', '🧴', '🧷', '🧹', '🧺', '🧻', '🪣', '🧼', '🪥', '🧽', '🧯', '🛒', '🚬', '⚰️', '🪦', '⚱️', '🗿', '🪧', '🚰'];
+                    const mode = state.responsiveMode;
+                    const fontSizeProp = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+                    html += `<div class="property-group">
+                        <label class="property-label">Emoji</label>
+                        <div style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 300px; overflow-y: auto; padding: 8px; background: var(--secondary); border-radius: 4px; margin-bottom: 12px;">
+                            ${emojis.map(emoji => `<button type="button" onclick="updateBlockProperty('emoji', '${emoji}')" style="font-size: 20px; padding: 4px; border: 1px solid ${block.emoji === emoji ? 'var(--primary)' : 'var(--border)'}; border-radius: 4px; background: ${block.emoji === emoji ? 'var(--primary)' : 'white'}; color: ${block.emoji === emoji ? 'white' : 'black'}; cursor: pointer;">${emoji}</button>`).join('')}
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Tamaño (px) - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
+                        <input type="number" value="${block[fontSizeProp] || block.fontSize || 48}" class="property-input" onchange="updateIconFontSize(this.value)" placeholder="48">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Color</label>
+                        <div class="color-input">
+                            <input type="color" value="${block.color || '#2563eb'}" onchange="updateBlockProperty('color', this.value)">
+                            <input type="text" value="${block.color || '#2563eb'}" class="property-input" onchange="updateBlockProperty('color', this.value)">
+                        </div>
                     </div>`;
                     break;
                 case 'cards':
@@ -964,6 +1020,16 @@
             const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block) {
                 block[propProp] = value;
+                renderBlocks();
+            }
+        }
+
+        function updateIconFontSize(value) {
+            const mode = state.responsiveMode;
+            const prop = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            if (block && block.type === 'icon') {
+                block[prop] = value;
                 renderBlocks();
             }
         }
@@ -1179,7 +1245,7 @@
                 if (paddingTopTablet || paddingRightTablet || paddingBottomTablet || paddingLeftTablet) {
                     css += `@media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { padding: ${paddingTopTablet || 0}px ${paddingRightTablet || 0}px ${paddingBottomTablet || 0}px ${paddingLeftTablet || 0}px; } } `;
                 }
-                
+
                 // Padding responsive - Mobile
                 const paddingTopMobile = block.paddingTopMobile || block.paddingTop;
                 const paddingRightMobile = block.paddingRightMobile || block.paddingRight;
@@ -1241,6 +1307,32 @@
                         break;
                     case 'image':
                         html = block.src ? `<style id="${cssId}">${block.customCSS} ${allCSS}</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; object-fit: cover; margin-bottom: 24px;">` : '';
+                        break;
+                    case 'icon':
+                        // Para iconos, usamos fontSize del modo actual
+                        const mode = state.responsiveMode;
+                        const fontSizeProp = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+                        const iconSize = block[fontSizeProp] || block.fontSize || '48';
+                        const iconColor = block.color || '#2563eb';
+                        let iconCSS = `${block.customCSS || ''}`;
+                        if (block.paddingTop || block.paddingRight || block.paddingBottom || block.paddingLeft) {
+                            iconCSS += ` padding: ${block.paddingTop || 0}px ${block.paddingRight || 0}px ${block.paddingBottom || 0}px ${block.paddingLeft || 0}px;`;
+                        }
+                        if (block.paddingTopTablet || block.paddingRightTablet || block.paddingBottomTablet || block.paddingLeftTablet) {
+                            const pt = block.paddingTopTablet || block.paddingTop || '0';
+                            const pr = block.paddingRightTablet || block.paddingRight || '0';
+                            const pb = block.paddingBottomTablet || block.paddingBottom || '0';
+                            const pl = block.paddingLeftTablet || block.paddingLeft || '0';
+                            iconCSS += ` @media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { padding: ${pt}px ${pr}px ${pb}px ${pl}px; } }`;
+                        }
+                        if (block.paddingTopMobile || block.paddingRightMobile || block.paddingBottomMobile || block.paddingLeftMobile) {
+                            const pt = block.paddingTopMobile || block.paddingTop || '0';
+                            const pr = block.paddingRightMobile || block.paddingRight || '0';
+                            const pb = block.paddingBottomMobile || block.paddingBottom || '0';
+                            const pl = block.paddingLeftMobile || block.paddingLeft || '0';
+                            iconCSS += ` @media (max-width: 768px) { .${blockClass} { padding: ${pt}px ${pr}px ${pb}px ${pl}px; } }`;
+                        }
+                        html = `<style id="${cssId}">.${blockClass} { ${iconCSS} font-size: ${iconSize}px !important; color: ${iconColor} !important; display: inline-block !important; } </style><span class="${blockClass}">${block.emoji || '😀'}</span>`;
                         break;
                     case 'cards':
                         html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;

@@ -81,6 +81,41 @@ func RenderBlock(block Block) string {
 	var html strings.Builder
 	blockClass := fmt.Sprintf("block-%d", block.ID)
 
+	// Para iconos, no usamos generateResponsiveCSS porque width debe ser font-size
+	if block.Type == "icon" {
+		html.WriteString(`<style>`)
+		if block.CustomCSS != "" {
+			html.WriteString(`.`)
+			html.WriteString(blockClass)
+			html.WriteString(` { `)
+			html.WriteString(block.CustomCSS)
+			html.WriteString(` } `)
+		}
+		// Padding responsive para iconos
+		if block.PaddingTop != "" || block.PaddingRight != "" || block.PaddingBottom != "" || block.PaddingLeft != "" {
+			paddingTop := block.PaddingTop
+			if paddingTop == "" {
+				paddingTop = "0"
+			}
+			paddingRight := block.PaddingRight
+			if paddingRight == "" {
+				paddingRight = "0"
+			}
+			paddingBottom := block.PaddingBottom
+			if paddingBottom == "" {
+				paddingBottom = "0"
+			}
+			paddingLeft := block.PaddingLeft
+			if paddingLeft == "" {
+				paddingLeft = "0"
+			}
+			html.WriteString(fmt.Sprintf(`.%s { padding: %spx %spx %spx %spx; } `, blockClass, paddingTop, paddingRight, paddingBottom, paddingLeft))
+		}
+		html.WriteString(`</style>`)
+		html.WriteString(renderIconToString(block, blockClass))
+		return html.String()
+	}
+
 	if block.CustomCSS != "" {
 		html.WriteString(`<style>.`)
 		html.WriteString(blockClass)
@@ -106,6 +141,8 @@ func RenderBlock(block Block) string {
 		renderParagraph(&html, block, blockClass)
 	case "image":
 		renderImage(&html, block, blockClass)
+	case "icon":
+		renderIcon(&html, block, blockClass)
 	case "button":
 		renderButton(&html, block, blockClass)
 	case "cards":
@@ -449,6 +486,46 @@ func renderImage(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(`; `)
 	}
 	html.WriteString(`object-fit: cover;">`)
+}
+
+func renderIcon(html *strings.Builder, block Block, blockClass string) {
+	fontSize := block.FontSize
+	if fontSize == "" {
+		fontSize = "48"
+	}
+	color := block.IconColor
+	if color == "" {
+		color = "#2563eb"
+	}
+	emoji := block.Emoji
+	if emoji == "" {
+		emoji = "😀"
+	}
+	html.WriteString(`<span class="`)
+	html.WriteString(blockClass)
+	html.WriteString(`" style="font-size: `)
+	html.WriteString(fontSize)
+	html.WriteString(`px; color: `)
+	html.WriteString(color)
+	html.WriteString(`; display: inline-block;">`)
+	html.WriteString(emoji)
+	html.WriteString(`</span>`)
+}
+
+func renderIconToString(block Block, blockClass string) string {
+	fontSize := block.FontSize
+	if fontSize == "" {
+		fontSize = "48"
+	}
+	color := block.IconColor
+	if color == "" {
+		color = "#2563eb"
+	}
+	emoji := block.Emoji
+	if emoji == "" {
+		emoji = "😀"
+	}
+	return fmt.Sprintf(`<span class="%s" style="font-size: %spx; color: %s; display: inline-block;">%s</span>`, blockClass, fontSize, color, emoji)
 }
 
 func renderButton(html *strings.Builder, block Block, blockClass string) {

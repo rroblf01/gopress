@@ -8,6 +8,11 @@ type Block struct {
 	Level           interface{}           `json:"level"`
 	Src             string                `json:"src"`
 	Alt             string                `json:"alt"`
+	Emoji           string                `json:"emoji"`
+	FontSize        string                `json:"fontSize"`
+	FontSizeTablet  string                `json:"fontSizeTablet"`
+	FontSizeMobile  string                `json:"fontSizeMobile"`
+	IconColor       string                `json:"iconColor"`
 	Width           string                `json:"width"`
 	Height          string                `json:"height"`
 	WidthMobile     string                `json:"widthMobile"`
