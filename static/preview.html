@@ -64,32 +64,33 @@
         .device-frame {
             background: #000;
             border-radius: 20px;
-            padding: 12px;
+            padding: 0;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             border: 3px solid #333;
+            overflow: hidden;
         }
         
         .desktop-frame {
             width: 1440px;
-            min-height: 900px;
+            height: 900px;
             border-radius: 8px;
         }
         
         .tablet-frame {
             width: 1024px;
-            min-height: 768px;
+            height: 768px;
             border-radius: 12px;
         }
         
         .mobile-frame {
             width: 390px;
-            min-height: 844px;
+            height: 844px;
             border-radius: 18px;
         }
         
         .device-content {
             background: white;
-            border-radius: 4px;
+            border-radius: 0;
             overflow: hidden;
             width: 100%;
             height: 100%;
@@ -100,18 +101,6 @@
             height: 100%;
             border: none;
             display: block;
-        }
-        
-        .desktop-frame .device-content {
-            min-height: 876px;
-        }
-        
-        .tablet-frame .device-content {
-            min-height: 744px;
-        }
-        
-        .mobile-frame .device-content {
-            min-height: 820px;
         }
         
         .loading {
@@ -175,26 +164,16 @@
     <script>
         async function loadPreview() {
             try {
-                const response = await fetch('/api/page');
-                const pageData = await response.json();
+                // Cargar la página renderizada en los 3 iframes
+                const url = '/';
                 
-                if (!pageData || !pageData.blocks) {
-                    document.querySelectorAll('.device-content').forEach(el => {
-                        el.innerHTML = '<div class="loading">No hay contenido guardado</div>';
-                    });
-                    return;
-                }
-                
-                // Generar HTML completo con estilos
-                const html = generatePreviewHTML(pageData);
-                
-                // Crear blob URL para el contenido
-                const blob = new Blob([html], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                
-                // Cargar en los 3 iframes
-                document.querySelectorAll('.device-content').forEach(el => {
-                    el.innerHTML = `<iframe src="${url}" sandbox="allow-scripts"></iframe>`;
+                document.querySelectorAll('.device-content').forEach((el, index) => {
+                    const devices = ['desktop', 'tablet', 'mobile'];
+                    
+                    el.innerHTML = `<iframe src="${url}" 
+                        style="width: 100%; height: 100%; border: none;"
+                        sandbox="allow-scripts allow-same-origin"
+                        title="${devices[index]} view"></iframe>`;
                 });
                 
             } catch (error) {
@@ -203,197 +182,6 @@
                     el.innerHTML = '<div class="loading">Error al cargar la vista previa</div>';
                 });
             }
-        }
-        
-        function generatePreviewHTML(pageData) {
-            const styles = pageData.styles || {};
-            
-            // Generar CSS para cada bloque con sus variantes responsive
-            let blockCSS = '';
-            (pageData.blocks || []).forEach(block => {
-                blockCSS += generateBlockCSS(block);
-            });
-            
-            return `<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageData.title || 'Vista Previa'}</title>
-    ${pageData.favicon ? `<link rel="icon" href="${pageData.favicon}">` : ''}
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: ${styles.fontFamily || "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"};
-            line-height: 1.6;
-            color: ${styles.textColor || '#1f2937'};
-            background: ${styles.backgroundColor || '#ffffff'};
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 100%;
-            padding: 20px;
-        }
-        h1 { font-size: 36px; }
-        h2 { font-size: 28px; }
-        h3 { font-size: 24px; }
-        h4 { font-size: 20px; }
-        p { margin-bottom: 16px; line-height: 1.8; }
-        a { color: ${styles.primaryColor || '#2563eb'}; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 4px; font-weight: 500; }
-        hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 24px 0; }
-        .card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px; }
-        ${styles.globalCSS || ''}
-        ${blockCSS}
-    </style>
-</head>
-<body>
-    <div class="container">
-        ${pageData.blocks.map(block => renderBlockHTML(block)).join('')}
-    </div>
-</body>
-</html>`;
-        }
-        
-        function generateBlockCSS(block) {
-            let css = '';
-            const blockClass = `.block-${block.id}`;
-            
-            // Colores base
-            if (block.backgroundColor || block.textColor) {
-                css += `${blockClass} { `;
-                if (block.backgroundColor) css += `background: ${block.backgroundColor}; `;
-                if (block.textColor) css += `color: ${block.textColor}; `;
-                css += '} ';
-            }
-            
-            // Dimensiones desktop
-            let desktopStyles = [];
-            if (block.widthDesktop) desktopStyles.push(`width: ${block.widthDesktop}`);
-            if (block.heightDesktop) desktopStyles.push(`height: ${block.heightDesktop}`);
-            if (block.width) desktopStyles.push(`width: ${block.width}`);
-            if (block.height) desktopStyles.push(`height: ${block.height}`);
-            if (desktopStyles.length > 0) {
-                css += `${blockClass} { ${desktopStyles.join('; ')}; } `;
-            }
-            
-            // Dirección contenedores
-            if (block.type === 'container') {
-                const baseDir = block.directionDesktop || block.direction;
-                if (baseDir) {
-                    css += `${blockClass} { display: flex; flex-direction: ${baseDir === 'horizontal' ? 'row' : 'column'}; gap: 12px; } `;
-                }
-            }
-            
-            // Tablet (769px - 1024px)
-            let tabletStyles = [];
-            if (block.widthTablet) tabletStyles.push(`width: ${block.widthTablet}`);
-            if (block.heightTablet) tabletStyles.push(`height: ${block.heightTablet}`);
-            if (tabletStyles.length > 0) {
-                css += `@media (max-width: 1024px) and (min-width: 769px) { ${blockClass} { ${tabletStyles.join('; ')}; } } `;
-            }
-            if (block.type === 'container' && block.directionTablet) {
-                css += `@media (max-width: 1024px) and (min-width: 769px) { ${blockClass} { flex-direction: ${block.directionTablet === 'horizontal' ? 'row' : 'column'}; } } `;
-            }
-            
-            // Mobile (<= 768px)
-            let mobileStyles = [];
-            if (block.widthMobile) mobileStyles.push(`width: ${block.widthMobile}`);
-            if (block.heightMobile) mobileStyles.push(`height: ${block.heightMobile}`);
-            if (mobileStyles.length > 0) {
-                css += `@media (max-width: 768px) { ${blockClass} { ${mobileStyles.join('; ')}; } } `;
-            }
-            if (block.type === 'container' && block.directionMobile) {
-                css += `@media (max-width: 768px) { ${blockClass} { flex-direction: ${block.directionMobile === 'horizontal' ? 'row' : 'column'}; } } `;
-            }
-            
-            // Hidden
-            if (block.hiddenDesktop) {
-                css += `@media (min-width: 1025px) { ${blockClass} { display: none !important; } } `;
-            }
-            if (block.hiddenTablet) {
-                css += `@media (max-width: 1024px) and (min-width: 769px) { ${blockClass} { display: none !important; } } `;
-            }
-            if (block.hiddenMobile) {
-                css += `@media (max-width: 768px) { ${blockClass} { display: none !important; } } `;
-            }
-            
-            // Hover
-            if (block.hoverBackgroundColor || block.hoverTextColor) {
-                css += `${blockClass}:hover { `;
-                if (block.hoverBackgroundColor) css += `background: ${block.hoverBackgroundColor} !important; `;
-                if (block.hoverTextColor) css += `color: ${block.hoverTextColor} !important; `;
-                css += '} ';
-            }
-            
-            return css;
-        }
-        
-        function renderBlockHTML(block) {
-            const blockClass = `block-${block.id}`;
-            
-            switch (block.type) {
-                case 'container':
-                    const childrenHTML = (block.children || []).map(child => renderBlockHTML(child)).join('');
-                    return `<div class="${blockClass}" style="padding: 16px; border-radius: 4px; margin: 24px 0;">${childrenHTML}</div>`;
-                    
-                case 'hero':
-                    return `<div class="${blockClass}" style="padding: 60px 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0; min-height: ${block.height || '400px'};">
-                        <h1 style="font-size: 48px; margin-bottom: 16px;">${escapeHTML(block.content)}</h1>
-                        <p style="font-size: 18px;">${escapeHTML(block.subContent)}</p>
-                    </div>`;
-                    
-                case 'heading':
-                    const level = block.level || 2;
-                    return `<h${level} class="${blockClass}" style="margin: 24px 0 16px;">${escapeHTML(block.content)}</h${level}>`;
-                    
-                case 'paragraph':
-                    return `<p class="${blockClass}" style="margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
-                    
-                case 'image':
-                    if (!block.src) return '';
-                    return `<img class="${blockClass}" src="${block.src}" alt="${escapeHTML(block.alt)}" style="max-width: 100%; border-radius: 4px; margin: 20px 0;">`;
-                    
-                case 'button':
-                    return `<a class="${blockClass}" href="${block.link || '#'}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor || '#2563eb'}; color: ${block.textColor || '#ffffff'}; border-radius: 4px; text-decoration: none; font-weight: 500; margin: 10px 0;">${escapeHTML(block.text)}</a>`;
-                    
-                case 'divider':
-                    return `<hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || '#e5e7eb'}; margin: 32px 0;">`;
-                    
-                case 'cards':
-                    const cardsHTML = (block.items || []).map(item => 
-                        `<div class="card"><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`
-                    ).join('');
-                    return `<div class="${blockClass} grid-3" style="margin: 24px 0;">${cardsHTML}</div>`;
-                    
-                case 'carousel':
-                    const slidesHTML = (block.slides || []).map(slide => 
-                        `<div style="flex: 0 0 300px; background: #f0f0f0; padding: 20px; border-radius: 8px;">
-                            ${slide.image ? `<img src="${slide.image}" style="width: 100%; border-radius: 4px; margin-bottom: 10px;">` : ''}
-                            <h4>${escapeHTML(slide.title)}</h4>
-                            ${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}
-                        </div>`
-                    ).join('');
-                    return `<div class="${blockClass}" style="display: flex; gap: 16px; overflow-x: auto; padding: 20px 0; margin: 24px 0;">${slidesHTML}</div>`;
-                    
-                default:
-                    return '';
-            }
-        }
-        
-        function escapeHTML(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
         }
         
         // Cargar vista previa al iniciar
