@@ -37,7 +37,6 @@
 
         <div class="canvas-wrapper">
             <div class="canvas">
-                <input type="text" id="pageTitle" class="page-title-input" placeholder="Título de la página">
                 <div class="blocks-container" id="blocksContainer">
                     <div class="empty-state">
                         <p>Arrastra bloques aquí para comenzar</p>
@@ -126,7 +125,7 @@
     <script src="static/sortablejs@1.15.7.js"></script>
     <script>
         const state = {
-            page: { title: 'Nueva Página', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '900', padding: '40', globalCSS: '' } },
+            page: { title: '', blocks: [], styles: { primaryColor: '#2563eb', backgroundColor: '#ffffff', textColor: '#1f2937', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: '', padding: '', globalCSS: '' } },
             selectedBlockId: null
         };
 
@@ -135,7 +134,7 @@
             hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '' },
             paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '' },
             heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '' },
-            image: { type: 'image', src: '', alt: 'Imagen', width: '100%', customCSS: '' },
+            image: { type: 'image', src: '', alt: 'Imagen', width: '', customCSS: '' },
             cards: { type: 'cards', items: [], customCSS: '' },
             carousel: { type: 'carousel', slides: [], customCSS: '' },
             button: { type: 'button', text: 'Click aquí', link: '#', backgroundColor: '#2563eb', textColor: '#ffffff', customCSS: '' },
@@ -154,7 +153,6 @@
             fetch('/api/page').then(res => res.json()).then(data => {
                 if (data && data.title) {
                     state.page = { title: data.title, blocks: data.blocks || [], styles: data.styles || state.page.styles };
-                    document.getElementById('pageTitle').value = state.page.title;
                     loadGlobalStyles();
                     renderBlocks();
                     showToast('Página cargada', 'success');
@@ -171,8 +169,8 @@
             document.getElementById('textColor').value = styles.textColor || '#1f2937';
             document.getElementById('textColorText').value = styles.textColor || '#1f2937';
             document.getElementById('fontFamily').value = styles.fontFamily || "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-            document.getElementById('maxWidth').value = styles.maxWidth || '900';
-            document.getElementById('padding').value = styles.padding || '40';
+            document.getElementById('maxWidth').value = styles.maxWidth || '';
+            document.getElementById('padding').value = styles.padding || '';
             document.getElementById('globalCSS').value = styles.globalCSS || '';
         }
 
@@ -222,7 +220,6 @@
             document.getElementById('saveBtn').addEventListener('click', savePage);
             document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
             document.getElementById('goToWebBtn').addEventListener('click', () => { window.open('/', '_blank'); });
-            document.getElementById('pageTitle').addEventListener('input', (e) => { state.page.title = e.target.value; });
         }
 
         function addBlock(type, parentId = null) {
@@ -687,7 +684,7 @@
             const modal = document.getElementById('previewModal');
             const previewContent = document.getElementById('previewContent');
             const styles = state.page.styles;
-            previewContent.innerHTML = `<style>body { font-family: ${styles.fontFamily}; background: ${styles.backgroundColor}; color: ${styles.textColor}; }.container { max-width: ${styles.maxWidth}px; padding: ${styles.padding}px; }${state.page.blocks.map(b => `.block-${b.id} { ${b.customCSS} }`).join('\n')}${styles.globalCSS}</style><div class="container"><h1 style="margin-bottom: 24px; font-size: 32px;">${escapeHTML(state.page.title)}</h1>${state.page.blocks.map(block => renderBlockPreview(block)).join('')}</div>`;
+            previewContent.innerHTML = `<style>body { font-family: ${styles.fontFamily}; background: ${styles.backgroundColor}; color: ${styles.textColor}; }${state.page.blocks.map(b => `.block-${b.id} { ${b.customCSS} }`).join('\n')}${styles.globalCSS}</style>${state.page.blocks.map(block => renderBlockPreview(block)).join('')}`;
             modal.classList.add('active');
         }
 

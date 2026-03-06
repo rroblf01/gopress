@@ -33,20 +33,16 @@ func BuildPageHTML(page PageData) string {
             background: `)
 	html.WriteString(page.Styles.BackgroundColor)
 	html.WriteString(`;
+            margin: 0;
+            padding: 0;
         }
         .container {
-            max-width: `)
-	html.WriteString(page.Styles.MaxWidth)
-	html.WriteString(`px;
-            margin: 0 auto;
-            padding: `)
-	html.WriteString(page.Styles.Padding)
-	html.WriteString(`px;
+            width: 100%;
         }
-        h1 { font-size: 36px; margin-bottom: 32px; }
-        h2 { font-size: 28px; margin: 24px 0 16px; }
-        h3 { font-size: 24px; margin: 20px 0 12px; }
-        h4 { font-size: 20px; margin: 16px 0 8px; }
+        h1 { font-size: 36px; }
+        h2 { font-size: 28px; }
+        h3 { font-size: 24px; }
+        h4 { font-size: 20px; }
         p { margin-bottom: 16px; line-height: 1.8; }
         a { color: `)
 	html.WriteString(page.Styles.PrimaryColor)
@@ -62,15 +58,13 @@ func BuildPageHTML(page PageData) string {
 	html.WriteString(`
     </style>
 </head>
-<body>
-    <div class="container">`)
+<body>`)
 
 	for _, block := range page.Blocks {
 		html.WriteString(RenderBlock(block))
 	}
 
 	html.WriteString(`
-    </div>
 </body>
 </html>`)
 
@@ -194,6 +188,17 @@ func renderHeading(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(fmt.Sprintf("%d", level))
 	html.WriteString(`" class="`)
 	html.WriteString(blockClass)
+	html.WriteString(`" style="`)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
 	html.WriteString(`">`)
 	html.WriteString(EscapeHTML(block.Content))
 	html.WriteString(`</h`)
