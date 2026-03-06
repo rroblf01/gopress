@@ -24,6 +24,7 @@
     <div class="editor-container">
         <div class="sidebar-left">
             <div class="sidebar-title">Bloques</div>
+            <button class="block-btn" draggable="true" data-block-type="container">📦 Contenedor</button>
             <button class="block-btn" draggable="true" data-block-type="hero">🎨 Hero</button>
             <button class="block-btn" draggable="true" data-block-type="paragraph">📝 Párrafo</button>
             <button class="block-btn" draggable="true" data-block-type="heading">📌 Encabezado</button>
@@ -130,6 +131,7 @@
         };
 
         const blockTemplates = {
+            container: { type: 'container', direction: 'vertical', children: [], backgroundColor: '', textColor: '', customCSS: '' },
             hero: { type: 'hero', content: 'Bienvenido a nuestra web', subContent: 'Descripción corta aquí', backgroundColor: '#2563eb', textColor: '#ffffff', height: '400px', customCSS: '' },
             paragraph: { type: 'paragraph', content: 'Este es un párrafo editable. Haz clic en el bloque para editar el contenido.', customCSS: '' },
             heading: { type: 'heading', level: 2, content: 'Encabezado', customCSS: '' },
@@ -219,14 +221,22 @@
         function setupEventListeners() {
             document.getElementById('saveBtn').addEventListener('click', savePage);
             document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
-            document.getElementById('goToWebBtn').addEventListener('click', () => { window.location.href = '/'; });
+            document.getElementById('goToWebBtn').addEventListener('click', () => { window.open('/', '_blank'); });
             document.getElementById('pageTitle').addEventListener('input', (e) => { state.page.title = e.target.value; });
         }
 
-        function addBlock(type) {
+        function addBlock(type, parentId = null) {
             const template = JSON.parse(JSON.stringify(blockTemplates[type]));
             template.id = Date.now();
-            state.page.blocks.push(template);
+            if (parentId) {
+                const parent = findBlockById(state.page.blocks, parentId);
+                if (parent && parent.type === 'container') {
+                    parent.children = parent.children || [];
+                    parent.children.push(template);
+                }
+            } else {
+                state.page.blocks.push(template);
+            }
             renderBlocks();
         }
 
@@ -239,7 +249,10 @@
             container.innerHTML = state.page.blocks.map(block => createBlockHTML(block)).join('');
             document.querySelectorAll('.block').forEach(el => {
                 el.addEventListener('click', (e) => {
-                    if (!e.target.closest('.block-action-btn')) selectBlock(parseInt(el.dataset.blockId));
+                    e.stopPropagation();
+                    if (!e.target.closest('.block-action-btn')) {
+                        selectBlock(parseInt(el.dataset.blockId));
+                    }
                 });
             });
             document.querySelectorAll('.block-action-btn').forEach(btn => {
@@ -253,6 +266,34 @@
                     else if (action === 'down') moveBlock(blockId, 1);
                 });
             });
+
+            document.querySelectorAll('.block-container-drop').forEach(dropZone => {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.style.background = 'rgba(37,99,235,0.07)';
+                });
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.style.background = '';
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.style.background = '';
+                    const type = e.dataTransfer.getData('blockType');
+                    const parentId = parseInt(dropZone.dataset.parentId);
+                    addBlock(type, parentId);
+                });
+
+                dropZone.addEventListener('click', (e) => {
+                    if (e.target.closest('.block')) {
+                        return;
+                    }
+                    e.stopPropagation();
+                    const parentId = parseInt(dropZone.dataset.parentId);
+                    selectBlock(parentId);
+                });
+            });
         }
 
         function createBlockHTML(block) {
@@ -260,31 +301,35 @@
             const blockClass = `block-${block.id}`;
             const cssId = `css-${block.id}`;
 
-            switch (block.type) {
-                case 'hero':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
-                    break;
-                case 'heading':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
-                    break;
-                case 'paragraph':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
-                    break;
-                case 'image':
-                    preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
-                    break;
-                case 'cards':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
-                    break;
-                case 'carousel':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
-                    break;
-                case 'button':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
-                    break;
-                case 'divider':
-                    preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor}; margin: 20px 0;">`;
-                    break;
+            if (block.type === 'container') {
+                preview = `<div class="block-container-drop" data-parent-id="${block.id}" style="min-height:32px; border: 1.5px dashed #2563eb; margin-bottom: 8px; background: #f8fafc; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px; padding: 12px;">${(block.children && block.children.length > 0) ? block.children.map(child => createBlockHTML(child)).join('') : '<span style=\"color:#94a3b8;font-size:13px;\">Arrastra aquí bloques</span>'}</div>`;
+            } else {
+                switch (block.type) {
+                    case 'hero':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 20px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"><h1 style="font-size: 28px; margin-bottom: 10px;">${block.content}</h1><p>${block.subContent}</p></div>`;
+                        break;
+                    case 'heading':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><h2 class="${blockClass}" style="margin: 16px 0;">${block.content}</h2>`;
+                        break;
+                    case 'paragraph':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; color: var(--text-secondary);">${block.content}</p>`;
+                        break;
+                    case 'image':
+                        preview = block.src ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%;">` : `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
+                        break;
+                    case 'cards':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 12px;">${block.items.map(item => `<div style="border: 1px solid var(--border); padding: 12px; border-radius: 4px;"><h3 style="margin-bottom: 4px; font-size: 14px;">${item.title}</h3><p style="font-size: 12px; color: var(--text-secondary);">${item.description}</p></div>`).join('')}</div>`;
+                        break;
+                    case 'carousel':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">Carrusel (${block.slides.length} slides)</div>`;
+                        break;
+                    case 'button':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><button class="${blockClass}" style="padding: 10px 20px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">${block.text}</button>`;
+                        break;
+                    case 'divider':
+                        preview = `<style id="${cssId}">.${blockClass} { ${block.customCSS} }</style><hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor}; margin: 20px 0;">`;
+                        break;
+                }
             }
             return `<div class="block ${state.selectedBlockId === block.id ? 'selected' : ''}" data-block-id="${block.id}" data-block-type="${block.type}"><div class="block-header"><span class="block-type">${block.type}</span><div class="block-actions"><button class="block-action-btn" data-action="up" title="Subir">↑</button><button class="block-action-btn" data-action="down" title="Bajar">↓</button><button class="block-action-btn" data-action="duplicate" title="Duplicar">⎘</button><button class="block-action-btn danger" data-action="delete" title="Eliminar">🗑️</button></div></div><div style="margin-top: 12px;">${preview}</div></div>`;
         }
@@ -296,30 +341,93 @@
         }
 
         function deleteBlock(blockId) {
-            state.page.blocks = state.page.blocks.filter(b => b.id !== blockId);
+            const idx = state.page.blocks.findIndex(b => b.id === blockId);
+            if (idx !== -1) {
+                state.page.blocks.splice(idx, 1);
+                if (state.selectedBlockId === blockId) state.selectedBlockId = null;
+                renderBlocks();
+                renderProperties();
+                return;
+            }
+
+            deleteBlockFromChildren(state.page.blocks, blockId);
             if (state.selectedBlockId === blockId) state.selectedBlockId = null;
             renderBlocks();
             renderProperties();
         }
 
+        function deleteBlockFromChildren(blocks, blockId) {
+            for (const block of blocks) {
+                if (block.type === 'container' && block.children) {
+                    const childIdx = block.children.findIndex(b => b.id === blockId);
+                    if (childIdx !== -1) {
+                        block.children.splice(childIdx, 1);
+                        return true;
+                    }
+                    if (deleteBlockFromChildren(block.children, blockId)) return true;
+                }
+            }
+            return false;
+        }
+
         function duplicateBlock(blockId) {
-            const block = state.page.blocks.find(b => b.id === blockId);
-            if (block) {
+            const idx = state.page.blocks.findIndex(b => b.id === blockId);
+            if (idx !== -1) {
+                const block = state.page.blocks[idx];
                 const copy = JSON.parse(JSON.stringify(block));
                 copy.id = Date.now();
-                const idx = state.page.blocks.findIndex(b => b.id === blockId);
                 state.page.blocks.splice(idx + 1, 0, copy);
                 renderBlocks();
+                return;
             }
+
+            duplicateBlockFromChildren(state.page.blocks, blockId);
+            renderBlocks();
+        }
+
+        function duplicateBlockFromChildren(blocks, blockId) {
+            for (const block of blocks) {
+                if (block.type === 'container' && block.children) {
+                    const childIdx = block.children.findIndex(b => b.id === blockId);
+                    if (childIdx !== -1) {
+                        const copy = JSON.parse(JSON.stringify(block.children[childIdx]));
+                        copy.id = Date.now();
+                        block.children.splice(childIdx + 1, 0, copy);
+                        return true;
+                    }
+                    if (duplicateBlockFromChildren(block.children, blockId)) return true;
+                }
+            }
+            return false;
         }
 
         function moveBlock(blockId, direction) {
             const idx = state.page.blocks.findIndex(b => b.id === blockId);
             const newIdx = idx + direction;
-            if (newIdx >= 0 && newIdx < state.page.blocks.length) {
+            if (idx !== -1 && newIdx >= 0 && newIdx < state.page.blocks.length) {
                 [state.page.blocks[idx], state.page.blocks[newIdx]] = [state.page.blocks[newIdx], state.page.blocks[idx]];
                 renderBlocks();
+                return;
             }
+
+            moveBlockFromChildren(state.page.blocks, blockId, direction);
+        }
+
+        function moveBlockFromChildren(blocks, blockId, direction) {
+            for (const block of blocks) {
+                if (block.type === 'container' && block.children) {
+                    const childIdx = block.children.findIndex(b => b.id === blockId);
+                    if (childIdx !== -1) {
+                        const newIdx = childIdx + direction;
+                        if (newIdx >= 0 && newIdx < block.children.length) {
+                            [block.children[childIdx], block.children[newIdx]] = [block.children[newIdx], block.children[childIdx]];
+                            return true;
+                        }
+                    }
+                    if (moveBlockFromChildren(block.children, blockId, direction)) return true;
+                }
+            }
+            return false;
         }
 
         function renderProperties() {
@@ -328,11 +436,38 @@
                 panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
                 return;
             }
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (!block) return;
             let html = `<div class="property-group"><label class="property-label">Tipo de Bloque</label><input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);"></div>`;
 
             switch (block.type) {
+                case 'container':
+                    html += `<div class="property-group">
+                        <label class="property-label">Dirección</label>
+                        <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
+                            <option value="vertical" ${block.direction === 'vertical' ? 'selected' : ''}>Vertical</option>
+                            <option value="horizontal" ${block.direction === 'horizontal' ? 'selected' : ''}>Horizontal</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Color de Fondo</label>
+                        <div class="color-input">
+                            <input type="color" value="${block.backgroundColor || '#ffffff'}" onchange="updateBlockProperty('backgroundColor', this.value)">
+                            <input type="text" value="${block.backgroundColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)">
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Color de Texto</label>
+                        <div class="color-input">
+                            <input type="color" value="${block.textColor || '#1f2937'}" onchange="updateBlockProperty('textColor', this.value)">
+                            <input type="text" value="${block.textColor || '#1f2937'}" class="property-input" onchange="updateBlockProperty('textColor', this.value)">
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Bloques hijos</label>
+                        <p style="font-size:12px;color:var(--text-secondary);">Arrastra bloques dentro de este contenedor desde la lista de bloques. (Funcionalidad anidada pendiente de implementar)</p>
+                    </div>`;
+                    break;
                 case 'hero':
                     html += `<div class="property-group"><label class="property-label">Título</label><input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)"></div><div class="property-group"><label class="property-label">Subtítulo</label><input type="text" value="${block.subContent}" class="property-input" onchange="updateBlockProperty('subContent', this.value)"></div><div class="property-group"><label class="property-label">Color de Fondo</label><div class="color-input"><input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)"><input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)"></div></div><div class="property-group"><label class="property-label">Color de Texto</label><div class="color-input"><input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)"><input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)"></div></div><div class="property-group"><label class="property-label">Altura (px)</label><input type="text" value="${block.height}" class="property-input" onchange="updateBlockProperty('height', this.value)"></div>`;
                     break;
@@ -363,7 +498,7 @@
         }
 
         function updateBlockProperty(prop, value) {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block) {
                 block[prop] = value;
                 renderBlocks();
@@ -371,8 +506,19 @@
             }
         }
 
+        function findBlockById(blocks, id) {
+            for (const block of blocks) {
+                if (block.id === id) return block;
+                if (block.type === 'container' && block.children) {
+                    const found = findBlockById(block.children, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
         function addCardItem() {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'cards') {
                 block.items.push({ title: 'Nueva Tarjeta', description: 'Descripción' });
                 renderBlocks();
@@ -381,7 +527,7 @@
         }
 
         function updateCardItem(idx, prop, value) {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'cards') {
                 block.items[idx][prop] = value;
                 renderBlocks();
@@ -390,7 +536,7 @@
         }
 
         function deleteCardItem(idx) {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'cards') {
                 block.items.splice(idx, 1);
                 renderBlocks();
@@ -399,7 +545,7 @@
         }
 
         function addCarouselSlide() {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'carousel') {
                 block.slides.push({ title: 'Nuevo Slide', image: '', description: '' });
                 renderBlocks();
@@ -408,7 +554,7 @@
         }
 
         function updateCarouselSlide(idx, prop, value) {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'carousel') {
                 block.slides[idx][prop] = value;
                 renderBlocks();
@@ -417,7 +563,7 @@
         }
 
         function deleteCarouselSlide(idx) {
-            const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+            const block = findBlockById(state.page.blocks, state.selectedBlockId);
             if (block && block.type === 'carousel') {
                 block.slides.splice(idx, 1);
                 renderBlocks();
@@ -430,7 +576,7 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const block = state.page.blocks.find(b => b.id === state.selectedBlockId);
+                    const block = findBlockById(state.page.blocks, state.selectedBlockId);
                     if (block && block.type === 'carousel') {
                         block.slides[idx]['image'] = e.target.result;
                         renderBlocks();
@@ -452,31 +598,39 @@
         function renderBlockPreview(block) {
             const blockClass = `block-${block.id}`;
             let html = '';
-            switch (block.type) {
-                case 'hero':
-                    html = `<div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
-                    break;
-                case 'heading':
-                    html = `<h2 class="${blockClass}" style="margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
-                    break;
-                case 'paragraph':
-                    html = `<p class="${blockClass}" style="line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
-                    break;
-                case 'image':
-                    html = block.src ? `<img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%; margin-bottom: 24px;">` : '';
-                    break;
-                case 'cards':
-                    html = `<div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
-                    break;
-                case 'carousel':
-                    html = `<div class="${blockClass}" style="margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
-                    break;
-                case 'button':
-                    html = `<a class="${blockClass}" href="${block.link}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
-                    break;
-                case 'divider':
-                    html = `<hr class="${blockClass}" style="border: none; border-top: 2px solid ${block.borderColor}; margin: 32px 0;">`;
-                    break;
+
+            if (block.type === 'container') {
+                const childrenHtml = (block.children && block.children.length > 0)
+                    ? block.children.map(child => renderBlockPreview(child)).join('')
+                    : '';
+                html = `<div class="${blockClass}" style="background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px; display: flex; flex-direction: ${block.direction === 'horizontal' ? 'row' : 'column'}; gap: 12px;">${childrenHtml}</div>`;
+            } else {
+                switch (block.type) {
+                    case 'hero':
+                        html = `<div class="${blockClass}" style="background: ${block.backgroundColor}; color: ${block.textColor}; padding: 40px; border-radius: 4px; height: ${block.height}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin-bottom: 24px;"><h1 style="font-size: 36px; margin-bottom: 12px;">${escapeHTML(block.content)}</h1><p style="font-size: 18px;">${escapeHTML(block.subContent)}</p></div>`;
+                        break;
+                    case 'heading':
+                        html = `<h2 class="${blockClass}" style="margin-bottom: 16px;">${escapeHTML(block.content)}</h2>`;
+                        break;
+                    case 'paragraph':
+                        html = `<p class="${blockClass}" style="line-height: 1.8; margin-bottom: 16px;">${escapeHTML(block.content)}</p>`;
+                        break;
+                    case 'image':
+                        html = block.src ? `<img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="width: ${block.width}; border-radius: 4px; max-width: 100%; margin-bottom: 24px;">` : '';
+                        break;
+                    case 'cards':
+                        html = `<div class="${blockClass}" style="display: grid; grid-template-columns: repeat(${Math.min(block.items.length, 3)}, 1fr); gap: 24px; margin-bottom: 24px;">${block.items.map(item => `<div style="border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px;"><h3 style="margin-bottom: 8px; font-size: 18px;">${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description)}</p></div>`).join('')}</div>`;
+                        break;
+                    case 'carousel':
+                        html = `<div class="${blockClass}" style="margin-bottom: 24px;"><style>.carousel-container { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; scroll-behavior: smooth; } .carousel-item { flex: 0 0 350px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .carousel-item img { width: 100%; height: 250px; object-fit: cover; } .carousel-item-content { padding: 16px; } .carousel-item h3 { margin-bottom: 8px; font-size: 18px; color: #1f2937; } .carousel-item p { color: #6b7280; font-size: 14px; }</style><div class="carousel-container">${block.slides.map(slide => `<div class="carousel-item">${slide.image ? `<img src="${slide.image}" alt="${slide.title}">` : '<div style="width: 100%; height: 250px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #6b7280;">Sin imagen</div>'}<div class="carousel-item-content"><h3>${escapeHTML(slide.title)}</h3>${slide.description ? `<p>${escapeHTML(slide.description)}</p>` : ''}</div></div>`).join('')}</div></div>`;
+                        break;
+                    case 'button':
+                        html = `<a class="${blockClass}" href="${block.link}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">${escapeHTML(block.text)}</a>`;
+                        break;
+                    case 'divider':
+                        html = `<hr class="${blockClass}" style="border: none; border-top: 2px solid ${block.borderColor}; margin: 32px 0;">`;
+                        break;
+                }
             }
             return html;
         }
