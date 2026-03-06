@@ -94,6 +94,8 @@ func RenderBlock(block Block) string {
 	}
 
 	switch block.Type {
+	case "container":
+		return renderContainer(&html, block, blockClass)
 	case "hero":
 		renderHero(&html, block, blockClass)
 	case "heading":
@@ -112,6 +114,33 @@ func RenderBlock(block Block) string {
 		renderDivider(&html, block, blockClass)
 	}
 
+	return html.String()
+}
+
+func renderContainer(html *strings.Builder, block Block, blockClass string) string {
+	var innerHTML strings.Builder
+	
+	for _, child := range block.Children {
+		innerHTML.WriteString(RenderBlock(child))
+	}
+	
+	flexDirection := "column"
+	if block.Direction == "horizontal" {
+		flexDirection = "row"
+	}
+	
+	html.WriteString(`<div class="`)
+	html.WriteString(blockClass)
+	html.WriteString(`" style="background: `)
+	html.WriteString(block.BackgroundColor)
+	html.WriteString(`; color: `)
+	html.WriteString(block.TextColor)
+	html.WriteString(`; padding: 16px; border-radius: 4px; margin: 24px 0; display: flex; flex-direction: `)
+	html.WriteString(flexDirection)
+	html.WriteString(`; gap: 12px;">`)
+	html.WriteString(innerHTML.String())
+	html.WriteString(`</div>`)
+	
 	return html.String()
 }
 
