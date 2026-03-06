@@ -35,6 +35,18 @@ type Block struct {
 	HiddenDesktop   bool                  `json:"hiddenDesktop"`
 	HoverBackgroundColor string           `json:"hoverBackgroundColor"`
 	HoverTextColor  string                `json:"hoverTextColor"`
+	PaddingTop      string                `json:"paddingTop"`
+	PaddingRight    string                `json:"paddingRight"`
+	PaddingBottom   string                `json:"paddingBottom"`
+	PaddingLeft     string                `json:"paddingLeft"`
+	PaddingTopTablet    string           `json:"paddingTopTablet"`
+	PaddingRightTablet  string           `json:"paddingRightTablet"`
+	PaddingBottomTablet string           `json:"paddingBottomTablet"`
+	PaddingLeftTablet   string           `json:"paddingLeftTablet"`
+	PaddingTopMobile    string           `json:"paddingTopMobile"`
+	PaddingRightMobile  string           `json:"paddingRightMobile"`
+	PaddingBottomMobile string           `json:"paddingBottomMobile"`
+	PaddingLeftMobile   string           `json:"paddingLeftMobile"`
 }
 
 type Styles struct {

@@ -54,11 +54,11 @@ func BuildPageHTML(page PageData) string {
 	html.WriteString(page.Styles.PrimaryColor)
 	html.WriteString(`; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 4px; font-weight: 500; }
+        button { cursor: pointer; border: none; border-radius: 4px; font-weight: 500; }
         hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 24px 0; }
-        .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin: 24px 0; }
-        .card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 4px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+        .card { border: 1px solid #e5e7eb; border-radius: 4px; }
         `)
 	html.WriteString(page.Styles.GlobalCSS)
 	html.WriteString(`
@@ -122,13 +122,33 @@ func RenderBlock(block Block) string {
 func generateResponsiveCSS(block Block, blockClass string) string {
 	var css strings.Builder
 
-	// Desktop (base) - Colores base primero
+	// Desktop (base) - Colores base y padding
 	css.WriteString(fmt.Sprintf(".%s { ", blockClass))
 	if block.BackgroundColor != "" {
 		css.WriteString(fmt.Sprintf("background: %s; ", block.BackgroundColor))
 	}
 	if block.TextColor != "" {
 		css.WriteString(fmt.Sprintf("color: %s; ", block.TextColor))
+	}
+	// Padding desktop
+	if block.PaddingTop != "" || block.PaddingRight != "" || block.PaddingBottom != "" || block.PaddingLeft != "" {
+		paddingTop := block.PaddingTop
+		if paddingTop == "" {
+			paddingTop = "0"
+		}
+		paddingRight := block.PaddingRight
+		if paddingRight == "" {
+			paddingRight = "0"
+		}
+		paddingBottom := block.PaddingBottom
+		if paddingBottom == "" {
+			paddingBottom = "0"
+		}
+		paddingLeft := block.PaddingLeft
+		if paddingLeft == "" {
+			paddingLeft = "0"
+		}
+		css.WriteString(fmt.Sprintf("padding: %spx %spx %spx %spx; ", paddingTop, paddingRight, paddingBottom, paddingLeft))
 	}
 	css.WriteString("} ")
 
@@ -238,6 +258,72 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		css.WriteString("} ")
 	}
 
+	// Padding responsive - Tablet
+	if block.PaddingTopTablet != "" || block.PaddingRightTablet != "" || block.PaddingBottomTablet != "" || block.PaddingLeftTablet != "" {
+		paddingTop := block.PaddingTopTablet
+		if paddingTop == "" {
+			paddingTop = block.PaddingTop
+			if paddingTop == "" {
+				paddingTop = "0"
+			}
+		}
+		paddingRight := block.PaddingRightTablet
+		if paddingRight == "" {
+			paddingRight = block.PaddingRight
+			if paddingRight == "" {
+				paddingRight = "0"
+			}
+		}
+		paddingBottom := block.PaddingBottomTablet
+		if paddingBottom == "" {
+			paddingBottom = block.PaddingBottom
+			if paddingBottom == "" {
+				paddingBottom = "0"
+			}
+		}
+		paddingLeft := block.PaddingLeftTablet
+		if paddingLeft == "" {
+			paddingLeft = block.PaddingLeft
+			if paddingLeft == "" {
+				paddingLeft = "0"
+			}
+		}
+		css.WriteString(fmt.Sprintf("@media (max-width: 1024px) and (min-width: 769px) { .%s { padding: %spx %spx %spx %spx; } } ", blockClass, paddingTop, paddingRight, paddingBottom, paddingLeft))
+	}
+
+	// Padding responsive - Mobile
+	if block.PaddingTopMobile != "" || block.PaddingRightMobile != "" || block.PaddingBottomMobile != "" || block.PaddingLeftMobile != "" {
+		paddingTop := block.PaddingTopMobile
+		if paddingTop == "" {
+			paddingTop = block.PaddingTop
+			if paddingTop == "" {
+				paddingTop = "0"
+			}
+		}
+		paddingRight := block.PaddingRightMobile
+		if paddingRight == "" {
+			paddingRight = block.PaddingRight
+			if paddingRight == "" {
+				paddingRight = "0"
+			}
+		}
+		paddingBottom := block.PaddingBottomMobile
+		if paddingBottom == "" {
+			paddingBottom = block.PaddingBottom
+			if paddingBottom == "" {
+				paddingBottom = "0"
+			}
+		}
+		paddingLeft := block.PaddingLeftMobile
+		if paddingLeft == "" {
+			paddingLeft = block.PaddingLeft
+			if paddingLeft == "" {
+				paddingLeft = "0"
+			}
+		}
+		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { padding: %spx %spx %spx %spx; } } ", blockClass, paddingTop, paddingRight, paddingBottom, paddingLeft))
+	}
+
 	return css.String()
 }
 
@@ -261,7 +347,7 @@ func renderContainer(html *strings.Builder, block Block, blockClass string) stri
 		html.WriteString(block.Height)
 		html.WriteString(`; `)
 	}
-	html.WriteString(`padding: 16px; border-radius: 4px; margin: 24px 0;">`)
+	html.WriteString(`border-radius: 4px;">`)
 	html.WriteString(innerHTML.String())
 	html.WriteString(`</div>`)
 
@@ -282,7 +368,7 @@ func renderHero(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(block.Height)
 		html.WriteString(`; `)
 	}
-	html.WriteString(`padding: 60px 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; margin: 24px 0;">
+	html.WriteString(`border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
         <h1 style="font-size: 48px; margin-bottom: 16px;">`)
 	html.WriteString(EscapeHTML(block.Content))
 	html.WriteString(`</h1>
@@ -390,7 +476,7 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(block.Height)
 		html.WriteString(`; `)
 	}
-	html.WriteString(`display: inline-block; padding: 12px 24px; background: `)
+	html.WriteString(`display: inline-block; background: `)
 	html.WriteString(bgColor)
 	html.WriteString(`; color: `)
 	html.WriteString(textColor)
