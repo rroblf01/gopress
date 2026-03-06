@@ -17,8 +17,11 @@
             <input type="text" id="siteTitle" class="toolbar-input" placeholder="Título del sitio"
                 onchange="updateSiteTitle(this.value)">
             <label for="siteFavicon" class="toolbar-label">Favicon:</label>
-            <input type="file" id="siteFavicon" class="toolbar-input" accept="image/*"
-                onchange="updateSiteFavicon(event)" title="Subir Favicon">
+            <div class="favicon-input-container">
+                <input type="file" id="siteFavicon" class="toolbar-input" accept="image/*"
+                    onchange="updateSiteFavicon(event)" title="Subir Favicon">
+                <img id="faviconPreview" class="favicon-preview" style="display: none;" alt="Favicon">
+            </div>
             <div class="responsive-selector">
                 <button class="responsive-btn" data-device="desktop" onclick="setResponsiveMode('desktop')"
                     title="Ordenador">🖥️</button>
@@ -176,6 +179,10 @@
                         link.rel = 'icon';
                         link.href = data.favicon;
                         document.head.appendChild(link);
+                        // Mostrar vista previa del favicon
+                        const preview = document.getElementById('faviconPreview');
+                        preview.src = data.favicon;
+                        preview.style.display = 'block';
                     }
                     loadGlobalStyles();
                     renderBlocks();
@@ -198,6 +205,10 @@
                     link.rel = 'icon';
                     link.href = e.target.result;
                     document.head.appendChild(link);
+                    // Mostrar vista previa
+                    const preview = document.getElementById('faviconPreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
