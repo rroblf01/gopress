@@ -63,7 +63,7 @@ func BuildPageHTMLWithComponents(page PageData, db *sql.DB) string {
         button { cursor: pointer; border: none; border-radius: 4px; font-weight: 500; }
         hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+        .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
         .card { border: 1px solid #e5e7eb; border-radius: 4px; }
         `)
 	html.WriteString(page.Styles.GlobalCSS)
@@ -283,9 +283,9 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 			if baseDirection == "horizontal" {
 				flexDir = "row"
 			}
-			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: %s; gap: 12px; } ", blockClass, flexDir))
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: %s; } ", blockClass, flexDir))
 		} else {
-			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: column; gap: 12px; } ", blockClass))
+			css.WriteString(fmt.Sprintf(".%s { display: flex; flex-direction: column; } ", blockClass))
 		}
 	}
 
@@ -496,7 +496,7 @@ func renderHeading(html *strings.Builder, block Block, blockClass string) {
 	}
 	html.WriteString(`<h`)
 	html.WriteString(fmt.Sprintf("%d", level))
-	html.WriteString(`" class="`)
+	html.WriteString(` class="`)
 	html.WriteString(blockClass)
 	html.WriteString(`" style="`)
 	if block.Width != "" {

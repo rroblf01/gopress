@@ -349,9 +349,14 @@ function createBlockHTML(block) {
                     background: #e0f2fe !important;
                     border-color: #0284c7 !important;
                 }
+                .${blockClass} .block-container-drop > .block {
+                    width: 100%;
+                    flex-shrink: 0;
+                    margin-bottom: 16px;
+                }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} ${hiddenStyle} gap: 12px;">${childrenContent}</div>`;
+            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}">${childrenContent}</div>`;
     } else {
         preview = createBlockPreviewHTML(block, allCSS, isHidden);
     }
