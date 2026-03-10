@@ -140,6 +140,7 @@ async function loadTemplate(id) {
         loadGlobalStyles();
         renderBlocks();
         closeTemplatesModal();
+        autoSave();
         showToast('Plantilla cargada correctamente', 'success');
     } catch (error) {
         console.error('Error loading template:', error);

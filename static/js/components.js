@@ -124,7 +124,7 @@ async function useComponent(id) {
         }
 
         const component = await response.json();
-        
+
         // Crear un bloque de tipo "component" que referencia al componente
         const componentBlock = {
             id: Date.now(),
@@ -156,11 +156,12 @@ async function useComponent(id) {
             paddingBottomMobile: '',
             paddingLeftMobile: ''
         };
-        
+
         // Añadir el bloque al canvas
         state.page.blocks.push(componentBlock);
-        
+
         renderBlocks();
+        autoSave();
         closeComponentsModal();
         showToast('Componente añadido al canvas', 'success');
     } catch (error) {
@@ -318,7 +319,6 @@ async function loadCustomComponentsList() {
  * Añade un componente al canvas desde el drag
  */
 async function addComponentFromDrag(componentId, dropTarget) {
-
     try {
         const response = await fetch(`/api/components/${componentId}`);
         if (!response.ok) {
@@ -328,7 +328,6 @@ async function addComponentFromDrag(componentId, dropTarget) {
         }
 
         const component = await response.json();
-    
 
         // Crear un bloque de tipo "component" que referencia al componente
         const componentBlock = {
@@ -365,7 +364,6 @@ async function addComponentFromDrag(componentId, dropTarget) {
         // Verificar si estamos en el editor principal o en un editor de componente
         const tabsStateLocal = window.tabsState || tabsState;
         const isComponentEditor = tabsStateLocal && tabsStateLocal.activeTabId !== 'main';
-    
 
         if (isComponentEditor) {
             // Estamos en un editor de componente
@@ -374,12 +372,12 @@ async function addComponentFromDrag(componentId, dropTarget) {
                 editorState.blocks.push(componentBlock);
                 editorState.dirty = true;
                 renderComponentEditorBlocks(tabsStateLocal.activeTabId);
-            
+                saveComponentFromEditor(tabsStateLocal.activeTabId);
             } else {
                 console.error('editorState no encontrado para tabId:', tabsStateLocal.activeTabId);
             }
         } else {
-
+            // Estamos en el editor principal
             // Si hay un target de drop (contenedor), añadir como hijo
             if (dropTarget && dropTarget.dataset.parentId) {
                 const parentId = parseInt(dropTarget.dataset.parentId);
@@ -393,6 +391,7 @@ async function addComponentFromDrag(componentId, dropTarget) {
                 state.page.blocks.push(componentBlock);
             }
             renderBlocks();
+            autoSave();
         }
 
         showToast('Componente añadido', 'success');

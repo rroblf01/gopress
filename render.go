@@ -118,8 +118,6 @@ func renderComponent(block Block, db *sql.DB) string {
 		</div>`, EscapeHTML(block.ComponentName))
 	}
 
-	fmt.Printf("Componente cargado, blocksJSON: %s\n", string(blocksJSON))
-
 	// Decodificar los bloques del componente
 	var componentBlocks []Block
 	if err := json.Unmarshal(blocksJSON, &componentBlocks); err != nil {

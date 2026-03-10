@@ -236,6 +236,7 @@ function showComponentEditor(tabId) {
         editorEl.style.display = 'block';
         // Renderizar bloques del componente
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     }
 }
 
@@ -404,6 +405,7 @@ function addBlockToContainer(editorState, blockType, parentId, tabId) {
         parent.children.push(newBlock);
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     }
 }
 
@@ -438,6 +440,7 @@ async function addComponentToContainer(editorState, componentId, parentId, tabId
             parent.children.push(componentBlock);
             editorState.dirty = true;
             renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
         }
     } catch (error) {
         console.error('Error adding component to container:', error);
@@ -450,6 +453,7 @@ async function addComponentToContainer(editorState, componentId, parentId, tabId
 function selectComponentBlock(tabId, blockId) {
     tabsState.componentEditors[tabId].selectedBlockId = blockId;
     renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     renderProperties();
 }
 
@@ -527,6 +531,7 @@ function addBlockToComponentEditor(type) {
     editorState.blocks.push(template);
     editorState.dirty = true;
     renderComponentEditorBlocks(tabsState.activeTabId);
+    saveComponentFromEditor(tabsState.activeTabId);
 }
 
 /**
@@ -548,6 +553,7 @@ function deleteComponentBlock(tabId, blockId) {
             editorState.selectedBlockId = null;
         }
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
         return;
     }
     
@@ -555,6 +561,7 @@ function deleteComponentBlock(tabId, blockId) {
     if (deleteComponentBlockFromChildren(editorState.blocks, blockId)) {
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     }
 }
 
@@ -593,6 +600,7 @@ function duplicateComponentBlock(tabId, blockId) {
         editorState.blocks.splice(idx + 1, 0, copy);
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
         return;
     }
     
@@ -600,6 +608,7 @@ function duplicateComponentBlock(tabId, blockId) {
     if (duplicateComponentBlockFromChildren(editorState.blocks, blockId)) {
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     }
 }
 
@@ -639,6 +648,7 @@ function moveComponentBlock(tabId, blockId, direction) {
         [editorState.blocks[idx], editorState.blocks[newIdx]] = [editorState.blocks[newIdx], editorState.blocks[idx]];
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
         return;
     }
     
@@ -646,6 +656,7 @@ function moveComponentBlock(tabId, blockId, direction) {
     if (moveComponentBlockFromChildren(editorState.blocks, blockId, direction)) {
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        saveComponentFromEditor(tabId);
     }
 }
 

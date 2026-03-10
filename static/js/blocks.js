@@ -24,6 +24,7 @@ function addBlock(type, parentId = null) {
         state.page.blocks.push(template);
     }
     renderBlocks();
+    autoSave();
 }
 
 /**
@@ -91,14 +92,14 @@ function deleteBlock(blockId) {
         state.page.blocks.splice(idx, 1);
         if (state.selectedBlockId === blockId) state.selectedBlockId = null;
         renderBlocks();
-        renderProperties();
+        autoSave();
         return;
     }
 
     deleteBlockFromChildren(state.page.blocks, blockId);
     if (state.selectedBlockId === blockId) state.selectedBlockId = null;
     renderBlocks();
-    renderProperties();
+    autoSave();
 }
 
 function deleteBlockFromChildren(blocks, blockId) {
@@ -126,11 +127,13 @@ function duplicateBlock(blockId) {
         copy.id = Date.now();
         state.page.blocks.splice(idx + 1, 0, copy);
         renderBlocks();
+        autoSave();
         return;
     }
 
     duplicateBlockFromChildren(state.page.blocks, blockId);
     renderBlocks();
+    autoSave();
 }
 
 function duplicateBlockFromChildren(blocks, blockId) {
@@ -155,17 +158,17 @@ function duplicateBlockFromChildren(blocks, blockId) {
 function moveBlock(blockId, direction) {
     const idx = state.page.blocks.findIndex(b => b.id === blockId);
     const newIdx = idx + direction;
-    
+
     if (idx !== -1 && newIdx >= 0 && newIdx < state.page.blocks.length) {
         [state.page.blocks[idx], state.page.blocks[newIdx]] = [state.page.blocks[newIdx], state.page.blocks[idx]];
         renderBlocks();
-        renderProperties();
+        autoSave();
         return;
     }
 
     moveBlockFromChildren(state.page.blocks, blockId, direction);
     renderBlocks();
-    renderProperties();
+    autoSave();
 }
 
 function moveBlockFromChildren(blocks, blockId, direction) {

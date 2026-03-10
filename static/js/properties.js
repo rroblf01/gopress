@@ -483,6 +483,9 @@ function updateBlockProperty(prop, value) {
         }
         if (current.isComponent) {
             current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
         }
         renderCurrentBlocks();
         renderProperties();
@@ -501,6 +504,9 @@ function updateDimensionProperty(dim, value, isComponentEditor = false) {
         block[prop] = value;
         if (current.isComponent) {
             current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
         }
         renderCurrentBlocks();
         renderProperties();
@@ -519,6 +525,9 @@ function updatePaddingProperty(pad, value, isComponentEditor = false) {
         block[prop] = value;
         if (current.isComponent) {
             current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
         }
         renderCurrentBlocks();
         renderProperties();
@@ -537,6 +546,9 @@ function updateIconFontSize(value) {
         block[prop] = value;
         if (current.isComponent) {
             current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
         }
         renderCurrentBlocks();
         renderProperties();
@@ -557,6 +569,9 @@ function updateColorProperty(prop, value) {
         }
         if (current.isComponent) {
             current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
         }
         renderCurrentBlocks();
         renderProperties();
@@ -579,7 +594,12 @@ function addCardItem() {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items.push({ title: 'Nueva Tarjeta', description: 'Descripción' });
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -593,7 +613,12 @@ function updateCardItem(idx, prop, value) {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items[idx][prop] = value;
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -607,7 +632,12 @@ function deleteCardItem(idx) {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items.splice(idx, 1);
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -621,7 +651,12 @@ function addCarouselSlide() {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides.push({ title: 'Nuevo Slide', image: '', description: '' });
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -635,7 +670,12 @@ function updateCarouselSlide(idx, prop, value) {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides[idx][prop] = value;
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -649,7 +689,12 @@ function deleteCarouselSlide(idx) {
     const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides.splice(idx, 1);
-        if (current.isComponent) current.editorState.dirty = true;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
         renderCurrentBlocks();
         renderProperties();
     }
@@ -667,7 +712,12 @@ function handleImageUpload(event) {
             const block = findBlockById(current.state, current.selectedBlockId);
             if (block && block.type === 'image') {
                 block.src = e.target.result;
-                if (current.isComponent) current.editorState.dirty = true;
+                if (current.isComponent) {
+                    current.editorState.dirty = true;
+                    saveComponentFromEditor(current.tabId);
+                } else {
+                    autoSave();
+                }
                 renderCurrentBlocks();
                 renderProperties();
             }
@@ -688,7 +738,12 @@ function handleCarouselImageUpload(idx, event) {
             const block = findBlockById(current.state, current.selectedBlockId);
             if (block && block.type === 'carousel') {
                 block.slides[idx]['image'] = e.target.result;
-                if (current.isComponent) current.editorState.dirty = true;
+                if (current.isComponent) {
+                    current.editorState.dirty = true;
+                    saveComponentFromEditor(current.tabId);
+                } else {
+                    autoSave();
+                }
                 renderCurrentBlocks();
                 renderProperties();
             }

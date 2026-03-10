@@ -8,20 +8,28 @@ let sidebarState = {
     rightHidden: false
 };
 
+// Debounce para auto-guardado
+let autoSaveTimeout = null;
+
+/**
+ * Auto-guardado con debounce
+ */
+function autoSave() {
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+        savePage();
+    }, 1000); // Guardar 1 segundo después de la última modificación
+}
+
 /**
  * Configura los event listeners globales
  */
 function setupEventListeners() {
-    document.getElementById('saveBtn').addEventListener('click', savePage);
-    document.getElementById('saveComponentBtn').addEventListener('click', () => {
-        const tabId = window.tabsState ? window.tabsState.activeTabId : tabsState.activeTabId;
-        saveComponentFromEditor(tabId);
-    });
     document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
     document.getElementById('templatesBtn').addEventListener('click', openTemplatesModal);
     document.getElementById('componentsBtn').addEventListener('click', openComponentsModal);
-    document.getElementById('goToWebBtn').addEventListener('click', () => { 
-        window.open('/', '_blank'); 
+    document.getElementById('goToWebBtn').addEventListener('click', () => {
+        window.open('/', '_blank');
     });
 }
 
