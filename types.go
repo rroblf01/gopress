@@ -93,3 +93,15 @@ type Component struct {
 	Styles    Styles  `json:"styles"`
 	CreatedAt string  `json:"createdAt"`
 }
+
+type User struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"-"` // Never send password in JSON
+	CreatedAt string `json:"createdAt"`
+}
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

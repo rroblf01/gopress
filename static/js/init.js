@@ -31,6 +31,48 @@ function setupEventListeners() {
     document.getElementById('goToWebBtn').addEventListener('click', () => {
         window.open('/', '_blank');
     });
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+
+/**
+ * Cierra sesión
+ */
+async function logout() {
+    try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login';
+    } catch (error) {
+        console.error('Error logging out:', error);
+        window.location.href = '/login';
+    }
+}
+
+/**
+ * Verifica autenticación
+ */
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+            window.location.href = '/login';
+            return false;
+        }
+        
+        // Mostrar usuario logueado
+        const user = data.user;
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.textContent = `🚪 ${user.username}`;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error checking auth:', error);
+        window.location.href = '/login';
+        return false;
+    }
 }
 
 /**
@@ -69,7 +111,11 @@ function toggleSidebar(side) {
 /**
  * Inicializa el editor cuando el DOM está listo
  */
-function initializeEditor() {
+async function initializeEditor() {
+    // Verificar autenticación primero
+    const authenticated = await checkAuth();
+    if (!authenticated) return;
+    
     loadPageData();
     setupDragAndDrop();
     setupEventListeners();

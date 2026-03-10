@@ -8,6 +8,43 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+// Auth middleware
+func AuthMiddleware(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		// Check if user is authenticated via cookie
+		session := c.Cookies("session")
+		if session == "" {
+			// Redirect to login
+			c.Redirect().Status(fiber.StatusMovedPermanently).To("/login")
+			return nil
+		}
+
+		// Validate session (you could store sessions in DB)
+		// For now, just check if cookie exists
+		return c.Next()
+	}
+}
+
+// Check if first user needs to be created
+func NeedsFirstUser(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		count, err := GetUserCount(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		if count == 0 {
+			// No users exist, redirect to first user setup
+			c.Redirect().Status(fiber.StatusMovedPermanently).To("/first-user")
+			return nil
+		}
+
+		return c.Next()
+	}
+}
+
 func ServeEditor(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		return c.SendFile("./static/index.html")
@@ -284,6 +321,193 @@ func DeleteComponentHandler(db *sql.DB) fiber.Handler {
 
 		return c.JSON(fiber.Map{
 			"message": "Componente eliminado correctamente",
+		})
+	}
+}
+
+// Auth handlers
+func ServeLoginPage() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		return c.SendFile("./static/login.html")
+	}
+}
+
+func ServeFirstUserPage() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		return c.SendFile("./static/first-user.html")
+	}
+}
+
+func LoginHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		var req LoginRequest
+
+		if err := c.Bind().JSON(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos",
+			})
+		}
+
+		if req.Username == "" || req.Password == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Usuario y contraseña son requeridos",
+			})
+		}
+
+		user, err := ValidateUser(db, req.Username, req.Password)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		// Set session cookie (simple implementation - in production use proper sessions)
+		c.Cookie(&fiber.Cookie{
+			Name:     "session",
+			Value:    fmt.Sprintf("%d", user.ID),
+			Path:     "/",
+			MaxAge:   86400 * 7, // 7 days
+			HTTPOnly: true,
+			SameSite: "Lax",
+		})
+
+		return c.JSON(fiber.Map{
+			"message": "Login exitoso",
+			"user": fiber.Map{
+				"id":       user.ID,
+				"username": user.Username,
+			},
+		})
+	}
+}
+
+func LogoutHandler() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		c.Cookie(&fiber.Cookie{
+			Name:   "session",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+		return c.JSON(fiber.Map{
+			"message": "Logout exitoso",
+		})
+	}
+}
+
+func CreateFirstUserHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		// Check if users already exist
+		count, err := GetUserCount(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		if count > 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Ya existe un usuario. Usa el login normal.",
+			})
+		}
+
+		var req LoginRequest
+
+		if err := c.Bind().JSON(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos",
+			})
+		}
+
+		if req.Username == "" || req.Password == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Usuario y contraseña son requeridos",
+			})
+		}
+
+		if len(req.Username) < 3 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "El usuario debe tener al menos 3 caracteres",
+			})
+		}
+
+		if len(req.Password) < 6 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "La contraseña debe tener al menos 6 caracteres",
+			})
+		}
+
+		_, err = CreateUser(db, req.Username, req.Password)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		// Auto-login after creating first user
+		user, _ := ValidateUser(db, req.Username, req.Password)
+		if user != nil {
+			c.Cookie(&fiber.Cookie{
+				Name:     "session",
+				Value:    fmt.Sprintf("%d", user.ID),
+				Path:     "/",
+				MaxAge:   86400 * 7, // 7 days
+				HTTPOnly: true,
+				SameSite: "Lax",
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Usuario creado exitosamente",
+			"user": fiber.Map{
+				"id":       user.ID,
+				"username": user.Username,
+			},
+		})
+	}
+}
+
+func CheckAuthStatus(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		session := c.Cookies("session")
+		if session == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"authenticated": false,
+			})
+		}
+
+		userID, err := strconv.ParseInt(session, 10, 64)
+		if err != nil {
+			c.Cookie(&fiber.Cookie{
+				Name:   "session",
+				Value:  "",
+				Path:   "/",
+				MaxAge: -1,
+			})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"authenticated": false,
+			})
+		}
+
+		user, err := GetUserByID(db, userID)
+		if err != nil {
+			c.Cookie(&fiber.Cookie{
+				Name:   "session",
+				Value:  "",
+				Path:   "/",
+				MaxAge: -1,
+			})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"authenticated": false,
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"authenticated": true,
+			"user": fiber.Map{
+				"id":       user.ID,
+				"username": user.Username,
+			},
 		})
 	}
 }

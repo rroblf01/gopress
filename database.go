@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func InitDB(dbURL string) (*sql.DB, error) {
@@ -47,9 +49,16 @@ func CreateTable(db *sql.DB) error {
 		styles JSONB,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		username VARCHAR(255) NOT NULL UNIQUE,
+		password VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
 	CREATE INDEX IF NOT EXISTS idx_pages_created_at ON pages(created_at);
 	CREATE INDEX IF NOT EXISTS idx_templates_created_at ON templates(created_at);
 	CREATE INDEX IF NOT EXISTS idx_components_created_at ON components(created_at);
+	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 	`
 
 	if _, err := db.Exec(createTableSQL); err != nil {
@@ -356,4 +365,81 @@ func DeleteComponentFromDB(db *sql.DB, id int64) error {
 	}
 	log.Printf("✓ Componente eliminado (ID: %d)", id)
 	return nil
+}
+
+// User functions
+func GetUserCount(db *sql.DB) (int, error) {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error counting users: %w", err)
+	}
+	return count, nil
+}
+
+func CreateUser(db *sql.DB, username, password string) (int64, error) {
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, fmt.Errorf("error hashing password: %w", err)
+	}
+
+	var userID int64
+	err = db.QueryRow(`
+		INSERT INTO users (username, password, created_at)
+		VALUES ($1, $2, NOW())
+		RETURNING id
+	`, username, string(hashedPassword)).Scan(&userID)
+
+	if err != nil {
+		return 0, fmt.Errorf("error creating user: %w", err)
+	}
+	log.Printf("✓ Usuario creado (ID: %d): %s", userID, username)
+	return userID, nil
+}
+
+func ValidateUser(db *sql.DB, username, password string) (*User, error) {
+	query := `
+	SELECT id, username, password, created_at
+	FROM users
+	WHERE username = $1
+	`
+
+	var user User
+	var hashedPassword string
+
+	err := db.QueryRow(query, username).Scan(&user.ID, &user.Username, &hashedPassword, &user.CreatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("usuario no encontrado")
+	} else if err != nil {
+		return nil, fmt.Errorf("error obteniendo usuario: %w", err)
+	}
+
+	// Verify password
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return nil, fmt.Errorf("contraseña incorrecta")
+	}
+
+	return &user, nil
+}
+
+func GetUserByID(db *sql.DB, id int64) (*User, error) {
+	query := `
+	SELECT id, username, created_at
+	FROM users
+	WHERE id = $1
+	`
+
+	var user User
+	err := db.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.CreatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("usuario no encontrado")
+	} else if err != nil {
+		return nil, fmt.Errorf("error obteniendo usuario: %w", err)
+	}
+
+	return &user, nil
 }
