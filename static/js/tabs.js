@@ -290,10 +290,12 @@ function renderComponentEditorBlocks(tabId) {
     });
 
     // Añadir eventos de acciones
-    container.querySelectorAll('.block-action-btn').forEach(btn => {
+    const actionBtns = container.querySelectorAll('.block-action-btn');
+    actionBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const blockId = parseInt(btn.closest('.block').dataset.blockId);
+            const blockElement = btn.closest('.block');
+            const blockId = parseInt(blockElement.dataset.blockId);
             const action = btn.dataset.action;
             if (action === 'delete') deleteComponentBlock(tabId, blockId);
             else if (action === 'duplicate') duplicateComponentBlock(tabId, blockId);
@@ -532,9 +534,13 @@ function addBlockToComponentEditor(type) {
  */
 function deleteComponentBlock(tabId, blockId) {
     const editorState = tabsState.componentEditors[tabId];
-    if (!editorState) return;
+    if (!editorState) {
+        return;
+    }
 
+    // Buscar en root level
     const idx = editorState.blocks.findIndex(b => b.id === blockId);
+    
     if (idx !== -1) {
         editorState.blocks.splice(idx, 1);
         editorState.dirty = true;
@@ -542,7 +548,31 @@ function deleteComponentBlock(tabId, blockId) {
             editorState.selectedBlockId = null;
         }
         renderComponentEditorBlocks(tabId);
+        return;
     }
+    
+    // Buscar en children de contenedores
+    if (deleteComponentBlockFromChildren(editorState.blocks, blockId)) {
+        editorState.dirty = true;
+        renderComponentEditorBlocks(tabId);
+    }
+}
+
+/**
+ * Elimina un bloque de los children recursivamente
+ */
+function deleteComponentBlockFromChildren(blocks, blockId) {
+    for (const block of blocks) {
+        if (block.type === 'container' && block.children) {
+            const childIdx = block.children.findIndex(b => b.id === blockId);
+            if (childIdx !== -1) {
+                block.children.splice(childIdx, 1);
+                return true;
+            }
+            if (deleteComponentBlockFromChildren(block.children, blockId)) return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -550,16 +580,46 @@ function deleteComponentBlock(tabId, blockId) {
  */
 function duplicateComponentBlock(tabId, blockId) {
     const editorState = tabsState.componentEditors[tabId];
-    if (!editorState) return;
+    if (!editorState) {
+        return;
+    }
 
+    // Buscar en root level
     const idx = editorState.blocks.findIndex(b => b.id === blockId);
+    
     if (idx !== -1) {
         const copy = JSON.parse(JSON.stringify(editorState.blocks[idx]));
         copy.id = Date.now();
         editorState.blocks.splice(idx + 1, 0, copy);
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        return;
     }
+    
+    // Buscar en children de contenedores
+    if (duplicateComponentBlockFromChildren(editorState.blocks, blockId)) {
+        editorState.dirty = true;
+        renderComponentEditorBlocks(tabId);
+    }
+}
+
+/**
+ * Duplica un bloque de los children recursivamente
+ */
+function duplicateComponentBlockFromChildren(blocks, blockId) {
+    for (const block of blocks) {
+        if (block.type === 'container' && block.children) {
+            const childIdx = block.children.findIndex(b => b.id === blockId);
+            if (childIdx !== -1) {
+                const copy = JSON.parse(JSON.stringify(block.children[childIdx]));
+                copy.id = Date.now();
+                block.children.splice(childIdx + 1, 0, copy);
+                return true;
+            }
+            if (duplicateComponentBlockFromChildren(block.children, blockId)) return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -567,15 +627,46 @@ function duplicateComponentBlock(tabId, blockId) {
  */
 function moveComponentBlock(tabId, blockId, direction) {
     const editorState = tabsState.componentEditors[tabId];
-    if (!editorState) return;
+    if (!editorState) {
+        return;
+    }
 
+    // Buscar en root level
     const idx = editorState.blocks.findIndex(b => b.id === blockId);
     const newIdx = idx + direction;
+    
     if (idx !== -1 && newIdx >= 0 && newIdx < editorState.blocks.length) {
         [editorState.blocks[idx], editorState.blocks[newIdx]] = [editorState.blocks[newIdx], editorState.blocks[idx]];
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
+        return;
     }
+    
+    // Buscar en children de contenedores
+    if (moveComponentBlockFromChildren(editorState.blocks, blockId, direction)) {
+        editorState.dirty = true;
+        renderComponentEditorBlocks(tabId);
+    }
+}
+
+/**
+ * Mueve un bloque de los children recursivamente
+ */
+function moveComponentBlockFromChildren(blocks, blockId, direction) {
+    for (const block of blocks) {
+        if (block.type === 'container' && block.children) {
+            const childIdx = block.children.findIndex(b => b.id === blockId);
+            if (childIdx !== -1) {
+                const newIdx = childIdx + direction;
+                if (newIdx >= 0 && newIdx < block.children.length) {
+                    [block.children[childIdx], block.children[newIdx]] = [block.children[newIdx], block.children[childIdx]];
+                    return true;
+                }
+            }
+            if (moveComponentBlockFromChildren(block.children, blockId, direction)) return true;
+        }
+    }
+    return false;
 }
 
 /**

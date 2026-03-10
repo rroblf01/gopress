@@ -221,11 +221,12 @@ function renderBlocks() {
         });
     });
 
-    // Eventos para acciones de bloques
+    // Eventos para acciones de bloques (todos, incluyendo dentro de contenedores)
     document.querySelectorAll('.block-action-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const blockId = parseInt(btn.closest('.block').dataset.blockId);
+            const blockElement = btn.closest('.block');
+            const blockId = parseInt(blockElement.dataset.blockId);
             const action = btn.dataset.action;
             if (action === 'delete') deleteBlock(blockId);
             else if (action === 'duplicate') duplicateBlock(blockId);
