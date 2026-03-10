@@ -147,6 +147,12 @@ body {
     min-height: 400px;
 }
 
+.canvas-wrapper.tablet .canvas,
+.canvas-wrapper.mobile .canvas {
+    min-height: 100%;
+    box-shadow: none;
+}
+
 .page-title-input {
     padding: 20px;
     border: none;
@@ -800,15 +806,30 @@ body {
 }
 
 .canvas-wrapper.tablet .canvas {
-    max-width: 768px;
+    max-width: 100%;
 }
 
 .canvas-wrapper.mobile .canvas {
-    max-width: 375px;
+    max-width: 100%;
 }
 
 .canvas-wrapper .canvas {
     transition: max-width 0.3s ease;
+}
+
+/* Viewport interno para preview responsive */
+.canvas-wrapper.tablet .canvas .blocks-container {
+    max-width: 768px;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-wrapper.mobile .canvas .blocks-container {
+    max-width: 375px;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
 .show-sidebar-btn {
