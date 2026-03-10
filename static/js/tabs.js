@@ -49,7 +49,6 @@ function renderTabs() {
  * Cambia a una pestaña
  */
 function switchTab(tabId) {
-    console.log('switchTab llamado con tabId:', tabId);
     
     // Guardar estado actual antes de cambiar
     saveCurrentEditorState();
@@ -60,11 +59,11 @@ function switchTab(tabId) {
     
     // Mostrar el editor correspondiente
     if (tabId === 'main') {
-        console.log('Cambiando a Editor Web');
+
         showMainEditor();
         updateSaveButton('main');
     } else {
-        console.log('Cambiando a editor de componente:', tabId);
+
         showComponentEditor(tabId);
         updateSaveButton('component');
     }
@@ -468,7 +467,6 @@ function saveCurrentEditorState() {
  * Guarda un componente desde su editor
  */
 async function saveComponentFromEditor(tabId) {
-    console.log('saveComponentFromEditor llamado con tabId:', tabId);
     
     const state = window.tabsState || tabsState;
     const editorState = state.componentEditors[tabId];
@@ -484,8 +482,6 @@ async function saveComponentFromEditor(tabId) {
         blocks: editorState.blocks,
         styles: editorState.styles
     };
-    
-    console.log('Guardando componente:', componentData.name);
 
     try {
         const response = await fetch(`/api/components/${editorState.componentId}`, {
@@ -493,8 +489,6 @@ async function saveComponentFromEditor(tabId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(componentData)
         });
-        
-        console.log('Response status:', response.status);
 
         if (response.ok) {
             editorState.dirty = false;

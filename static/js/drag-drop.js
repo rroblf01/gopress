@@ -37,7 +37,7 @@ function setupDragAndDrop() {
 function handleComponentDragStartGlobal(e) {
     const componentBtn = e.target.closest('.component-btn');
     if (componentBtn && componentBtn.dataset.componentId) {
-        console.log('Component drag start (global):', componentBtn.dataset.componentId);
+        
         e.dataTransfer.effectAllowed = 'copy';
         e.dataTransfer.setData('componentId', componentBtn.dataset.componentId);
         e.dataTransfer.setData('componentName', componentBtn.dataset.componentName);
@@ -79,7 +79,7 @@ function handleDragEnd() {
  * Maneja drag over en el canvas
  */
 function handleCanvasDragOver(e) {
-    console.log('Canvas dragover');
+    
     
     // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
     if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
@@ -90,10 +90,10 @@ function handleCanvasDragOver(e) {
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
     const componentId = e.dataTransfer.getData('componentId');
     
-    console.log('Dragover data:', { dragSource, componentId });
+    
     
     if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && dragSource !== 'component' && !componentId) {
-        console.log('Dragover ignorado: dragSource no válido');
+        
         return;
     }
 
@@ -113,11 +113,11 @@ function handleCanvasDragLeave() {
  * Maneja drop en el canvas
  */
 function handleCanvasDrop(e) {
-    console.log('Canvas drop event');
+    
     
     // Si el drop es en una dropzone o en un bloque, no hacer nada
     if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
-        console.log('Drop ignorado: dentro de block-container-drop o block');
+        
         return;
     }
 
@@ -125,10 +125,10 @@ function handleCanvasDrop(e) {
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
     const componentId = e.dataTransfer.getData('componentId');
     
-    console.log('Drop data:', { dragSource, componentId });
+    
 
     if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
-        console.log('Drop ignorado: dragSource inválido y no es componente');
+        
         return;
     }
 
@@ -136,16 +136,16 @@ function handleCanvasDrop(e) {
     document.getElementById('blocksContainer').style.background = '';
 
     if (componentId) {
-        console.log('Añadiendo componente desde drag, componentId:', componentId);
+        
         // Es un componente personalizado - verificar si estamos en editor principal o de componente
         const tabsStateLocal = window.tabsState || tabsState;
         if (tabsStateLocal && tabsStateLocal.activeTabId !== 'main') {
             // Estamos en un editor de componente
-            console.log('Editor de componente activo:', tabsStateLocal.activeTabId);
+            
             addComponentFromDrag(componentId, null);
         } else {
             // Estamos en el editor principal
-            console.log('Editor principal activo, añadiendo componente');
+            
             addComponentFromDrag(componentId, null);
         }
     } else if (dragSource === 'sidebar') {

@@ -199,12 +199,12 @@ function selectBlock(blockId) {
  */
 function renderBlocks() {
     const container = document.getElementById('blocksContainer');
-    
+
     if (state.page.blocks.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Arrastra bloques aquí para comenzar</p></div>';
         return;
     }
-    
+
     container.innerHTML = state.page.blocks.map(block => createBlockHTML(block)).join('');
 
     // Eventos para selección de bloques

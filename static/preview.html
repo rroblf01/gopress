@@ -1,40 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vista Previa Responsive</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="static/favicon.ico" type="image/x-icon">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #1a1a2e;
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .preview-header {
             text-align: center;
             color: white;
             margin-bottom: 30px;
         }
-        
+
         .preview-header h1 {
             font-size: 24px;
             margin-bottom: 10px;
         }
-        
+
         .preview-header p {
             color: #888;
             font-size: 14px;
         }
-        
+
         .preview-container {
             display: flex;
             justify-content: center;
@@ -43,13 +45,13 @@
             flex-wrap: wrap;
             padding-bottom: 40px;
         }
-        
+
         .preview-device {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        
+
         .device-label {
             font-size: 14px;
             font-weight: 600;
@@ -60,7 +62,7 @@
             align-items: center;
             gap: 8px;
         }
-        
+
         .device-frame {
             background: #000;
             border-radius: 20px;
@@ -69,25 +71,25 @@
             border: 3px solid #333;
             overflow: hidden;
         }
-        
+
         .desktop-frame {
             width: 1440px;
             height: 900px;
             border-radius: 8px;
         }
-        
+
         .tablet-frame {
             width: 1024px;
             height: 768px;
             border-radius: 12px;
         }
-        
+
         .mobile-frame {
             width: 390px;
             height: 844px;
             border-radius: 18px;
         }
-        
+
         .device-content {
             background: white;
             border-radius: 0;
@@ -95,14 +97,14 @@
             width: 100%;
             height: 100%;
         }
-        
+
         .device-content iframe {
             width: 100%;
             height: 100%;
             border: none;
             display: block;
         }
-        
+
         .loading {
             display: flex;
             align-items: center;
@@ -111,7 +113,7 @@
             color: #888;
             font-size: 14px;
         }
-        
+
         @media (max-width: 1600px) {
             .preview-container {
                 flex-direction: column;
@@ -120,12 +122,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="preview-header">
         <h1>📱 Vista Previa Responsive</h1>
         <p>Vista en tiempo real de los 3 dispositivos</p>
     </div>
-    
+
     <div class="preview-container">
         <div class="preview-device">
             <div class="device-label">
@@ -137,7 +140,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="preview-device">
             <div class="device-label">
                 📱 Tablet
@@ -148,7 +151,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="preview-device">
             <div class="device-label">
                 📲 Móvil
@@ -160,22 +163,22 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         async function loadPreview() {
             try {
                 // Cargar la página renderizada en los 3 iframes
                 const url = '/';
-                
+
                 document.querySelectorAll('.device-content').forEach((el, index) => {
                     const devices = ['desktop', 'tablet', 'mobile'];
-                    
+
                     el.innerHTML = `<iframe src="${url}" 
                         style="width: 100%; height: 100%; border: none;"
                         sandbox="allow-scripts allow-same-origin"
                         title="${devices[index]} view"></iframe>`;
                 });
-                
+
             } catch (error) {
                 console.error('Error loading preview:', error);
                 document.querySelectorAll('.device-content').forEach(el => {
@@ -183,9 +186,10 @@
                 });
             }
         }
-        
+
         // Cargar vista previa al iniciar
         loadPreview();
     </script>
 </body>
+
 </html>

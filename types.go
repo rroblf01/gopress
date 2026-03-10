@@ -52,6 +52,8 @@ type Block struct {
 	PaddingRightMobile  string           `json:"paddingRightMobile"`
 	PaddingBottomMobile string           `json:"paddingBottomMobile"`
 	PaddingLeftMobile   string           `json:"paddingLeftMobile"`
+	ComponentName   string                `json:"componentName"`
+	ComponentId     int64                 `json:"componentId"`
 }
 
 type Styles struct {

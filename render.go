@@ -1,11 +1,17 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
 func BuildPageHTML(page PageData) string {
+	return BuildPageHTMLWithComponents(page, nil)
+}
+
+func BuildPageHTMLWithComponents(page PageData, db *sql.DB) string {
 	var html strings.Builder
 
 	html.WriteString(`<!DOCTYPE html>
@@ -67,7 +73,7 @@ func BuildPageHTML(page PageData) string {
 <body>`)
 
 	for _, block := range page.Blocks {
-		html.WriteString(RenderBlock(block))
+		html.WriteString(RenderBlockWithDB(block, db))
 	}
 
 	html.WriteString(`
@@ -77,11 +83,68 @@ func BuildPageHTML(page PageData) string {
 	return html.String()
 }
 
-func RenderBlock(block Block) string {
+func RenderBlockWithDB(block Block, db *sql.DB) string {
+	if block.Type == "component" && db != nil {
+		return renderComponent(block, db)
+	}
+	return renderBlockInternal(block, db)
+}
+
+func renderComponent(block Block, db *sql.DB) string {	
+	// Si no hay DB o no hay ComponentId, mostrar placeholder
+	if db == nil {
+		fmt.Println("DB es nil, mostrando placeholder")
+		return fmt.Sprintf(`<div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; color: #666;">
+			<p>🧩 %s (Componente)</p>
+		</div>`, EscapeHTML(block.ComponentName))
+	}
+	
+	if block.ComponentId == 0 {
+		fmt.Println("ComponentId es 0, mostrando placeholder")
+		return fmt.Sprintf(`<div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; color: #666;">
+			<p>🧩 %s (Sin ID)</p>
+		</div>`, EscapeHTML(block.ComponentName))
+	}
+	
+	// Cargar el componente desde la base de datos
+	query := `SELECT blocks, styles FROM components WHERE id = $1`
+	var blocksJSON, stylesJSON []byte
+	err := db.QueryRow(query, block.ComponentId).Scan(&blocksJSON, &stylesJSON)
+	if err != nil {
+		fmt.Printf("Error al cargar componente %d: %v\n", block.ComponentId, err)
+		// Si no se encuentra el componente, mostrar un placeholder
+		return fmt.Sprintf(`<div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; color: #666;">
+			<p>Componente no encontrado: %s</p>
+		</div>`, EscapeHTML(block.ComponentName))
+	}
+
+	fmt.Printf("Componente cargado, blocksJSON: %s\n", string(blocksJSON))
+
+	// Decodificar los bloques del componente
+	var componentBlocks []Block
+	if err := json.Unmarshal(blocksJSON, &componentBlocks); err != nil {
+		fmt.Printf("Error al decodificar bloques: %v\n", err)
+		return fmt.Sprintf(`<div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; color: #666;">
+			<p>Error al cargar componente: %s</p>
+		</div>`, EscapeHTML(block.ComponentName))
+	}
+
+	fmt.Printf("Bloques del componente: %d\n", len(componentBlocks))
+
+	// Renderizar los bloques del componente
+	var html strings.Builder
+	for _, childBlock := range componentBlocks {
+		html.WriteString(RenderBlockWithDB(childBlock, db))
+	}
+
+	return html.String()
+}
+
+func renderBlockInternal(block Block, db *sql.DB) string {
 	var html strings.Builder
 	blockClass := fmt.Sprintf("block-%d", block.ID)
 
-	// Para iconos, no usamos generateResponsiveCSS porque width debe ser font-size
+	// Para iconos
 	if block.Type == "icon" {
 		html.WriteString(`<style>`)
 		if block.CustomCSS != "" {
@@ -91,7 +154,6 @@ func RenderBlock(block Block) string {
 			html.WriteString(block.CustomCSS)
 			html.WriteString(` } `)
 		}
-		// Padding responsive para iconos
 		if block.PaddingTop != "" || block.PaddingRight != "" || block.PaddingBottom != "" || block.PaddingLeft != "" {
 			paddingTop := block.PaddingTop
 			if paddingTop == "" {
@@ -132,7 +194,7 @@ func RenderBlock(block Block) string {
 
 	switch block.Type {
 	case "container":
-		return renderContainer(&html, block, blockClass)
+		return renderContainer(&html, block, blockClass, db)
 	case "hero":
 		renderHero(&html, block, blockClass)
 	case "heading":
@@ -154,6 +216,10 @@ func RenderBlock(block Block) string {
 	}
 
 	return html.String()
+}
+
+func RenderBlock(block Block) string {
+	return renderBlockInternal(block, nil)
 }
 
 func generateResponsiveCSS(block Block, blockClass string) string {
@@ -364,11 +430,15 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 	return css.String()
 }
 
-func renderContainer(html *strings.Builder, block Block, blockClass string) string {
+func renderContainer(html *strings.Builder, block Block, blockClass string, db *sql.DB) string {
 	var innerHTML strings.Builder
 
 	for _, child := range block.Children {
-		innerHTML.WriteString(RenderBlock(child))
+		if db != nil {
+			innerHTML.WriteString(RenderBlockWithDB(child, db))
+		} else {
+			innerHTML.WriteString(RenderBlock(child))
+		}
 	}
 
 	html.WriteString(`<div class="`)

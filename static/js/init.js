@@ -15,7 +15,6 @@ function setupEventListeners() {
     document.getElementById('saveBtn').addEventListener('click', savePage);
     document.getElementById('saveComponentBtn').addEventListener('click', () => {
         const tabId = window.tabsState ? window.tabsState.activeTabId : tabsState.activeTabId;
-        console.log('Guardando componente, tabId:', tabId);
         saveComponentFromEditor(tabId);
     });
     document.getElementById('previewBtn').addEventListener('click', openPreviewModal);

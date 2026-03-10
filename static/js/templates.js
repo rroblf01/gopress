@@ -112,7 +112,6 @@ async function loadTemplate(id) {
         }
 
         const pageData = await response.json();
-        console.log('Plantilla cargada:', pageData);
 
         state.page = {
             title: pageData.title || '',

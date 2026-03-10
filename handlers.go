@@ -22,7 +22,7 @@ func ServePreview(db *sql.DB) fiber.Handler {
 
 func SavePageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
-
+		
 		var pageData PageData
 
 		if err := c.Bind().JSON(&pageData); err != nil {
@@ -31,7 +31,7 @@ func SavePageHandler(db *sql.DB) fiber.Handler {
 				"error": "Datos inválidos: " + err.Error(),
 			})
 		}
-
+		
 		pageID, err := SavePageToDB(db, pageData)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -66,7 +66,7 @@ func RenderPageHandler(db *sql.DB) fiber.Handler {
 			return c.Status(fiber.StatusNotFound).SendString("No hay página guardada")
 		}
 
-		html := BuildPageHTML(*pageData)
+		html := BuildPageHTMLWithComponents(*pageData, db)
 
 		c.Set("Content-Type", "text/html; charset=utf-8")
 		return c.SendString(html)

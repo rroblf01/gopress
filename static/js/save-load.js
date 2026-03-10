@@ -13,14 +13,14 @@ async function savePage() {
         favicon: state.page.favicon,
         createdAt: new Date().toISOString()
     };
-    
+
     try {
         const response = await fetch('/cms', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pageData)
         });
-        
+
         if (response.ok) {
             showToast('Página guardada correctamente', 'success');
         } else {
@@ -36,45 +36,50 @@ async function savePage() {
  * Carga los datos de la página
  */
 function loadPageData() {
-    fetch('/api/page').then(res => {
+    fetch('/api/page')
+    .then(res => {
         if (res.status === 404) {
-            console.log('Nueva página - no hay datos guardados');
             loadGlobalStyles();
             renderBlocks();
-            return;
+            return null;
         }
         return res.json();
-    }).then(data => {
-        if (data && data.title) {
+    })
+    .then(data => {
+        if (!data) return;
+        
+        if (data.blocks !== undefined) {
+            
             // Inicializar propiedades faltantes en los bloques
             const blocks = initializeBlockProperties(data.blocks || []);
 
-            state.page = { 
-                title: data.title, 
-                blocks: blocks, 
-                styles: data.styles || state.page.styles, 
-                favicon: data.favicon || '' 
+            state.page = {
+                title: data.title || '',
+                blocks: blocks,
+                styles: data.styles || state.page.styles,
+                favicon: data.favicon || ''
             };
-            
-            document.getElementById('siteTitle').value = data.title;
-            
+
+            document.getElementById('siteTitle').value = data.title || '';
+
             if (data.favicon) {
                 const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
                 link.rel = 'icon';
                 link.href = data.favicon;
                 document.head.appendChild(link);
-                
+
                 const preview = document.getElementById('faviconPreview');
                 preview.src = data.favicon;
                 preview.style.display = 'block';
             }
-            
+
             loadGlobalStyles();
             renderBlocks();
             showToast('Página cargada', 'success');
         }
-    }).catch(err => {
-        console.log('Nueva página - error al cargar:', err);
+    })
+    .catch(err => {
+        console.error('Error al cargar página:', err);
     });
 }
 

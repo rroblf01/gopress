@@ -318,8 +318,7 @@ async function loadCustomComponentsList() {
  * Añade un componente al canvas desde el drag
  */
 async function addComponentFromDrag(componentId, dropTarget) {
-    console.log('addComponentFromDrag llamado con componentId:', componentId);
-    
+
     try {
         const response = await fetch(`/api/components/${componentId}`);
         if (!response.ok) {
@@ -329,7 +328,7 @@ async function addComponentFromDrag(componentId, dropTarget) {
         }
 
         const component = await response.json();
-        console.log('Componente cargado:', component.name);
+    
 
         // Crear un bloque de tipo "component" que referencia al componente
         const componentBlock = {
@@ -366,7 +365,7 @@ async function addComponentFromDrag(componentId, dropTarget) {
         // Verificar si estamos en el editor principal o en un editor de componente
         const tabsStateLocal = window.tabsState || tabsState;
         const isComponentEditor = tabsStateLocal && tabsStateLocal.activeTabId !== 'main';
-        console.log('isComponentEditor:', isComponentEditor, 'activeTabId:', tabsStateLocal ? tabsStateLocal.activeTabId : 'no state');
+    
 
         if (isComponentEditor) {
             // Estamos en un editor de componente
@@ -375,14 +374,12 @@ async function addComponentFromDrag(componentId, dropTarget) {
                 editorState.blocks.push(componentBlock);
                 editorState.dirty = true;
                 renderComponentEditorBlocks(tabsStateLocal.activeTabId);
-                console.log('Componente añadido al editor de componente');
+            
             } else {
                 console.error('editorState no encontrado para tabId:', tabsStateLocal.activeTabId);
             }
         } else {
-            // Estamos en el editor principal - usar el estado global state.page
-            console.log('Añadiendo al editor principal');
-            console.log('state.page.blocks antes:', JSON.stringify(state.page.blocks));
+
             // Si hay un target de drop (contenedor), añadir como hijo
             if (dropTarget && dropTarget.dataset.parentId) {
                 const parentId = parseInt(dropTarget.dataset.parentId);
@@ -393,10 +390,7 @@ async function addComponentFromDrag(componentId, dropTarget) {
                 }
             } else {
                 // Añadir al root
-                console.log('Añadiendo al root, blocks antes:', state.page.blocks.length);
                 state.page.blocks.push(componentBlock);
-                console.log('Blocks después:', state.page.blocks.length);
-                console.log('state.page.blocks después:', JSON.stringify(state.page.blocks));
             }
             renderBlocks();
         }
