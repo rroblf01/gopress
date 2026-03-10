@@ -177,7 +177,7 @@ function createVisibilityProperties(block, isComponentEditor = false) {
  */
 function renderContainerProperties(block) {
     return `<div class="property-group">
-        <label class="property-label">Dirección base (Ordenador)</label>
+        <label class="property-label">Dirección</label>
         <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
             <option value="vertical" ${block.direction === 'vertical' ? 'selected' : ''}>Vertical</option>
             <option value="horizontal" ${block.direction === 'horizontal' ? 'selected' : ''}>Horizontal</option>
@@ -610,10 +610,8 @@ function updateColorProperty(prop, value) {
 function updateHiddenProperty(prop, value, isComponentEditor = false) {
     const current = getCurrentState();
     const block = findBlockById(current.state, current.selectedBlockId);
-    console.log('updateHiddenProperty:', {prop, value, blockId: block?.id, blockType: block?.type});
     if (block) {
         block[prop] = value;
-        console.log('Block after update:', block);
         if (current.isComponent) {
             current.editorState.dirty = true;
             saveComponentFromEditor(current.tabId);
