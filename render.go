@@ -151,13 +151,23 @@ func renderComponent(block Block, db *sql.DB) string {
 		</div>`, EscapeHTML(block.ComponentName))
 	}
 
-	fmt.Printf("Bloques del componente: %d\n", len(componentBlocks))
-
-	// Renderizar los bloques del componente
+	// Renderizar los bloques del componente envueltos en un contenedor con los atributos del componente
 	var html strings.Builder
+	blockClass := fmt.Sprintf("block-%d", block.ID)
+
+	html.WriteString("<style>")
+	html.WriteString(generateResponsiveCSS(block, blockClass))
+	html.WriteString("</style>")
+
+	html.WriteString(`<div class="`)
+	html.WriteString(blockClass)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="display: contents;">`)
 	for _, childBlock := range componentBlocks {
 		html.WriteString(RenderBlockWithDB(childBlock, db))
 	}
+	html.WriteString(`</div>`)
 
 	return html.String()
 }

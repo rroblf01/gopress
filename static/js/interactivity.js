@@ -9,10 +9,10 @@
 function renderInteractivityProperties(block, isComponentEditor = false) {
     // Obtener todos los bloques disponibles
     const allBlocks = getAllBlocksFlat(isComponentEditor);
-    
+
     // Filtrar el bloque actual de la lista
     const availableBlocks = allBlocks.filter(b => b.id !== block.id);
-    
+
     if (availableBlocks.length === 0) {
         return `<div class="property-group" style="border-top: 2px solid var(--border); padding-top: 16px;">
             <label class="property-label">⚡ Interactividad</label>
@@ -21,28 +21,39 @@ function renderInteractivityProperties(block, isComponentEditor = false) {
             </p>
         </div>`;
     }
-    
+
     // Encontrar el bloque target seleccionado
     const targetBlock = block.toggleTargetId ? allBlocks.find(b => b.id === block.toggleTargetId) : null;
-    
+
     let html = `<div class="property-group" style="border-top: 2px solid var(--border); padding-top: 16px;">
         <label class="property-label">⚡ Interactividad</label>
         <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
             Al hacer click en este elemento, se mostrará/ocultará el elemento seleccionado:
         </p>
-        
+
         <div style="margin-top: 12px;">
             <label class="property-label" style="font-size: 12px;">Elemento a mostrar/ocultar:</label>
-            <select class="property-select" onchange="setToggleTarget(${block.id}, this.value, ${isComponentEditor})">
-                <option value="">-- Ninguno --</option>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; margin-top: 8px;">
+                <div style="padding: 8px; background: var(--secondary); border-bottom: 1px solid var(--border);">
+                    <span style="font-size: 11px; color: var(--text-secondary);">Pasa el ratón para resaltar en el editor</span>
+                </div>
                 ${availableBlocks.map(b => `
-                    <option value="${b.id}" ${block.toggleTargetId === b.id ? 'selected' : ''}>
-                        ${escapeHTML(getBlockDisplayName(b))} (ID: ${b.id})
-                    </option>
+                    <div style="padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s;"
+                         onmouseenter="highlightBlock(${b.id})"
+                         onmouseleave="unhighlightBlock(${b.id})"
+                         onclick="setToggleTarget(${block.id}, ${b.id}, ${isComponentEditor})"
+                         onmouseover="this.style.background='#e0f2fe'"
+                         onmouseout="this.style.background='${block.toggleTargetId === b.id ? '#fef3c7' : 'transparent'}'"
+                         ${block.toggleTargetId === b.id ? 'style="background: #fef3c7;"' : ''}>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-size: 13px;">${escapeHTML(getBlockDisplayName(b))}</span>
+                            ${block.toggleTargetId === b.id ? '<span style="font-size: 16px;">✓</span>' : ''}
+                        </div>
+                    </div>
                 `).join('')}
-            </select>
+            </div>
         </div>
-        
+
         ${targetBlock ? `
             <div style="margin-top: 12px; padding: 12px; background: var(--secondary); border-radius: 6px; border: 1px solid var(--border);">
                 <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
@@ -58,14 +69,8 @@ function renderInteractivityProperties(block, isComponentEditor = false) {
                 </p>
             </div>
         ` : ''}
-        
-        <div style="margin-top: 12px; padding: 10px; background: #fef3c7; border-radius: 6px; border: 1px solid #fcd34d;">
-            <p style="font-size: 11px; color: #92400e; margin: 0;">
-                💡 Pasa el ratón por la lista de elementos para resaltarlo en el editor
-            </p>
-        </div>
     </div>`;
-    
+
     return html;
 }
 
