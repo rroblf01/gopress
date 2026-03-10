@@ -345,6 +345,21 @@ body {
     background: rgba(239, 68, 68, 0.1);
 }
 
+/* Component visibility list styles */
+.component-visibility-item {
+    border: 1px solid var(--border);
+}
+
+.component-visibility-item:hover {
+    background: #e0f2fe !important;
+    border-color: var(--primary);
+}
+
+.component-visibility-item.highlighted {
+    background: #dbeafe !important;
+    border-color: var(--primary);
+}
+
 .sidebar-right {
     background: white;
     border-left: 1px solid var(--border);

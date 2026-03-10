@@ -70,7 +70,31 @@ func BuildPageHTMLWithComponents(page PageData, db *sql.DB) string {
 	html.WriteString(`
     </style>
 </head>
-<body>`)
+<body>
+    <script>
+        // Función para toggle de visibilidad de elementos
+        function toggleElementVisibility(targetId) {
+            const targetElement = document.querySelector('[data-block-id="' + targetId + '"]');
+            if (targetElement) {
+                const currentDisplay = window.getComputedStyle(targetElement).display;
+                targetElement.style.display = currentDisplay === 'none' ? '' : 'none';
+            }
+        }
+
+        // Configurar event listeners para bloques interactivos
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-toggle-target-id]').forEach(function(block) {
+                block.style.cursor = 'pointer';
+                block.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const targetId = block.getAttribute('data-toggle-target-id');
+                    if (targetId) {
+                        toggleElementVisibility(targetId);
+                    }
+                });
+            });
+        });
+    </script>`)
 
 	for _, block := range page.Blocks {
 		html.WriteString(RenderBlockWithDB(block, db))
@@ -90,7 +114,7 @@ func RenderBlockWithDB(block Block, db *sql.DB) string {
 	return renderBlockInternal(block, db)
 }
 
-func renderComponent(block Block, db *sql.DB) string {	
+func renderComponent(block Block, db *sql.DB) string {
 	// Si no hay DB o no hay ComponentId, mostrar placeholder
 	if db == nil {
 		fmt.Println("DB es nil, mostrando placeholder")
@@ -98,14 +122,14 @@ func renderComponent(block Block, db *sql.DB) string {
 			<p>🧩 %s (Componente)</p>
 		</div>`, EscapeHTML(block.ComponentName))
 	}
-	
+
 	if block.ComponentId == 0 {
 		fmt.Println("ComponentId es 0, mostrando placeholder")
 		return fmt.Sprintf(`<div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; color: #666;">
 			<p>🧩 %s (Sin ID)</p>
 		</div>`, EscapeHTML(block.ComponentName))
 	}
-	
+
 	// Cargar el componente desde la base de datos
 	query := `SELECT blocks, styles FROM components WHERE id = $1`
 	var blocksJSON, stylesJSON []byte
@@ -136,6 +160,15 @@ func renderComponent(block Block, db *sql.DB) string {
 	}
 
 	return html.String()
+}
+
+// getBlockDataAttributes devuelve los atributos data-block-id y data-toggle-target-id
+func getBlockDataAttributes(block Block) string {
+	attrs := fmt.Sprintf(`data-block-id="%d"`, block.ID)
+	if block.ToggleTargetId != 0 {
+		attrs += fmt.Sprintf(` data-toggle-target-id="%d"`, block.ToggleTargetId)
+	}
+	return attrs
 }
 
 func renderBlockInternal(block Block, db *sql.DB) string {
@@ -441,7 +474,9 @@ func renderContainer(html *strings.Builder, block Block, blockClass string, db *
 
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -462,7 +497,9 @@ func renderContainer(html *strings.Builder, block Block, blockClass string, db *
 func renderHero(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -498,7 +535,9 @@ func renderHeading(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(fmt.Sprintf("%d", level))
 	html.WriteString(` class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -519,7 +558,9 @@ func renderHeading(html *strings.Builder, block Block, blockClass string) {
 func renderParagraph(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<p class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -538,7 +579,9 @@ func renderParagraph(html *strings.Builder, block Block, blockClass string) {
 func renderImage(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<img class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" src="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` src="`)
 	html.WriteString(block.Src)
 	html.WriteString(`" alt="`)
 	html.WriteString(EscapeHTML(block.Alt))
@@ -571,7 +614,9 @@ func renderIcon(html *strings.Builder, block Block, blockClass string) {
 	}
 	html.WriteString(`<span class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="font-size: `)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="font-size: `)
 	html.WriteString(fontSize)
 	html.WriteString(`px; color: `)
 	html.WriteString(color)
@@ -593,7 +638,7 @@ func renderIconToString(block Block, blockClass string) string {
 	if emoji == "" {
 		emoji = "😀"
 	}
-	return fmt.Sprintf(`<span class="%s" style="font-size: %spx; color: %s; display: inline-block;">%s</span>`, blockClass, fontSize, color, emoji)
+	return fmt.Sprintf(`<span class="%s" %s style="font-size: %spx; color: %s; display: inline-block;">%s</span>`, blockClass, getBlockDataAttributes(block), fontSize, color, emoji)
 }
 
 func renderButton(html *strings.Builder, block Block, blockClass string) {
@@ -605,10 +650,12 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 	if textColor == "" {
 		textColor = "#ffffff"
 	}
-	
+
 	html.WriteString(`<a class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" href="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` href="`)
 	html.WriteString(block.Link)
 	html.WriteString(`" style="`)
 	if block.Width != "" {
@@ -633,7 +680,9 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 func renderCards(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(` grid-3" style="`)
+	html.WriteString(` grid-3" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -658,7 +707,9 @@ func renderCards(html *strings.Builder, block Block, blockClass string) {
 func renderCarousel(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<div class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)
@@ -701,7 +752,9 @@ func renderCarousel(html *strings.Builder, block Block, blockClass string) {
 func renderDivider(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(`<hr class="`)
 	html.WriteString(blockClass)
-	html.WriteString(`" style="`)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)

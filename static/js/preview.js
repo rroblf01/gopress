@@ -150,6 +150,8 @@ function setResponsiveMode(mode) {
     canvasWrapper.classList.add(mode);
     
     renderBlocks();
+    
+    // Re-renderizar propiedades para actualizar la lista de visibilidad
     renderProperties();
 }
 

@@ -36,7 +36,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     hero: {
         type: 'hero',
@@ -68,7 +69,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     paragraph: {
         type: 'paragraph',
@@ -98,7 +100,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     heading: {
         type: 'heading',
@@ -129,7 +132,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     image: {
         type: 'image',
@@ -159,7 +163,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     icon: {
         type: 'icon',
@@ -185,7 +190,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     cards: {
         type: 'cards',
@@ -215,7 +221,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     carousel: {
         type: 'carousel',
@@ -245,7 +252,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     button: {
         type: 'button',
@@ -278,7 +286,8 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     },
     divider: {
         type: 'divider',
@@ -337,6 +346,7 @@ const blockTemplates = {
         paddingTopMobile: '',
         paddingRightMobile: '',
         paddingBottomMobile: '',
-        paddingLeftMobile: ''
+        paddingLeftMobile: '',
+        toggleTargetId: null
     }
 };

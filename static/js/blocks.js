@@ -242,6 +242,11 @@ function renderBlocks() {
     document.querySelectorAll('.block-container-drop').forEach(dropZone => {
         setupContainerDropZone(dropZone);
     });
+    
+    // Re-renderizar propiedades para actualizar la lista de componentes
+    if (state.selectedBlockId) {
+        renderProperties();
+    }
 }
 
 /**

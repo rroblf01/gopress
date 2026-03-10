@@ -23,27 +23,38 @@ function renderProperties() {
             return;
         }
         selectedBlockId = editorState.selectedBlockId;
-        if (!selectedBlockId) {
-            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
-            return;
+        if (selectedBlockId) {
+            block = findBlockById(editorState.blocks, selectedBlockId);
         }
-        block = findBlockById(editorState.blocks, selectedBlockId);
     } else {
         // Estamos en el editor principal
-        if (!state.selectedBlockId) {
-            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
-            return;
-        }
         selectedBlockId = state.selectedBlockId;
-        block = findBlockById(state.page.blocks, selectedBlockId);
+        if (selectedBlockId) {
+            block = findBlockById(state.page.blocks, selectedBlockId);
+        }
     }
-    
+
+    // Siempre mostrar la lista global de componentes
+    let html = createGlobalComponentList(isComponentEditor);
+
+    // Si no hay bloque seleccionado, mostrar mensaje
     if (!block) {
-        panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Bloque no encontrado</p>';
+        if (!html) {
+            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
+        } else {
+            // Añadir mensaje después de la lista de componentes
+            html += '<p style="color: var(--text-secondary); font-size: 13px; margin-top: 16px;">Selecciona un bloque para editar sus propiedades</p>';
+        }
+        panel.innerHTML = html;
         return;
     }
 
-    let html = `<div class="property-group">
+    // Propiedades del bloque seleccionado
+    html += `<div class="property-group" style="margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border);">
+        <label class="property-label">Propiedades del Bloque</label>
+    </div>`;
+    
+    html += `<div class="property-group">
         <label class="property-label">Tipo de Bloque</label>
         <input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);">
     </div>`;
@@ -58,6 +69,14 @@ function renderProperties() {
 
     // Visibilidad por dispositivo
     html += createVisibilityProperties(block, isComponentEditor);
+
+    // Lista global de componentes personalizados en la página
+    html += createGlobalComponentList(isComponentEditor);
+
+    // Visibilidad de componentes hijos (para cualquier bloque con children)
+    if (block.children && block.children.length > 0) {
+        html += createComponentVisibilityList(block, isComponentEditor);
+    }
 
     // Propiedades específicas por tipo de bloque
     switch (block.type) {
@@ -101,6 +120,9 @@ function renderProperties() {
         <label class="property-label">CSS Personalizado</label>
         <textarea class="property-textarea" onchange="updateBlockProperty('customCSS', this.value)">${block.customCSS || ''}</textarea>
     </div>`;
+
+    // Interactividad
+    html += renderInteractivityProperties(block, isComponentEditor);
 
     panel.innerHTML = html;
 }
@@ -169,6 +191,111 @@ function createVisibilityProperties(block, isComponentEditor = false) {
                 <span style="font-size: 13px;">📲 Ocultar en Móvil</span>
             </label>
         </div>
+    </div>`;
+}
+
+/**
+ * Crea lista de visibilidad de componentes hijos
+ */
+function createComponentVisibilityList(block, isComponentEditor = false) {
+    const components = block.children.filter(child => child.type === 'component');
+    if (components.length === 0) return '';
+
+    const listItems = components.map((comp, index) => `
+        <div class="component-visibility-item" 
+             data-block-id="${comp.id}" 
+             data-component-id="${comp.componentId}"
+             data-component-name="${escapeHTML(comp.componentName)}"
+             style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background: var(--secondary); border-radius: 4px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s;"
+             onmouseenter="highlightComponent(${comp.id})"
+             onmouseleave="unhighlightComponent(${comp.id})">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <span style="font-size: 16px;">🧩</span>
+                <span style="font-size: 13px; font-weight: 500;">${escapeHTML(comp.componentName)}</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;" onclick="event.stopPropagation()">
+                <input type="checkbox" 
+                    ${comp.hiddenDesktop || comp.hiddenTablet || comp.hiddenMobile ? 'checked' : ''} 
+                    onchange="toggleComponentVisibility(${comp.id}, ${isComponentEditor})"
+                    style="width: 16px; height: 16px; cursor: pointer;">
+                <span style="font-size: 11px; color: var(--text-secondary);">Oculto</span>
+            </label>
+        </div>
+    `).join('');
+
+    return `<div class="property-group" style="border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <label class="property-label" style="display: flex; align-items: center; gap: 6px;">
+            <span>📦</span> Componentes en este bloque (${components.length})
+        </label>
+        <div style="margin-top: 8px;">
+            ${listItems}
+        </div>
+    </div>`;
+}
+
+/**
+ * Crea lista global de componentes personalizados en la página
+ */
+function createGlobalComponentList(isComponentEditor = false) {
+    // Buscar todos los componentes en la página (recursivamente)
+    const allComponents = [];
+    const stateObj = isComponentEditor ? 
+        tabsState.componentEditors[tabsState.activeTabId] : 
+        { blocks: state.page.blocks };
+    
+    function findComponents(blocks) {
+        for (const block of blocks) {
+            if (block.type === 'component') {
+                allComponents.push(block);
+            }
+            if (block.children && block.children.length > 0) {
+                findComponents(block.children);
+            }
+        }
+    }
+    
+    findComponents(stateObj.blocks);
+    
+    if (allComponents.length === 0) return '';
+    
+    // Determinar qué propiedad hidden usar según el modo responsive
+    const mode = state.responsiveMode;
+    const hiddenProp = mode === 'desktop' ? 'hiddenDesktop' : mode === 'tablet' ? 'hiddenTablet' : 'hiddenMobile';
+
+    const listItems = allComponents.map((comp) => `
+        <div class="component-visibility-item" 
+             data-block-id="${comp.id}" 
+             data-component-id="${comp.componentId}"
+             data-component-name="${escapeHTML(comp.componentName)}"
+             style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background: var(--secondary); border-radius: 4px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s;"
+             onmouseenter="highlightComponent(${comp.id})"
+             onmouseleave="unhighlightComponent(${comp.id})">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <span style="font-size: 16px;">🧩</span>
+                <span style="font-size: 13px; font-weight: 500;">${escapeHTML(comp.componentName)}</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;" onclick="event.stopPropagation()">
+                <input type="checkbox" 
+                    ${comp[hiddenProp] ? 'checked' : ''} 
+                    onchange="toggleComponentVisibility(${comp.id}, ${isComponentEditor})"
+                    style="width: 16px; height: 16px; cursor: pointer;">
+                <span style="font-size: 11px; color: var(--text-secondary);">Oculto</span>
+            </label>
+        </div>
+    `).join('');
+
+    const modeLabel = mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲';
+
+    return `<div class="property-group" style="border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <label class="property-label" style="display: flex; align-items: center; gap: 6px;">
+            <span>👁️</span> Componentes en la página ${modeLabel} (${allComponents.length})
+        </label>
+        <div style="margin-top: 8px; max-height: 300px; overflow-y: auto;">
+            ${listItems}
+        </div>
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+            💡 Pasa el ratón para resaltar el componente en el canvas
+        </p>
     </div>`;
 }
 
@@ -620,6 +747,58 @@ function updateHiddenProperty(prop, value, isComponentEditor = false) {
         }
         renderCurrentBlocks();
         renderProperties();
+    }
+}
+
+/**
+ * Alterna visibilidad de un componente
+ */
+function toggleComponentVisibility(blockId, isComponentEditor = false) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, blockId);
+    
+    if (block && block.type === 'component') {
+        // Toggle hidden for current responsive mode
+        const mode = state.responsiveMode;
+        const hiddenProp = mode === 'desktop' ? 'hiddenDesktop' : mode === 'tablet' ? 'hiddenTablet' : 'hiddenMobile';
+        
+        block[hiddenProp] = !block[hiddenProp];
+        
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Resalta un componente en el canvas
+ */
+function highlightComponent(blockId) {
+    const blockEl = document.querySelector(`[data-block-id="${blockId}"]`);
+    if (blockEl) {
+        blockEl.style.transition = 'all 0.2s';
+        blockEl.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.5)';
+        blockEl.style.transform = 'scale(1.02)';
+        blockEl.style.zIndex = '100';
+        // Scroll hasta el elemento si no está visible
+        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+/**
+ * Elimina el resaltado de un componente
+ */
+function unhighlightComponent(blockId) {
+    const blockEl = document.querySelector(`[data-block-id="${blockId}"]`);
+    if (blockEl) {
+        blockEl.style.boxShadow = '';
+        blockEl.style.transform = '';
+        blockEl.style.zIndex = '';
     }
 }
 
