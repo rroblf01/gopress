@@ -77,3 +77,17 @@ type TemplateInfo struct {
 	Name      string `json:"name"`
 	CreatedAt string `json:"createdAt"`
 }
+
+type ComponentInfo struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type Component struct {
+	ID        int64   `json:"id"`
+	Name      string  `json:"name"`
+	Blocks    []Block `json:"blocks"`
+	Styles    Styles  `json:"styles"`
+	CreatedAt string  `json:"createdAt"`
+}

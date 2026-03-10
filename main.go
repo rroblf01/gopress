@@ -39,6 +39,13 @@ func main() {
 	app.Get("/api/templates", GetTemplatesHandler(db))
 	app.Get("/api/templates/:id", GetTemplateHandler(db))
 	app.Delete("/api/templates/:id", DeleteTemplateHandler(db))
+
+	// Component routes
+	app.Post("/api/components", SaveComponentHandler(db))
+	app.Get("/api/components", GetComponentsHandler(db))
+	app.Get("/api/components/:id", GetComponentHandler(db))
+	app.Put("/api/components/:id", UpdateComponentHandler(db))
+	app.Delete("/api/components/:id", DeleteComponentHandler(db))
 	
 	app.Use("/static", static.New("./static"))
 

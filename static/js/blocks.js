@@ -248,9 +248,10 @@ function setupContainerDropZone(dropZone) {
         e.preventDefault();
         e.stopPropagation();
         const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        if (dragSource !== 'sidebar' && dragSource !== 'existing-block') return;
-        
-        e.dataTransfer.dropEffect = dragSource === 'sidebar' ? 'copy' : 'move';
+        const componentId = e.dataTransfer.getData('componentId');
+        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) return;
+
+        e.dataTransfer.dropEffect = dragSource === 'sidebar' || componentId ? 'copy' : 'move';
         dropZone.style.background = '#e0f2fe';
         dropZone.style.borderColor = '#0284c7';
     });
@@ -266,14 +267,18 @@ function setupContainerDropZone(dropZone) {
         e.preventDefault();
         e.stopPropagation();
         const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        if (dragSource !== 'sidebar' && dragSource !== 'existing-block') return;
-        
+        const componentId = e.dataTransfer.getData('componentId');
+        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) return;
+
         dropZone.style.background = '#f0f9ff';
         dropZone.style.borderColor = '#2563eb';
 
         const parentId = parseInt(dropZone.dataset.parentId);
 
-        if (dragSource === 'sidebar') {
+        if (componentId) {
+            // Es un componente personalizado
+            addComponentFromDrag(componentId, dropZone);
+        } else if (dragSource === 'sidebar') {
             const blockType = e.dataTransfer.getData('text/plain');
             if (blockType && blockTemplates[blockType]) {
                 addBlock(blockType, parentId);
@@ -426,7 +431,15 @@ function createBlockPreviewHTML(block, allCSS) {
         case 'divider':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
                 <hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
-        
+
+        case 'component':
+            return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
+                <div class="${blockClass}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 8px; text-align: center; color: white;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🧩</div>
+                    <div style="font-size: 16px; font-weight: 600;">${escapeHTML(block.componentName || 'Componente')}</div>
+                    <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Componente personalizado</div>
+                </div>`;
+
         default:
             return '';
     }

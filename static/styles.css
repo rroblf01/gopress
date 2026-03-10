@@ -23,10 +23,115 @@ body {
     color: var(--text-primary);
 }
 
+/* Tabs Bar Styles */
+.tabs-bar {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    height: 44px;
+    box-shadow: var(--shadow);
+}
+
+.tabs-list {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    overflow-x: auto;
+    gap: 4px;
+    scrollbar-width: none;
+}
+
+.tabs-list::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.tab-item:hover {
+    background: #e5e7eb;
+    color: var(--text-primary);
+}
+
+.tab-item.active {
+    background: white;
+    color: var(--primary);
+    border-bottom-color: white;
+}
+
+.tab-item-icon {
+    font-size: 14px;
+}
+
+.tab-item-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.tab-item-close:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.tab-item.closable .tab-item-close {
+    display: flex;
+}
+
+.tab-item:not(.closable) .tab-item-close {
+    display: none;
+}
+
+.tabs-scroll-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    margin-left: 4px;
+}
+
+.tabs-scroll-btn:hover {
+    background: var(--secondary);
+    color: var(--text-primary);
+}
+
 .editor-container {
     display: grid;
     grid-template-columns: 250px 1fr 320px;
-    height: 100vh;
+    height: calc(100vh - 44px);
     gap: 0;
     transition: grid-template-columns 0.3s ease;
 }

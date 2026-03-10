@@ -32,11 +32,22 @@
             </div>
         </div>
         <div class="toolbar-right">
+            <button class="toolbar-btn" id="componentsBtn">🧩 Componentes</button>
             <button class="toolbar-btn" id="templatesBtn">📋 Plantillas</button>
             <button class="toolbar-btn" id="goToWebBtn">Ir a la Web</button>
             <button class="toolbar-btn" id="previewBtn">👁️ Vistas</button>
             <button class="toolbar-btn primary" id="saveBtn">💾 Guardar</button>
+            <button class="toolbar-btn primary" id="saveComponentBtn" style="display: none;">💾 Guardar Componente</button>
         </div>
+    </div>
+
+    <!-- Barra de pestañas -->
+    <div class="tabs-bar">
+        <div class="tabs-list" id="tabsList">
+            <!-- Las pestañas se generan dinámicamente -->
+        </div>
+        <button class="tabs-scroll-btn" id="tabsScrollLeft" onclick="scrollTabs(-1)">◀</button>
+        <button class="tabs-scroll-btn" id="tabsScrollRight" onclick="scrollTabs(1)">▶</button>
     </div>
 
     <div class="editor-container">
@@ -57,9 +68,14 @@
             <button class="block-btn" draggable="true" data-block-type="carousel">🎠 Carrusel</button>
             <button class="block-btn" draggable="true" data-block-type="button">🔘 Botón</button>
             <button class="block-btn" draggable="true" data-block-type="divider">─ Divisor</button>
+
+            <div class="sidebar-title" style="margin-top: 20px;">Componentes Personalizados</div>
+            <div id="customComponentsList" style="max-height: 300px; overflow-y: auto;">
+                <div style="font-size: 11px; color: var(--text-secondary); padding: 10px;">Cargando...</div>
+            </div>
         </div>
 
-        <div class="canvas-wrapper">
+        <div class="canvas-wrapper" id="mainEditor">
             <div class="canvas">
                 <div class="blocks-container" id="blocksContainer">
                     <div class="empty-state">
@@ -78,8 +94,8 @@
             </div>
             <div class="tab-buttons">
                 <button class="tab-btn active" data-tab="properties"
-                    onclick="switchTab('properties')">Propiedades</button>
-                <button class="tab-btn" data-tab="styles" onclick="switchTab('styles')">Estilos</button>
+                    onclick="switchPropertiesTab('properties')">Propiedades</button>
+                <button class="tab-btn" data-tab="styles" onclick="switchPropertiesTab('styles')">Estilos</button>
             </div>
 
             <div id="propertiesPanel" class="tab-content active">
@@ -189,6 +205,48 @@
         </div>
     </div>
 
+    <div class="modal" id="componentsModal">
+        <div class="modal-content" style="position: relative; max-width: 800px;">
+            <button class="modal-close" onclick="closeComponentsModal()">×</button>
+            <h2 style="margin-bottom: 20px;">🧩 Gestionar Componentes</h2>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 16px; background: var(--secondary); border-radius: 8px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nombre del componente</label>
+                    <input type="text" id="componentNameInput" class="property-input" placeholder="Ej: Header, Footer, CTA..." style="width: 100%;">
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+                        💡 Selecciona un bloque en el canvas para guardarlo como componente. Si no hay selección, se creará un contenedor vacío.
+                    </p>
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="toolbar-btn primary" onclick="saveBlockAsComponent()">Guardar Componente</button>
+                </div>
+            </div>
+
+            <div id="componentsList" style="max-height: 400px; overflow-y: auto;">
+                <div class="loading">Cargando componentes...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editComponentModal">
+        <div class="modal-content" style="position: relative; max-width: 500px;">
+            <button class="modal-close" onclick="closeEditComponentModal()">×</button>
+            <h2 style="margin-bottom: 20px;">✏️ Editar Componente</h2>
+
+            <div class="property-group">
+                <label class="property-label">Nombre</label>
+                <input type="text" id="editComponentName" class="property-input" placeholder="Nombre del componente">
+            </div>
+            <input type="hidden" id="editComponentId">
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="toolbar-btn" onclick="closeEditComponentModal()" style="flex: 1;">Cancelar</button>
+                <button class="toolbar-btn primary" onclick="updateComponent()" style="flex: 1;">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts modulares del CMS -->
     <script src="static/js/state.js"></script>
     <script src="static/js/block-templates.js"></script>
@@ -199,6 +257,8 @@
     <script src="static/js/properties.js"></script>
     <script src="static/js/save-load.js"></script>
     <script src="static/js/templates.js"></script>
+    <script src="static/js/tabs.js"></script>
+    <script src="static/js/components.js"></script>
     <script src="static/js/preview.js"></script>
     <script src="static/js/init.js"></script>
 

@@ -18,6 +18,9 @@ function setupDragAndDrop() {
         });
     });
 
+    // Configurar drag en componentes personalizados
+    document.addEventListener('dragstart', handleComponentDragStartGlobal);
+
     // Configurar drag en bloques existentes para moverlos
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('dragend', handleDragEnd);
@@ -26,6 +29,20 @@ function setupDragAndDrop() {
     blocksContainer.addEventListener('dragover', handleCanvasDragOver);
     blocksContainer.addEventListener('dragleave', handleCanvasDragLeave);
     blocksContainer.addEventListener('drop', handleCanvasDrop);
+}
+
+/**
+ * Maneja el drag start de componentes personalizados (global)
+ */
+function handleComponentDragStartGlobal(e) {
+    const componentBtn = e.target.closest('.component-btn');
+    if (componentBtn && componentBtn.dataset.componentId) {
+        console.log('Component drag start (global):', componentBtn.dataset.componentId);
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('componentId', componentBtn.dataset.componentId);
+        e.dataTransfer.setData('componentName', componentBtn.dataset.componentName);
+        e.dataTransfer.setData('application/x-drag-source', 'component');
+    }
 }
 
 /**
@@ -62,19 +79,26 @@ function handleDragEnd() {
  * Maneja drag over en el canvas
  */
 function handleCanvasDragOver(e) {
+    console.log('Canvas dragover');
+    
     // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
     if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
         return;
     }
-    
-    // Solo permitir drop desde la sidebar o bloques existentes
+
+    // Solo permitir drop desde la sidebar o bloques existentes o componentes
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
-    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+    const componentId = e.dataTransfer.getData('componentId');
+    
+    console.log('Dragover data:', { dragSource, componentId });
+    
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && dragSource !== 'component' && !componentId) {
+        console.log('Dragover ignorado: dragSource no válido');
         return;
     }
-    
+
     e.preventDefault();
-    e.dataTransfer.dropEffect = dragSource === 'sidebar' ? 'copy' : 'move';
+    e.dataTransfer.dropEffect = dragSource === 'sidebar' || dragSource === 'component' ? 'copy' : 'move';
     document.getElementById('blocksContainer').style.background = 'rgba(37, 99, 235, 0.05)';
 }
 
@@ -89,25 +113,52 @@ function handleCanvasDragLeave() {
  * Maneja drop en el canvas
  */
 function handleCanvasDrop(e) {
+    console.log('Canvas drop event');
+    
     // Si el drop es en una dropzone o en un bloque, no hacer nada
     if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+        console.log('Drop ignorado: dentro de block-container-drop o block');
         return;
     }
-    
-    // Solo procesar si es desde la sidebar o bloque existente
+
+    // Solo procesar si es desde la sidebar o bloque existente o componente
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
-    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+    const componentId = e.dataTransfer.getData('componentId');
+    
+    console.log('Drop data:', { dragSource, componentId });
+
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
+        console.log('Drop ignorado: dragSource inválido y no es componente');
         return;
     }
-    
+
     e.preventDefault();
     document.getElementById('blocksContainer').style.background = '';
 
-    if (dragSource === 'sidebar') {
+    if (componentId) {
+        console.log('Añadiendo componente desde drag, componentId:', componentId);
+        // Es un componente personalizado - verificar si estamos en editor principal o de componente
+        const tabsStateLocal = window.tabsState || tabsState;
+        if (tabsStateLocal && tabsStateLocal.activeTabId !== 'main') {
+            // Estamos en un editor de componente
+            console.log('Editor de componente activo:', tabsStateLocal.activeTabId);
+            addComponentFromDrag(componentId, null);
+        } else {
+            // Estamos en el editor principal
+            console.log('Editor principal activo, añadiendo componente');
+            addComponentFromDrag(componentId, null);
+        }
+    } else if (dragSource === 'sidebar') {
         // Añadir nuevo bloque desde sidebar
         const blockType = e.dataTransfer.getData('text/plain');
         if (blockType && blockTemplates[blockType]) {
-            addBlock(blockType);
+            // Verificar si estamos en el editor principal o en un editor de componente
+            const tabsStateLocal = window.tabsState || tabsState;
+            if (tabsStateLocal && tabsStateLocal.activeTabId === 'main') {
+                addBlock(blockType);
+            } else if (tabsStateLocal && tabsStateLocal.activeTabId !== 'main') {
+                addBlockToComponentEditor(blockType);
+            }
         }
     } else {
         // Mover bloque existente al root level

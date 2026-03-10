@@ -156,9 +156,14 @@ function setResponsiveMode(mode) {
 /**
  * Cambia entre tabs del panel derecho
  */
-function switchTab(tab) {
+function switchPropertiesTab(tab) {
+    const propertiesPanel = document.getElementById(tab + 'Panel');
+    const tabBtn = document.querySelector(`[data-tab="${tab}"]`);
+    
+    if (!propertiesPanel || !tabBtn) return;
+    
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(tab + 'Panel').classList.add('active');
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    propertiesPanel.classList.add('active');
+    tabBtn.classList.add('active');
 }

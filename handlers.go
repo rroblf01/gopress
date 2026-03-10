@@ -162,3 +162,128 @@ func DeleteTemplateHandler(db *sql.DB) fiber.Handler {
 		})
 	}
 }
+
+// Component handlers
+func SaveComponentHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		var req struct {
+			Name   string `json:"name"`
+			Blocks []Block `json:"blocks"`
+			Styles Styles  `json:"styles"`
+		}
+
+		if err := c.Bind().JSON(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos: " + err.Error(),
+			})
+		}
+
+		if req.Name == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "El nombre del componente es requerido",
+			})
+		}
+
+		componentID, err := SaveComponentToDB(db, req.Name, req.Blocks, req.Styles)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"id":      componentID,
+			"message": "Componente guardado correctamente",
+		})
+	}
+}
+
+func GetComponentsHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		components, err := GetComponentsFromDB(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(components)
+	}
+}
+
+func GetComponentHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		idStr := c.Params("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "ID de componente inválido",
+			})
+		}
+
+		component, err := GetComponentFromDB(db, id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(component)
+	}
+}
+
+func UpdateComponentHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		idStr := c.Params("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "ID de componente inválido",
+			})
+		}
+
+		var req struct {
+			Name   string `json:"name"`
+			Blocks []Block `json:"blocks"`
+			Styles Styles  `json:"styles"`
+		}
+
+		if err := c.Bind().JSON(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos: " + err.Error(),
+			})
+		}
+
+		if err := UpdateComponentInDB(db, id, req.Name, req.Blocks, req.Styles); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Componente actualizado correctamente",
+		})
+	}
+}
+
+func DeleteComponentHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		idStr := c.Params("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "ID de componente inválido",
+			})
+		}
+
+		if err := DeleteComponentFromDB(db, id); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Componente eliminado correctamente",
+		})
+	}
+}

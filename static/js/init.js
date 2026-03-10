@@ -13,8 +13,14 @@ let sidebarState = {
  */
 function setupEventListeners() {
     document.getElementById('saveBtn').addEventListener('click', savePage);
+    document.getElementById('saveComponentBtn').addEventListener('click', () => {
+        const tabId = window.tabsState ? window.tabsState.activeTabId : tabsState.activeTabId;
+        console.log('Guardando componente, tabId:', tabId);
+        saveComponentFromEditor(tabId);
+    });
     document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
     document.getElementById('templatesBtn').addEventListener('click', openTemplatesModal);
+    document.getElementById('componentsBtn').addEventListener('click', openComponentsModal);
     document.getElementById('goToWebBtn').addEventListener('click', () => { 
         window.open('/', '_blank'); 
     });
@@ -61,6 +67,8 @@ function initializeEditor() {
     setupDragAndDrop();
     setupEventListeners();
     setResponsiveMode('desktop');
+    loadCustomComponentsList(); // Cargar componentes personalizados al inicio
+    initTabs(); // Inicializar sistema de pestañas
 }
 
 // Iniciar cuando el DOM esté listo

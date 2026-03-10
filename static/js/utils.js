@@ -60,3 +60,19 @@ function initializeBlockProperties(blocks) {
     });
     return blocks;
 }
+
+/**
+ * Clona bloques con nuevos IDs
+ */
+function cloneBlocksWithNewIds(blocks) {
+    return blocks.map(block => {
+        const newBlock = JSON.parse(JSON.stringify(block));
+        newBlock.id = Date.now() + Math.random();
+        
+        if (block.children && block.children.length > 0) {
+            newBlock.children = cloneBlocksWithNewIds(block.children);
+        }
+        
+        return newBlock;
+    });
+}

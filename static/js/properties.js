@@ -8,14 +8,41 @@
 function renderProperties() {
     const panel = document.getElementById('propertiesPanel');
     
-    if (!state.selectedBlockId) {
-        panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
-        return;
+    if (!panel) return;
+
+    // Determinar si estamos en el editor principal o en un editor de componente
+    const isComponentEditor = tabsState && tabsState.activeTabId !== 'main';
+    let block = null;
+    let selectedBlockId = null;
+    
+    if (isComponentEditor) {
+        // Estamos en un editor de componente
+        const editorState = tabsState.componentEditors[tabsState.activeTabId];
+        if (!editorState) {
+            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
+            return;
+        }
+        selectedBlockId = editorState.selectedBlockId;
+        if (!selectedBlockId) {
+            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
+            return;
+        }
+        block = findBlockById(editorState.blocks, selectedBlockId);
+    } else {
+        // Estamos en el editor principal
+        if (!state.selectedBlockId) {
+            panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Selecciona un bloque para editar</p>';
+            return;
+        }
+        selectedBlockId = state.selectedBlockId;
+        block = findBlockById(state.page.blocks, selectedBlockId);
     }
     
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
-    if (!block) return;
-    
+    if (!block) {
+        panel.innerHTML = '<p style="color: var(--text-secondary); font-size: 13px;">Bloque no encontrado</p>';
+        return;
+    }
+
     let html = `<div class="property-group">
         <label class="property-label">Tipo de Bloque</label>
         <input type="text" value="${block.type}" disabled class="property-input" style="background: var(--secondary);">
@@ -23,11 +50,11 @@ function renderProperties() {
 
     // Añadir propiedades de dimensiones para todos los bloques (excepto icon)
     if (block.type !== 'icon') {
-        html += createDimensionProperties(block);
+        html += createDimensionProperties(block, isComponentEditor);
     }
 
     // Añadir propiedades de padding para todos los bloques
-    html += createPaddingProperties(block);
+    html += createPaddingProperties(block, isComponentEditor);
 
     // Propiedades específicas por tipo de bloque
     switch (block.type) {
@@ -61,6 +88,9 @@ function renderProperties() {
         case 'divider':
             html += renderDividerProperties(block);
             break;
+        case 'component':
+            html += renderComponentProperties(block);
+            break;
     }
 
     // CSS Personalizado
@@ -75,18 +105,18 @@ function renderProperties() {
 /**
  * Crea propiedades de dimensiones
  */
-function createDimensionProperties(block) {
+function createDimensionProperties(block, isComponentEditor = false) {
     const mode = state.responsiveMode;
     const widthProp = mode === 'desktop' ? 'width' : `width${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
     const heightProp = mode === 'desktop' ? 'height' : `height${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
-    
+
     return `<div class="property-group">
         <label class="property-label">Dimensiones - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <input type="text" value="${block[widthProp] || block.width || ''}" class="property-input" 
-                placeholder="Ancho (px, %)" onchange="updateDimensionProperty('width', this.value)">
-            <input type="text" value="${block[heightProp] || block.height || ''}" class="property-input" 
-                placeholder="Alto (px, %)" onchange="updateDimensionProperty('height', this.value)">
+            <input type="text" value="${block[widthProp] || block.width || ''}" class="property-input"
+                placeholder="Ancho (px, %)" onchange="updateDimensionProperty('width', this.value, ${isComponentEditor})">
+            <input type="text" value="${block[heightProp] || block.height || ''}" class="property-input"
+                placeholder="Alto (px, %)" onchange="updateDimensionProperty('height', this.value, ${isComponentEditor})">
         </div>
     </div>`;
 }
@@ -94,24 +124,24 @@ function createDimensionProperties(block) {
 /**
  * Crea propiedades de padding
  */
-function createPaddingProperties(block) {
+function createPaddingProperties(block, isComponentEditor = false) {
     const mode = state.responsiveMode;
     const paddingTopProp = mode === 'desktop' ? 'paddingTop' : `paddingTop${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
     const paddingRightProp = mode === 'desktop' ? 'paddingRight' : `paddingRight${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
     const paddingBottomProp = mode === 'desktop' ? 'paddingBottom' : `paddingBottom${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
     const paddingLeftProp = mode === 'desktop' ? 'paddingLeft' : `paddingLeft${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
-    
+
     return `<div class="property-group">
         <label class="property-label">Padding - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <input type="number" value="${block[paddingTopProp] || block.paddingTop || ''}" class="property-input" 
-                placeholder="Top" onchange="updatePaddingProperty('paddingTop', this.value)">
-            <input type="number" value="${block[paddingRightProp] || block.paddingRight || ''}" class="property-input" 
-                placeholder="Right" onchange="updatePaddingProperty('paddingRight', this.value)">
-            <input type="number" value="${block[paddingBottomProp] || block.paddingBottom || ''}" class="property-input" 
-                placeholder="Bottom" onchange="updatePaddingProperty('paddingBottom', this.value)">
-            <input type="number" value="${block[paddingLeftProp] || block.paddingLeft || ''}" class="property-input" 
-                placeholder="Left" onchange="updatePaddingProperty('paddingLeft', this.value)">
+            <input type="number" value="${block[paddingTopProp] || block.paddingTop || ''}" class="property-input"
+                placeholder="Top" onchange="updatePaddingProperty('paddingTop', this.value, ${isComponentEditor})">
+            <input type="number" value="${block[paddingRightProp] || block.paddingRight || ''}" class="property-input"
+                placeholder="Right" onchange="updatePaddingProperty('paddingRight', this.value, ${isComponentEditor})">
+            <input type="number" value="${block[paddingBottomProp] || block.paddingBottom || ''}" class="property-input"
+                placeholder="Bottom" onchange="updatePaddingProperty('paddingBottom', this.value, ${isComponentEditor})">
+            <input type="number" value="${block[paddingLeftProp] || block.paddingLeft || ''}" class="property-input"
+                placeholder="Left" onchange="updatePaddingProperty('paddingLeft', this.value, ${isComponentEditor})">
         </div>
     </div>`;
 }
@@ -403,10 +433,47 @@ function updateColorProperty(prop, value) {
 }
 
 /**
+ * Obtiene el estado actual (principal o componente)
+ */
+function getCurrentState() {
+    const isComponentEditor = tabsState && tabsState.activeTabId !== 'main';
+    if (isComponentEditor) {
+        const editorState = tabsState.componentEditors[tabsState.activeTabId];
+        return { 
+            state: editorState.blocks, 
+            selectedBlockId: editorState.selectedBlockId,
+            isComponent: true,
+            editorState: editorState,
+            tabId: tabsState.activeTabId
+        };
+    }
+    return { 
+        state: state.page.blocks, 
+        selectedBlockId: state.selectedBlockId,
+        isComponent: false,
+        editorState: null,
+        tabId: null
+    };
+}
+
+/**
+ * Renderiza bloques según el estado actual
+ */
+function renderCurrentBlocks() {
+    const current = getCurrentState();
+    if (current.isComponent) {
+        renderComponentEditorBlocks(current.tabId);
+    } else {
+        renderBlocks();
+    }
+}
+
+/**
  * Actualiza propiedad de bloque
  */
 function updateBlockProperty(prop, value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block) {
         if (prop === 'direction' && block.type === 'container') {
             block.direction = value;
@@ -414,7 +481,10 @@ function updateBlockProperty(prop, value) {
         } else {
             block[prop] = value;
         }
-        renderBlocks();
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+        }
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -422,13 +492,17 @@ function updateBlockProperty(prop, value) {
 /**
  * Actualiza propiedad de dimensión responsive
  */
-function updateDimensionProperty(dim, value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+function updateDimensionProperty(dim, value, isComponentEditor = false) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block) {
         const mode = state.responsiveMode;
         const prop = mode === 'desktop' ? dim : `${dim}${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
         block[prop] = value;
-        renderBlocks();
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+        }
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -436,13 +510,17 @@ function updateDimensionProperty(dim, value) {
 /**
  * Actualiza propiedad de padding responsive
  */
-function updatePaddingProperty(pad, value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+function updatePaddingProperty(pad, value, isComponentEditor = false) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block) {
         const mode = state.responsiveMode;
         const prop = mode === 'desktop' ? pad : `${pad}${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
         block[prop] = value;
-        renderBlocks();
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+        }
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -451,12 +529,36 @@ function updatePaddingProperty(pad, value) {
  * Actualiza tamaño de fuente del icono
  */
 function updateIconFontSize(value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'icon') {
         const mode = state.responsiveMode;
         const prop = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
         block[prop] = value;
-        renderBlocks();
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de color con soporte para hover
+ */
+function updateColorProperty(prop, value) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    if (block) {
+        if (state.hoverMode) {
+            block[`hover${prop.charAt(0).toUpperCase() + prop.slice(1)}`] = value;
+        } else {
+            block[prop] = value;
+        }
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+        }
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -473,10 +575,12 @@ function toggleHoverMode() {
  * Añade item a tarjetas
  */
 function addCardItem() {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items.push({ title: 'Nueva Tarjeta', description: 'Descripción' });
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -485,10 +589,12 @@ function addCardItem() {
  * Actualiza item de tarjeta
  */
 function updateCardItem(idx, prop, value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items[idx][prop] = value;
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -497,10 +603,12 @@ function updateCardItem(idx, prop, value) {
  * Elimina item de tarjeta
  */
 function deleteCardItem(idx) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'cards') {
         block.items.splice(idx, 1);
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -509,10 +617,12 @@ function deleteCardItem(idx) {
  * Añade slide al carrusel
  */
 function addCarouselSlide() {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides.push({ title: 'Nuevo Slide', image: '', description: '' });
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -521,10 +631,12 @@ function addCarouselSlide() {
  * Actualiza slide del carrusel
  */
 function updateCarouselSlide(idx, prop, value) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides[idx][prop] = value;
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -533,10 +645,12 @@ function updateCarouselSlide(idx, prop, value) {
  * Elimina slide del carrusel
  */
 function deleteCarouselSlide(idx) {
-    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
     if (block && block.type === 'carousel') {
         block.slides.splice(idx, 1);
-        renderBlocks();
+        if (current.isComponent) current.editorState.dirty = true;
+        renderCurrentBlocks();
         renderProperties();
     }
 }
@@ -549,10 +663,12 @@ function handleImageUpload(event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            const current = getCurrentState();
+            const block = findBlockById(current.state, current.selectedBlockId);
             if (block && block.type === 'image') {
                 block.src = e.target.result;
-                renderBlocks();
+                if (current.isComponent) current.editorState.dirty = true;
+                renderCurrentBlocks();
                 renderProperties();
             }
         };
@@ -568,13 +684,65 @@ function handleCarouselImageUpload(idx, event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const block = findBlockById(state.page.blocks, state.selectedBlockId);
+            const current = getCurrentState();
+            const block = findBlockById(current.state, current.selectedBlockId);
             if (block && block.type === 'carousel') {
                 block.slides[idx]['image'] = e.target.result;
-                renderBlocks();
+                if (current.isComponent) current.editorState.dirty = true;
+                renderCurrentBlocks();
                 renderProperties();
             }
         };
         reader.readAsDataURL(file);
     }
+}
+
+/**
+ * Propiedades para componente personalizado
+ */
+function renderComponentProperties(block) {
+    return `<div class="property-group">
+        <label class="property-label">Nombre del Componente</label>
+        <input type="text" value="${block.componentName || ''}" class="property-input" disabled style="background: var(--secondary); font-weight: 600;">
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            🧩 Este es un componente personalizado. Para editarlo, ve al botón "Componentes" en la toolbar.
+        </p>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Acciones</label>
+        <button class="toolbar-btn" onclick="openComponentsModal()" style="width: 100%; margin-bottom: 8px;">📋 Gestionar Componentes</button>
+        <button class="toolbar-btn" onclick="convertComponentToBlocks()" style="width: 100%;">🔄 Convertir a Bloques</button>
+    </div>`;
+}
+
+/**
+ * Convierte un componente en bloques normales
+ */
+function convertComponentToBlocks() {
+    const block = findBlockById(state.page.blocks, state.selectedBlockId);
+    if (!block || block.type !== 'component') {
+        showToast('El bloque seleccionado no es un componente', 'error');
+        return;
+    }
+    
+    // Cargar los bloques del componente original
+    fetch(`/api/components/${block.componentId}`)
+        .then(res => res.json())
+        .then(component => {
+            const clonedBlocks = cloneBlocksWithNewIds(component.blocks);
+            
+            // Reemplazar el bloque componente con los bloques internos
+            const idx = state.page.blocks.findIndex(b => b.id === block.id);
+            if (idx !== -1) {
+                state.page.blocks.splice(idx, 1, ...clonedBlocks);
+                state.selectedBlockId = null;
+                renderBlocks();
+                renderProperties();
+                showToast('Componente convertido a bloques', 'success');
+            }
+        })
+        .catch(err => {
+            console.error('Error loading component:', err);
+            showToast('Error al cargar componente', 'error');
+        });
 }

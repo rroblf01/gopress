@@ -40,8 +40,16 @@ func CreateTable(db *sql.DB) error {
 		favicon TEXT,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+	CREATE TABLE IF NOT EXISTS components (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		blocks JSONB,
+		styles JSONB,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
 	CREATE INDEX IF NOT EXISTS idx_pages_created_at ON pages(created_at);
 	CREATE INDEX IF NOT EXISTS idx_templates_created_at ON templates(created_at);
+	CREATE INDEX IF NOT EXISTS idx_components_created_at ON components(created_at);
 	`
 
 	if _, err := db.Exec(createTableSQL); err != nil {
@@ -237,4 +245,115 @@ func GetPageFromDB(db *sql.DB) (*PageData, error) {
 	}
 
 	return pageData, nil
+}
+
+// Component functions
+func SaveComponentToDB(db *sql.DB, name string, blocks []Block, styles Styles) (int64, error) {
+	blocksJSON, _ := json.Marshal(blocks)
+	stylesJSON, _ := json.Marshal(styles)
+
+	var componentID int64
+	err := db.QueryRow(`
+		INSERT INTO components (name, blocks, styles, created_at)
+		VALUES ($1, $2, $3, NOW())
+		RETURNING id
+	`, name, string(blocksJSON), string(stylesJSON)).Scan(&componentID)
+
+	if err != nil {
+		return 0, fmt.Errorf("error guardando componente: %w", err)
+	}
+	log.Printf("✓ Componente guardado (ID: %d): %s", componentID, name)
+	return componentID, nil
+}
+
+func GetComponentsFromDB(db *sql.DB) ([]ComponentInfo, error) {
+	query := `
+	SELECT id, name, created_at
+	FROM components
+	ORDER BY created_at DESC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo componentes: %w", err)
+	}
+	defer rows.Close()
+
+	components := []ComponentInfo{} // Inicializar como array vacío
+	for rows.Next() {
+		var c ComponentInfo
+		if err := rows.Scan(&c.ID, &c.Name, &c.CreatedAt); err != nil {
+			return nil, fmt.Errorf("error escaneando componente: %w", err)
+		}
+		components = append(components, c)
+	}
+	return components, nil
+}
+
+func GetComponentFromDB(db *sql.DB, id int64) (*Component, error) {
+	query := `
+	SELECT name, blocks, styles, created_at
+	FROM components
+	WHERE id = $1
+	`
+
+	var name string
+	var blocksJSON, stylesJSON []byte
+	var createdAt string
+
+	err := db.QueryRow(query, id).Scan(&name, &blocksJSON, &stylesJSON, &createdAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("componente no encontrado")
+	} else if err != nil {
+		return nil, fmt.Errorf("error obteniendo componente: %w", err)
+	}
+
+	component := &Component{
+		ID:        id,
+		Name:      name,
+		CreatedAt: createdAt,
+	}
+
+	if err := json.Unmarshal(blocksJSON, &component.Blocks); err != nil {
+		log.Println("Error decodificando bloques de componente:", err)
+		component.Blocks = []Block{}
+	}
+
+	if stylesJSON != nil && len(stylesJSON) > 0 {
+		if err := json.Unmarshal(stylesJSON, &component.Styles); err != nil {
+			log.Println("Error decodificando estilos de componente:", err)
+			component.Styles = Styles{}
+		}
+	} else {
+		component.Styles = Styles{}
+	}
+
+	return component, nil
+}
+
+func UpdateComponentInDB(db *sql.DB, id int64, name string, blocks []Block, styles Styles) error {
+	blocksJSON, _ := json.Marshal(blocks)
+	stylesJSON, _ := json.Marshal(styles)
+
+	_, err := db.Exec(`
+		UPDATE components
+		SET name = $1, blocks = $2, styles = $3
+		WHERE id = $4
+	`, name, string(blocksJSON), string(stylesJSON), id)
+
+	if err != nil {
+		return fmt.Errorf("error actualizando componente: %w", err)
+	}
+	log.Printf("✓ Componente actualizado (ID: %d): %s", id, name)
+	return nil
+}
+
+func DeleteComponentFromDB(db *sql.DB, id int64) error {
+	_, err := db.Exec(`DELETE FROM components WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("error eliminando componente: %w", err)
+	}
+	log.Printf("✓ Componente eliminado (ID: %d)", id)
+	return nil
 }
