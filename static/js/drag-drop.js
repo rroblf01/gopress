@@ -1,0 +1,119 @@
+/**
+ * Gestión de Drag and Drop
+ */
+
+/**
+ * Configura los eventos de drag and drop
+ */
+function setupDragAndDrop() {
+    const blocksContainer = document.getElementById('blocksContainer');
+
+    // Configurar drag en los botones de la sidebar para añadir nuevos bloques
+    document.querySelectorAll('.block-btn').forEach(btn => {
+        btn.addEventListener('dragstart', (e) => {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', btn.dataset.blockType);
+            e.dataTransfer.setData('blockType', btn.dataset.blockType);
+            e.dataTransfer.setData('application/x-drag-source', 'sidebar');
+        });
+    });
+
+    // Configurar drag en bloques existentes para moverlos
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('dragend', handleDragEnd);
+
+    // Drag over en el canvas principal
+    blocksContainer.addEventListener('dragover', handleCanvasDragOver);
+    blocksContainer.addEventListener('dragleave', handleCanvasDragLeave);
+    blocksContainer.addEventListener('drop', handleCanvasDrop);
+}
+
+/**
+ * Maneja el inicio del drag
+ */
+function handleDragStart(e) {
+    const block = e.target.closest('.block');
+    if (block && !e.target.closest('.block-action-btn')) {
+        isDraggingBlock = true;
+        draggedBlockId = block.dataset.blockId;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('application/x-drag-source', 'existing-block');
+        e.dataTransfer.setData('blockId', block.dataset.blockId);
+        
+        // Crear una imagen de drag más clara
+        const dragImage = block.cloneNode(true);
+        dragImage.style.position = 'absolute';
+        dragImage.style.top = '-1000px';
+        document.body.appendChild(dragImage);
+        e.dataTransfer.setDragImage(dragImage, 20, 20);
+        setTimeout(() => document.body.removeChild(dragImage), 0);
+    }
+}
+
+/**
+ * Maneja el fin del drag
+ */
+function handleDragEnd() {
+    isDraggingBlock = false;
+    draggedBlockId = null;
+}
+
+/**
+ * Maneja drag over en el canvas
+ */
+function handleCanvasDragOver(e) {
+    // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
+    if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+        return;
+    }
+    
+    // Solo permitir drop desde la sidebar o bloques existentes
+    const dragSource = e.dataTransfer.getData('application/x-drag-source');
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+        return;
+    }
+    
+    e.preventDefault();
+    e.dataTransfer.dropEffect = dragSource === 'sidebar' ? 'copy' : 'move';
+    document.getElementById('blocksContainer').style.background = 'rgba(37, 99, 235, 0.05)';
+}
+
+/**
+ * Maneja drag leave en el canvas
+ */
+function handleCanvasDragLeave() {
+    document.getElementById('blocksContainer').style.background = '';
+}
+
+/**
+ * Maneja drop en el canvas
+ */
+function handleCanvasDrop(e) {
+    // Si el drop es en una dropzone o en un bloque, no hacer nada
+    if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+        return;
+    }
+    
+    // Solo procesar si es desde la sidebar o bloque existente
+    const dragSource = e.dataTransfer.getData('application/x-drag-source');
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block') {
+        return;
+    }
+    
+    e.preventDefault();
+    document.getElementById('blocksContainer').style.background = '';
+
+    if (dragSource === 'sidebar') {
+        // Añadir nuevo bloque desde sidebar
+        const blockType = e.dataTransfer.getData('text/plain');
+        if (blockType && blockTemplates[blockType]) {
+            addBlock(blockType);
+        }
+    } else {
+        // Mover bloque existente al root level
+        const blockId = parseInt(e.dataTransfer.getData('blockId'));
+        if (blockId) {
+            moveBlockToRoot(blockId);
+        }
+    }
+}

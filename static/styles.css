@@ -28,6 +28,19 @@ body {
     grid-template-columns: 250px 1fr 320px;
     height: 100vh;
     gap: 0;
+    transition: grid-template-columns 0.3s ease;
+}
+
+.editor-container.sidebar-left-hidden {
+    grid-template-columns: 0 1fr 320px;
+}
+
+.editor-container.sidebar-right-hidden {
+    grid-template-columns: 250px 1fr 0;
+}
+
+.editor-container.both-sidebars-hidden {
+    grid-template-columns: 0 1fr 0;
 }
 
 .sidebar-left {
@@ -36,6 +49,58 @@ body {
     overflow-y: auto;
     padding: 20px;
     box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.sidebar-left.collapsed {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.sidebar-toggle {
+    padding: 6px 10px;
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+}
+
+.sidebar-toggle:hover {
+    background: #e5e7eb;
+    color: var(--text-primary);
+}
+
+.toggle-icon {
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-left.collapsed .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-right .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-right.collapsed .toggle-icon {
+    transform: rotate(0deg);
 }
 
 .sidebar-title {
@@ -44,12 +109,7 @@ body {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 12px;
-    margin-top: 16px;
-}
-
-.sidebar-title:first-child {
-    margin-top: 0;
+    margin: 0;
 }
 
 .block-btn {
@@ -180,6 +240,14 @@ body {
     overflow-y: auto;
     padding: 20px;
     box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.sidebar-right.collapsed {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
 }
 
 .tab-buttons {
@@ -741,4 +809,41 @@ body {
 
 .canvas-wrapper .canvas {
     transition: max-width 0.3s ease;
+}
+
+.show-sidebar-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.show-sidebar-btn:hover {
+    background: var(--secondary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#showLeftSidebar {
+    left: 10px;
+}
+
+#showRightSidebar {
+    right: 10px;
+}
+
+#showLeftSidebar.visible,
+#showRightSidebar.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: all;
 }
