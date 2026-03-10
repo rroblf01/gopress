@@ -78,6 +78,17 @@ function generateResponsiveCSS(block) {
         css += `@media (max-width: 768px) { .${blockClass} { padding: ${paddingTopMobile || 0}px ${paddingRightMobile || 0}px ${paddingBottomMobile || 0}px ${paddingLeftMobile || 0}px; } } `;
     }
 
+    // Hidden por dispositivo
+    if (block.hiddenDesktop) {
+        css += `@media (min-width: 1025px) { .${blockClass} { display: none !important; } } `;
+    }
+    if (block.hiddenTablet) {
+        css += `@media (max-width: 1024px) and (min-width: 769px) { .${blockClass} { display: none !important; } } `;
+    }
+    if (block.hiddenMobile) {
+        css += `@media (max-width: 768px) { .${blockClass} { display: none !important; } } `;
+    }
+
     return css;
 }
 

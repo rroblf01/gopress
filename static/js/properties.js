@@ -56,6 +56,9 @@ function renderProperties() {
     // Añadir propiedades de padding para todos los bloques
     html += createPaddingProperties(block, isComponentEditor);
 
+    // Visibilidad por dispositivo
+    html += createVisibilityProperties(block, isComponentEditor);
+
     // Propiedades específicas por tipo de bloque
     switch (block.type) {
         case 'container':
@@ -142,6 +145,29 @@ function createPaddingProperties(block, isComponentEditor = false) {
                 placeholder="Bottom" onchange="updatePaddingProperty('paddingBottom', this.value, ${isComponentEditor})">
             <input type="number" value="${block[paddingLeftProp] || block.paddingLeft || ''}" class="property-input"
                 placeholder="Left" onchange="updatePaddingProperty('paddingLeft', this.value, ${isComponentEditor})">
+        </div>
+    </div>`;
+}
+
+/**
+ * Crea propiedades de visibilidad por dispositivo
+ */
+function createVisibilityProperties(block, isComponentEditor = false) {
+    return `<div class="property-group" style="border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <label class="property-label">Visibilidad por Dispositivo</label>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" ${block.hiddenDesktop ? 'checked' : ''} onchange="updateHiddenProperty('hiddenDesktop', this.checked, ${isComponentEditor})" style="width: 16px; height: 16px;">
+                <span style="font-size: 13px;">🖥️ Ocultar en Ordenador</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" ${block.hiddenTablet ? 'checked' : ''} onchange="updateHiddenProperty('hiddenTablet', this.checked, ${isComponentEditor})" style="width: 16px; height: 16px;">
+                <span style="font-size: 13px;">📱 Ocultar en Tablet</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" ${block.hiddenMobile ? 'checked' : ''} onchange="updateHiddenProperty('hiddenMobile', this.checked, ${isComponentEditor})" style="width: 16px; height: 16px;">
+                <span style="font-size: 13px;">📲 Ocultar en Móvil</span>
+            </label>
         </div>
     </div>`;
 }
@@ -567,6 +593,27 @@ function updateColorProperty(prop, value) {
         } else {
             block[prop] = value;
         }
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de visibilidad (hidden)
+ */
+function updateHiddenProperty(prop, value, isComponentEditor = false) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    console.log('updateHiddenProperty:', {prop, value, blockId: block?.id, blockType: block?.type});
+    if (block) {
+        block[prop] = value;
+        console.log('Block after update:', block);
         if (current.isComponent) {
             current.editorState.dirty = true;
             saveComponentFromEditor(current.tabId);

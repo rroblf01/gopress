@@ -326,6 +326,7 @@ function createBlockHTML(block) {
     const currentDirection = getCurrentDirection(block);
     const isHidden = getIsHidden(block);
     const directionStyle = currentDirection ? `flex-direction: ${currentDirection === 'horizontal' ? 'row' : 'column'};` : '';
+    const hiddenStyle = isHidden ? 'display: none;' : '';
 
     if (block.type === 'container') {
         const childrenContent = (block.children && block.children.length > 0)
@@ -350,9 +351,9 @@ function createBlockHTML(block) {
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} gap: 12px;">${childrenContent}</div>`;
+            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; flex-wrap: wrap; ${directionStyle} ${hiddenStyle} gap: 12px;">${childrenContent}</div>`;
     } else {
-        preview = createBlockPreviewHTML(block, allCSS);
+        preview = createBlockPreviewHTML(block, allCSS, isHidden);
     }
 
     return `<div class="block ${state.selectedBlockId === block.id ? 'selected' : ''}" data-block-id="${block.id}" data-block-type="${block.type}" draggable="true">
@@ -372,73 +373,74 @@ function createBlockHTML(block) {
 /**
  * Crea el HTML de preview para bloques individuales
  */
-function createBlockPreviewHTML(block, allCSS) {
+function createBlockPreviewHTML(block, allCSS, isHidden = false) {
     const blockClass = `block-${block.id}`;
     const cssId = `css-${block.id}`;
+    const hiddenStyle = isHidden ? 'display: none;' : '';
 
     switch (block.type) {
         case 'hero':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#1f2937'}; }</style>
-                <div class="${blockClass}" style="padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                <div class="${blockClass}" style="padding: 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; ${hiddenStyle}">
                     <h1 style="font-size: 28px; margin-bottom: 10px;">${escapeHTML(block.content)}</h1>
                     <p>${escapeHTML(block.subContent)}</p>
                 </div>`;
-        
+
         case 'heading':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} color: ${block.textColor || '#1f2937'}; }</style>
-                <h2 class="${blockClass}" style="margin: 16px 0;">${escapeHTML(block.content)}</h2>`;
-        
+                <h2 class="${blockClass}" style="margin: 16px 0; ${hiddenStyle}">${escapeHTML(block.content)}</h2>`;
+
         case 'paragraph':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} color: ${block.textColor || '#1f2937'}; }</style>
-                <p class="${blockClass}" style="line-height: 1.6; margin: 12px 0;">${escapeHTML(block.content)}</p>`;
-        
+                <p class="${blockClass}" style="line-height: 1.6; margin: 12px 0; ${hiddenStyle}">${escapeHTML(block.content)}</p>`;
+
         case 'image':
-            return block.src 
+            return block.src
                 ? `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                   <img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%;">`
+                   <img class="${blockClass}" src="${block.src}" alt="${block.alt}" style="border-radius: 4px; max-width: 100%; ${hiddenStyle}">`
                 : `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                   <div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary);">Sin imagen</div>`;
-        
+                   <div class="${blockClass}" style="background: var(--secondary); padding: 40px; text-align: center; border-radius: 4px; color: var(--text-secondary); ${hiddenStyle}">Sin imagen</div>`;
+
         case 'icon': {
             const mode = state.responsiveMode;
             const fontSizeProp = mode === 'desktop' ? 'fontSize' : `fontSize${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
             const iconSize = block[fontSizeProp] || block.fontSize || '48';
             const iconColor = block.color || '#2563eb';
-            
+
             let iconCSS = `${block.customCSS || ''}`;
             if (block.paddingTop || block.paddingRight || block.paddingBottom || block.paddingLeft) {
                 iconCSS += ` padding: ${block.paddingTop || 0}px ${block.paddingRight || 0}px ${block.paddingBottom || 0}px ${block.paddingLeft || 0}px;`;
             }
-            
+
             return `<style id="${cssId}">.${blockClass} { ${iconCSS} font-size: ${iconSize}px !important; color: ${iconColor} !important; display: inline-block !important; } </style>
-                <span class="${blockClass}">${block.emoji || '😀'}</span>`;
+                <span class="${blockClass}" style="${hiddenStyle}">${block.emoji || '😀'}</span>`;
         }
-        
+
         case 'cards':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                <div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">
+                <div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center; ${hiddenStyle}">
                     Tarjetas (${block.items.length})
                 </div>`;
-        
+
         case 'carousel':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                <div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center;">
+                <div class="${blockClass}" style="background: var(--secondary); padding: 20px; border-radius: 4px; text-align: center; ${hiddenStyle}">
                     Carrusel (${block.slides.length} slides)
                 </div>`;
-        
+
         case 'button':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#ffffff'}; }</style>
-                <button class="${blockClass}" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                <button class="${blockClass}" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; ${hiddenStyle}">
                     ${escapeHTML(block.text)}
                 </button>`;
-        
+
         case 'divider':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                <hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'};">`;
+                <hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'}; ${hiddenStyle}">`;
 
         case 'component':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
-                <div class="${blockClass}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 8px; text-align: center; color: white;">
+                <div class="${blockClass}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 8px; text-align: center; color: white; ${hiddenStyle}">
                     <div style="font-size: 24px; margin-bottom: 8px;">🧩</div>
                     <div style="font-size: 16px; font-weight: 600;">${escapeHTML(block.componentName || 'Componente')}</div>
                     <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Componente personalizado</div>
