@@ -23,6 +23,7 @@ DATABASE_URL="postgresql://usuario_admin:micontrasena123@localhost:5432/mi_base_
 ## Rutas principales
 
 - `/cms` — Acceso al editor de contenidos inspirado en WordPress.
+- `/preview` — Vista previa del contenido editado antes de publicarlo.
 - `/` — Renderiza el contenido editado y publicado desde el editor.
 
 ---
