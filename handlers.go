@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
@@ -180,6 +181,13 @@ func GetTemplateHandler(db *sql.DB) fiber.Handler {
 
 func DeleteTemplateHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
+		disableDeletion := os.Getenv("DISABLE_TEMPLATE_DELETION")
+		if disableDeletion == "true" {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Eliminación de plantillas no permitida",
+			})
+		}
+
 		idStr := c.Params("id")
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {

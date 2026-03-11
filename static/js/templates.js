@@ -162,7 +162,8 @@ async function deleteTemplate(id) {
             showToast('Plantilla eliminada correctamente', 'success');
             loadTemplatesList();
         } else {
-            showToast('Error al eliminar plantilla', 'error');
+            const error = await response.json();
+            showToast(`Error: ${error.error || 'Error al eliminar plantilla'}`, 'error');
         }
     } catch (error) {
         console.error('Error:', error);
