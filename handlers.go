@@ -86,7 +86,10 @@ func SavePageHandler(db *sql.DB) fiber.Handler {
 
 func GetPageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		pageData, err := GetPageFromDB(db)
+		// Obtener el slug de la query string (por defecto "/")
+		slug := c.Query("slug", "/")
+		
+		pageData, err := GetPageBySlugFromDB(db, slug)
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": err.Error(),
@@ -99,15 +102,115 @@ func GetPageHandler(db *sql.DB) fiber.Handler {
 
 func RenderPageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		pageData, err := GetPageFromDB(db)
+		// Obtener el slug de la URL (por defecto "/")
+		slug := c.Params("slug")
+		if slug == "" {
+			slug = "/"
+		}
+		
+		pageData, err := GetPageBySlugFromDB(db, slug)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).SendString("No hay página guardada")
+			return c.Status(fiber.StatusNotFound).SendString("Página no encontrada: " + slug)
 		}
 
 		html := BuildPageHTMLWithComponents(*pageData, db)
 
 		c.Set("Content-Type", "text/html; charset=utf-8")
 		return c.SendString(html)
+	}
+}
+
+func GetPagesHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		pages, err := GetAllPagesFromDB(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(pages)
+	}
+}
+
+func CreatePageHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		var req struct {
+			Slug  string `json:"slug"`
+			Title string `json:"title"`
+		}
+
+		if err := c.Bind().JSON(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos: " + err.Error(),
+			})
+		}
+
+		// Validar slug
+		if req.Slug == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "El slug es requerido",
+			})
+		}
+
+		// Verificar si el slug ya existe
+		existingPage, _ := GetPageBySlugFromDB(db, req.Slug)
+		if existingPage != nil {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+				"error": "Ya existe una página con este slug",
+			})
+		}
+
+		// Crear página vacía
+		pageData := PageData{
+			Slug:   req.Slug,
+			Title:  req.Title,
+			Blocks: []Block{},
+			Styles: Styles{
+				PrimaryColor:    "#2563eb",
+				BackgroundColor: "#ffffff",
+				TextColor:       "#1f2937",
+				FontFamily:      "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+				MaxWidth:        "900",
+				Padding:         "40",
+			},
+		}
+
+		pageID, err := SavePageToDB(db, pageData)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"id":      pageID,
+			"slug":    req.Slug,
+			"message": "Página creada correctamente",
+		})
+	}
+}
+
+func DeletePageHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		idStr := c.Params("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "ID de página inválido",
+			})
+		}
+
+		err = DeletePageFromDB(db, id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Página eliminada correctamente",
+		})
 	}
 }
 

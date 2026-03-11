@@ -13,6 +13,13 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <div class="toolbar-title">📄 Editor Visual</div>
+            <div class="page-selector-container">
+                <label class="toolbar-label">Página:</label>
+                <select id="pageSelector" class="toolbar-select" onchange="switchPage(this.value)">
+                    <option value="/">Cargando...</option>
+                </select>
+                <button class="toolbar-btn" id="newPageBtn" title="Nueva página" style="padding: 6px 12px; font-size: 13px;">+</button>
+            </div>
             <label for="siteTitle" class="toolbar-label">Título del sitio:</label>
             <input type="text" id="siteTitle" class="toolbar-input" placeholder="Título del sitio"
                 onchange="updateSiteTitle(this.value)">
@@ -246,6 +253,26 @@
         </div>
     </div>
 
+    <div class="modal" id="pagesModal">
+        <div class="modal-content" style="position: relative; max-width: 600px;">
+            <button class="modal-close" onclick="closePagesModal()">×</button>
+            <h2 style="margin-bottom: 20px;">📄 Gestionar Páginas</h2>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="newPageSlug" class="property-input" placeholder="Slug (ej: servicios, contacto)" style="flex: 1;">
+                <input type="text" id="newPageTitle" class="property-input" placeholder="Título" style="width: 150px;">
+                <button class="toolbar-btn primary" onclick="createNewPage()">Crear Página</button>
+            </div>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 16px;">
+                💡 El slug es la URL de la página. Ej: "servicios" → /servicios
+            </p>
+
+            <div id="pagesList" style="max-height: 400px; overflow-y: auto;">
+                <div class="loading">Cargando páginas...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts modulares del CMS -->
     <script src="static/js/state.js"></script>
     <script src="static/js/block-templates.js"></script>
@@ -260,6 +287,7 @@
     <script src="static/js/tabs.js"></script>
     <script src="static/js/components.js"></script>
     <script src="static/js/preview.js"></script>
+    <script src="static/js/pages.js"></script>
     <script src="static/js/init.js"></script>
 
     <!-- Botones flotantes para mostrar sidebars -->

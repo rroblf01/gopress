@@ -2,6 +2,7 @@
  * Estado global de la aplicación
  */
 const state = {
+    currentPageSlug: '/',
     page: {
         title: '',
         blocks: [],

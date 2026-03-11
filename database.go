@@ -24,6 +24,7 @@ func InitDB(dbURL string) (*sql.DB, error) {
 }
 
 func CreateTable(db *sql.DB) error {
+	// Crear tablas sin la columna slug (se añade después)
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS pages (
 		id SERIAL PRIMARY KEY,
@@ -67,16 +68,21 @@ func CreateTable(db *sql.DB) error {
 	log.Println("✓ Tabla de páginas lista")
 	log.Println("✓ Tabla de plantillas lista")
 
-	// Añadir columna favicon si no existe (para bases de datos existentes)
+	// Añadir columnas e índices para múltiples páginas
 	alterTableSQL := `
 	ALTER TABLE pages
-	ADD COLUMN IF NOT EXISTS favicon TEXT;
+	ADD COLUMN IF NOT EXISTS slug VARCHAR(255);
+	
+	UPDATE pages SET slug = '/' WHERE slug IS NULL OR slug = '';
+	
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_pages_slug_unique ON pages(slug);
+	CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
 	`
 
 	if _, err := db.Exec(alterTableSQL); err != nil {
-		log.Println("Nota: columna favicon ya existe o no se pudo añadir:", err)
+		log.Println("Nota: algunos índices ya existen:", err)
 	} else {
-		log.Println("✓ Columna favicon añadida")
+		log.Println("✓ Columna slug e índices añadidos")
 	}
 
 	return nil
@@ -181,65 +187,78 @@ func SavePageToDB(db *sql.DB, pageData PageData) (int64, error) {
 	blocksJSON, _ := json.Marshal(pageData.Blocks)
 	stylesJSON, _ := json.Marshal(pageData.Styles)
 
-	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM pages").Scan(&count); err != nil {
-		return 0, fmt.Errorf("error contando páginas: %w", err)
+	// Usar slug si está disponible, sino usar '/'
+	slug := pageData.Slug
+	if slug == "" {
+		slug = "/"
 	}
 
 	var pageID int64
-
-	if count == 0 {
+	
+	// Verificar si ya existe una página con este slug
+	var existingID int64
+	err := db.QueryRow(`SELECT id FROM pages WHERE slug = $1`, slug).Scan(&existingID)
+	
+	if err == sql.ErrNoRows {
+		// No existe, crear nueva página
 		err := db.QueryRow(`
-		INSERT INTO pages (title, blocks, styles, favicon, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		INSERT INTO pages (slug, title, blocks, styles, favicon, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
 		RETURNING id
-		`, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&pageID)
+		`, slug, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&pageID)
 
 		if err != nil {
 			return 0, fmt.Errorf("error insertando página: %w", err)
 		}
-		log.Printf("✓ Página creada (ID: %d): %s (%d bloques)", pageID, pageData.Title, len(pageData.Blocks))
+		log.Printf("✓ Página creada (ID: %d): %s (slug: %s, %d bloques)", pageID, pageData.Title, slug, len(pageData.Blocks))
+	} else if err != nil {
+		return 0, fmt.Errorf("error buscando página existente: %w", err)
 	} else {
+		// Ya existe, actualizar
 		err := db.QueryRow(`
 		UPDATE pages
 		SET title = $1, blocks = $2, styles = $3, favicon = $4, updated_at = NOW()
-		WHERE id = (SELECT MAX(id) FROM pages)
+		WHERE slug = $5
 		RETURNING id
-		`, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon).Scan(&pageID)
+		`, pageData.Title, string(blocksJSON), string(stylesJSON), pageData.Favicon, slug).Scan(&pageID)
 
 		if err != nil {
 			return 0, fmt.Errorf("error actualizando página: %w", err)
 		}
-		log.Printf("✓ Page updated (ID: %d): %s (%d blocks)", pageID, pageData.Title, len(pageData.Blocks))
+		log.Printf("✓ Página actualizada (ID: %d): %s (slug: %s, %d bloques)", pageID, pageData.Title, slug, len(pageData.Blocks))
 	}
 
 	return pageID, nil
 }
 
 func GetPageFromDB(db *sql.DB) (*PageData, error) {
+	return GetPageBySlugFromDB(db, "/")
+}
+
+func GetPageBySlugFromDB(db *sql.DB, slug string) (*PageData, error) {
 	query := `
-	SELECT title, blocks, styles, favicon, created_at
+	SELECT slug, title, blocks, styles, favicon, created_at
 	FROM pages
-	ORDER BY updated_at DESC
-	LIMIT 1
+	WHERE slug = $1
 	`
 
-	var title string
+	var pageSlug, title string
 	var blocksJSON, stylesJSON []byte
-	var favicon string
+	var favicon sql.NullString
 	var createdAt string
 
-	err := db.QueryRow(query).Scan(&title, &blocksJSON, &stylesJSON, &favicon, &createdAt)
+	err := db.QueryRow(query, slug).Scan(&pageSlug, &title, &blocksJSON, &stylesJSON, &favicon, &createdAt)
 
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("no hay página guardada")
+		return nil, fmt.Errorf("no hay página guardada para el slug: %s", slug)
 	} else if err != nil {
 		return nil, fmt.Errorf("error obteniendo página: %w", err)
 	}
 
 	pageData := &PageData{
+		Slug:      pageSlug,
 		Title:     title,
-		Favicon:   favicon,
+		Favicon:   favicon.String,
 		CreatedAt: createdAt,
 	}
 
@@ -254,6 +273,49 @@ func GetPageFromDB(db *sql.DB) (*PageData, error) {
 	}
 
 	return pageData, nil
+}
+
+func GetAllPagesFromDB(db *sql.DB) ([]PageInfo, error) {
+	query := `
+	SELECT id, slug, title, created_at, updated_at
+	FROM pages
+	ORDER BY created_at ASC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo páginas: %w", err)
+	}
+	defer rows.Close()
+
+	pages := []PageInfo{}
+	for rows.Next() {
+		var p PageInfo
+		if err := rows.Scan(&p.ID, &p.Slug, &p.Title, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("error escaneando página: %w", err)
+		}
+		pages = append(pages, p)
+	}
+	return pages, nil
+}
+
+func DeletePageFromDB(db *sql.DB, id int64) error {
+	// No permitir eliminar la página principal (/)
+	var slug string
+	err := db.QueryRow(`SELECT slug FROM pages WHERE id = $1`, id).Scan(&slug)
+	if err != nil {
+		return fmt.Errorf("error buscando página: %w", err)
+	}
+	if slug == "/" {
+		return fmt.Errorf("no se puede eliminar la página principal")
+	}
+	
+	_, err = db.Exec(`DELETE FROM pages WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("error eliminando página: %w", err)
+	}
+	log.Printf("✓ Página eliminada (ID: %d, slug: %s)", id, slug)
+	return nil
 }
 
 // Component functions

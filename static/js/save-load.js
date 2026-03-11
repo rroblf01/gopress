@@ -7,6 +7,7 @@
  */
 async function savePage() {
     const pageData = {
+        slug: state.currentPageSlug || '/',
         title: state.page.title,
         blocks: state.page.blocks,
         styles: state.page.styles,

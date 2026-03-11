@@ -35,9 +35,6 @@ func main() {
 	app.Post("/api/first-user", CreateFirstUserHandler(db))
 	app.Get("/api/auth/status", CheckAuthStatus(db))
 
-	// Public website
-	app.Get("/", RenderPageHandler(db))
-
 	// Static files (public)
 	app.Use("/static", static.New("./static"))
 
@@ -57,6 +54,9 @@ func main() {
 	apiGroup.Use(NeedsFirstUser(db))  // Check if first user exists FIRST
 	apiGroup.Use(AuthMiddleware(db))   // Then check auth
 	apiGroup.Get("/page", GetPageHandler(db))
+	apiGroup.Get("/pages", GetPagesHandler(db))
+	apiGroup.Post("/pages", CreatePageHandler(db))
+	apiGroup.Delete("/pages/:id", DeletePageHandler(db))
 	apiGroup.Post("/logout", LogoutHandler())
 
 	// Template routes (protected)
@@ -77,6 +77,10 @@ func main() {
 	componentsGroup.Get("/:id", GetComponentHandler(db))
 	componentsGroup.Put("/:id", UpdateComponentHandler(db))
 	componentsGroup.Delete("/:id", DeleteComponentHandler(db))
+
+
+	// Public website (páginas dinámicas por slug)
+	app.Get("/:slug?", RenderPageHandler(db))
 
 	fmt.Println("🚀 Servidor iniciado en http://localhost:3000")
 	log.Fatal(app.Listen(":3000"))

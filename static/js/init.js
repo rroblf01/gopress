@@ -28,8 +28,16 @@ function setupEventListeners() {
     document.getElementById('previewBtn').addEventListener('click', openPreviewModal);
     document.getElementById('templatesBtn').addEventListener('click', openTemplatesModal);
     document.getElementById('componentsBtn').addEventListener('click', openComponentsModal);
+    
+    // Page management
+    const newPageBtn = document.getElementById('newPageBtn');
+    if (newPageBtn) {
+        newPageBtn.addEventListener('click', openPagesModal);
+    }
+    
     document.getElementById('goToWebBtn').addEventListener('click', () => {
-        window.open('/', '_blank');
+        const slug = state.currentPageSlug || '/';
+        window.open(slug === '/' ? '/' : '/' + slug, '_blank');
     });
     document.getElementById('logoutBtn').addEventListener('click', logout);
 }
@@ -115,8 +123,12 @@ async function initializeEditor() {
     // Verificar autenticación primero
     const authenticated = await checkAuth();
     if (!authenticated) return;
+
+    // Inicializar estado de página actual
+    state.currentPageSlug = '/';
     
     loadPageData();
+    loadPagesList(); // Cargar lista de páginas en el selector
     setupDragAndDrop();
     setupEventListeners();
     setResponsiveMode('desktop');

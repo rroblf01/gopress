@@ -70,11 +70,20 @@ type Styles struct {
 }
 
 type PageData struct {
+	Slug      string  `json:"slug"`
 	Title     string  `json:"title"`
 	Blocks    []Block `json:"blocks"`
 	Styles    Styles  `json:"styles"`
 	Favicon   string  `json:"favicon"`
 	CreatedAt string  `json:"createdAt"`
+}
+
+type PageInfo struct {
+	ID        int64  `json:"id"`
+	Slug      string `json:"slug"`
+	Title     string `json:"title"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 type TemplateInfo struct {
