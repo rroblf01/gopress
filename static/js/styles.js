@@ -123,10 +123,106 @@ function generateDirectionCSS(block) {
 }
 
 /**
+ * Genera CSS responsive para flex (direction, justifyContent, alignItems, flexWrap, gap)
+ */
+function generateFlexCSS(block) {
+    if (block.type !== 'flex' && block.type !== 'grid') return '';
+
+    let css = '';
+    const blockClass = `block-${block.id}`;
+
+    // Dirección base (desktop)
+    const baseDirection = block.directionDesktop || block.direction;
+    const baseJustifyContent = block.justifyContentDesktop || block.justifyContent;
+    const baseAlignItems = block.alignItemsDesktop || block.alignItems;
+    const baseFlexWrap = block.flexWrapDesktop || block.flexWrap;
+    const baseGap = block.gapDesktop || block.gap;
+
+    let baseStyles = [];
+    if (baseDirection) baseStyles.push(`flex-direction: ${baseDirection === 'row' ? 'row' : 'column'}`);
+    if (baseJustifyContent) baseStyles.push(`justify-content: ${baseJustifyContent}`);
+    if (baseAlignItems) baseStyles.push(`align-items: ${baseAlignItems}`);
+    if (baseFlexWrap) baseStyles.push(`flex-wrap: ${baseFlexWrap}`);
+    if (baseGap) baseStyles.push(`gap: ${baseGap}px`);
+
+    if (baseStyles.length > 0) {
+        css += `.${blockClass} { ${baseStyles.join('; ')}; } `;
+    }
+
+    // Tablet
+    let tabletStyles = [];
+    if (block.directionTablet) tabletStyles.push(`flex-direction: ${block.directionTablet === 'row' ? 'row' : 'column'}`);
+    if (block.justifyContentTablet) tabletStyles.push(`justify-content: ${block.justifyContentTablet}`);
+    if (block.alignItemsTablet) tabletStyles.push(`align-items: ${block.alignItemsTablet}`);
+    if (block.flexWrapTablet) tabletStyles.push(`flex-wrap: ${block.flexWrapTablet}`);
+    if (block.gapTablet) tabletStyles.push(`gap: ${block.gapTablet}px`);
+
+    if (tabletStyles.length > 0) {
+        css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+    }
+
+    // Mobile
+    let mobileStyles = [];
+    if (block.directionMobile) mobileStyles.push(`flex-direction: ${block.directionMobile === 'row' ? 'row' : 'column'}`);
+    if (block.justifyContentMobile) mobileStyles.push(`justify-content: ${block.justifyContentMobile}`);
+    if (block.alignItemsMobile) mobileStyles.push(`align-items: ${block.alignItemsMobile}`);
+    if (block.flexWrapMobile) mobileStyles.push(`flex-wrap: ${block.flexWrapMobile}`);
+    if (block.gapMobile) mobileStyles.push(`gap: ${block.gapMobile}px`);
+
+    if (mobileStyles.length > 0) {
+        css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
+    }
+
+    return css;
+}
+
+/**
+ * Genera CSS responsive para grid (gridTemplateColumns, gridGap)
+ */
+function generateGridCSS(block) {
+    if (block.type !== 'grid') return '';
+
+    let css = '';
+    const blockClass = `block-${block.id}`;
+
+    // Grid Template Columns base (desktop)
+    const baseGridTemplateColumns = block.gridTemplateColumnsDesktop || block.gridTemplateColumns;
+    const baseGridGap = block.gridGapDesktop || block.gridGap;
+
+    let baseStyles = [];
+    if (baseGridTemplateColumns) baseStyles.push(`grid-template-columns: ${baseGridTemplateColumns}`);
+    if (baseGridGap) baseStyles.push(`gap: ${baseGridGap}px`);
+
+    if (baseStyles.length > 0) {
+        css += `.${blockClass} { ${baseStyles.join('; ')}; } `;
+    }
+
+    // Tablet
+    let tabletStyles = [];
+    if (block.gridTemplateColumnsTablet) tabletStyles.push(`grid-template-columns: ${block.gridTemplateColumnsTablet}`);
+    if (block.gridGapTablet) tabletStyles.push(`gap: ${block.gridGapTablet}px`);
+
+    if (tabletStyles.length > 0) {
+        css += `@media (min-width: 769px) and (max-width: 1024px) { .${blockClass} { ${tabletStyles.join('; ')}; } } `;
+    }
+
+    // Mobile
+    let mobileStyles = [];
+    if (block.gridTemplateColumnsMobile) mobileStyles.push(`grid-template-columns: ${block.gridTemplateColumnsMobile}`);
+    if (block.gridGapMobile) mobileStyles.push(`gap: ${block.gridGapMobile}px`);
+
+    if (mobileStyles.length > 0) {
+        css += `@media (max-width: 768px) { .${blockClass} { ${mobileStyles.join('; ')}; } } `;
+    }
+
+    return css;
+}
+
+/**
  * Obtiene la dirección actual según el modo responsive
  */
 function getCurrentDirection(block) {
-    if (block.type !== 'container') return '';
+    if (block.type !== 'container' && block.type !== 'flex' && block.type !== 'grid') return '';
     const mode = state.responsiveMode;
     if (mode === 'mobile' && block.directionMobile) return block.directionMobile;
     if (mode === 'tablet' && block.directionTablet) return block.directionTablet;

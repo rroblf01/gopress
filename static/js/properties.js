@@ -309,6 +309,10 @@ function createGlobalComponentList(isComponentEditor = false) {
  * Propiedades para contenedor
  */
 function renderContainerProperties(block) {
+    const mode = state.responsiveMode;
+    const directionProp = mode === 'desktop' ? 'directionDesktop' : `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const currentDirection = block[directionProp] || block.direction;
+    
     return `<div class="property-group">
         <label class="property-label">ID de Sección</label>
         <input type="text" value="${block.sectionId || ''}" class="property-input" placeholder="ej: contacto, servicios" onchange="updateBlockProperty('sectionId', this.value)">
@@ -317,11 +321,14 @@ function renderContainerProperties(block) {
         </p>
     </div>
     <div class="property-group">
-        <label class="property-label">Dirección</label>
-        <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
-            <option value="vertical" ${block.direction === 'vertical' ? 'selected' : ''}>Vertical</option>
-            <option value="horizontal" ${block.direction === 'horizontal' ? 'selected' : ''}>Horizontal</option>
+        <label class="property-label">Dirección - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
+        <select class="property-select" onchange="updateDirectionProperty(this.value)">
+            <option value="vertical" ${currentDirection === 'vertical' ? 'selected' : ''}>Vertical</option>
+            <option value="horizontal" ${currentDirection === 'horizontal' ? 'selected' : ''}>Horizontal</option>
         </select>
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            💡 Cambia según el dispositivo seleccionado
+        </p>
     </div>
     <div class="property-group">
         <label style="display: flex; align-items: center; justify-content: space-between;">
@@ -600,45 +607,58 @@ function renderDividerProperties(block) {
  * Propiedades para flex
  */
 function renderFlexProperties(block) {
+    const mode = state.responsiveMode;
+    const directionProp = mode === 'desktop' ? 'directionDesktop' : `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const justifyContentProp = mode === 'desktop' ? 'justifyContentDesktop' : `justifyContent${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const alignItemsProp = mode === 'desktop' ? 'alignItemsDesktop' : `alignItems${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const flexWrapProp = mode === 'desktop' ? 'flexWrapDesktop' : `flexWrap${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const gapProp = mode === 'desktop' ? 'gapDesktop' : `gap${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    
+    const currentDirection = block[directionProp] || block.direction;
+    const currentJustifyContent = block[justifyContentProp] || block.justifyContent;
+    const currentAlignItems = block[alignItemsProp] || block.alignItems;
+    const currentFlexWrap = block[flexWrapProp] || block.flexWrap;
+    const currentGap = block[gapProp] || block.gap;
+    
     return `<div class="property-group">
-        <label class="property-label">Dirección</label>
-        <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
-            <option value="row" ${block.direction === 'row' ? 'selected' : ''}>Horizontal (Row)</option>
-            <option value="column" ${block.direction === 'column' ? 'selected' : ''}>Vertical (Column)</option>
+        <label class="property-label">Dirección - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
+        <select class="property-select" onchange="updateFlexDirectionProperty(this.value)">
+            <option value="row" ${currentDirection === 'row' ? 'selected' : ''}>Horizontal (Row)</option>
+            <option value="column" ${currentDirection === 'column' ? 'selected' : ''}>Vertical (Column)</option>
         </select>
     </div>
     <div class="property-group">
-        <label class="property-label">Justificar Contenido</label>
-        <select class="property-select" onchange="updateBlockProperty('justifyContent', this.value)">
-            <option value="flex-start" ${block.justifyContent === 'flex-start' ? 'selected' : ''}>Inicio</option>
-            <option value="center" ${block.justifyContent === 'center' ? 'selected' : ''}>Centro</option>
-            <option value="flex-end" ${block.justifyContent === 'flex-end' ? 'selected' : ''}>Fin</option>
-            <option value="space-between" ${block.justifyContent === 'space-between' ? 'selected' : ''}>Entre espacios</option>
-            <option value="space-around" ${block.justifyContent === 'space-around' ? 'selected' : ''}>Alrededor</option>
-            <option value="space-evenly" ${block.justifyContent === 'space-evenly' ? 'selected' : ''}>Uniforme</option>
+        <label class="property-label">Justificar Contenido - ${mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲'}</label>
+        <select class="property-select" onchange="updateFlexProperty('justifyContent', this.value)">
+            <option value="flex-start" ${currentJustifyContent === 'flex-start' ? 'selected' : ''}>Inicio</option>
+            <option value="center" ${currentJustifyContent === 'center' ? 'selected' : ''}>Centro</option>
+            <option value="flex-end" ${currentJustifyContent === 'flex-end' ? 'selected' : ''}>Fin</option>
+            <option value="space-between" ${currentJustifyContent === 'space-between' ? 'selected' : ''}>Entre espacios</option>
+            <option value="space-around" ${currentJustifyContent === 'space-around' ? 'selected' : ''}>Alrededor</option>
+            <option value="space-evenly" ${currentJustifyContent === 'space-evenly' ? 'selected' : ''}>Uniforme</option>
         </select>
     </div>
     <div class="property-group">
-        <label class="property-label">Alinear Elementos</label>
-        <select class="property-select" onchange="updateBlockProperty('alignItems', this.value)">
-            <option value="flex-start" ${block.alignItems === 'flex-start' ? 'selected' : ''}>Inicio</option>
-            <option value="center" ${block.alignItems === 'center' ? 'selected' : ''}>Centro</option>
-            <option value="flex-end" ${block.alignItems === 'flex-end' ? 'selected' : ''}>Fin</option>
-            <option value="stretch" ${block.alignItems === 'stretch' ? 'selected' : ''}>Estirar</option>
-            <option value="baseline" ${block.alignItems === 'baseline' ? 'selected' : ''}>Línea base</option>
+        <label class="property-label">Alinear Elementos - ${mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲'}</label>
+        <select class="property-select" onchange="updateFlexProperty('alignItems', this.value)">
+            <option value="flex-start" ${currentAlignItems === 'flex-start' ? 'selected' : ''}>Inicio</option>
+            <option value="center" ${currentAlignItems === 'center' ? 'selected' : ''}>Centro</option>
+            <option value="flex-end" ${currentAlignItems === 'flex-end' ? 'selected' : ''}>Fin</option>
+            <option value="stretch" ${currentAlignItems === 'stretch' ? 'selected' : ''}>Estirar</option>
+            <option value="baseline" ${currentAlignItems === 'baseline' ? 'selected' : ''}>Línea base</option>
         </select>
     </div>
     <div class="property-group">
-        <label class="property-label">Flex Wrap</label>
-        <select class="property-select" onchange="updateBlockProperty('flexWrap', this.value)">
-            <option value="nowrap" ${block.flexWrap === 'nowrap' ? 'selected' : ''}>No envolver</option>
-            <option value="wrap" ${block.flexWrap === 'wrap' ? 'selected' : ''}>Envolver</option>
-            <option value="wrap-reverse" ${block.flexWrap === 'wrap-reverse' ? 'selected' : ''}>Envolver inverso</option>
+        <label class="property-label">Flex Wrap - ${mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲'}</label>
+        <select class="property-select" onchange="updateFlexProperty('flexWrap', this.value)">
+            <option value="nowrap" ${currentFlexWrap === 'nowrap' ? 'selected' : ''}>No envolver</option>
+            <option value="wrap" ${currentFlexWrap === 'wrap' ? 'selected' : ''}>Envolver</option>
+            <option value="wrap-reverse" ${currentFlexWrap === 'wrap-reverse' ? 'selected' : ''}>Envolver inverso</option>
         </select>
     </div>
     <div class="property-group">
-        <label class="property-label">Espacio entre elementos (Gap)</label>
-        <input type="number" value="${block.gap || '16'}" class="property-input" onchange="updateBlockProperty('gap', this.value)" placeholder="16">
+        <label class="property-label">Espacio entre elementos (Gap) - ${mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲'}</label>
+        <input type="number" value="${currentGap || '16'}" class="property-input" onchange="updateFlexProperty('gap', this.value)" placeholder="16">
     </div>
     <div class="property-group">
         <label class="property-label">Color de Fondo</label>
@@ -653,16 +673,23 @@ function renderFlexProperties(block) {
  * Propiedades para grid
  */
 function renderGridProperties(block) {
+    const mode = state.responsiveMode;
+    const gridTemplateColumnsProp = mode === 'desktop' ? 'gridTemplateColumnsDesktop' : `gridTemplateColumns${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    const gridGapProp = mode === 'desktop' ? 'gridGapDesktop' : `gridGap${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    
+    const currentGridTemplateColumns = block[gridTemplateColumnsProp] || block.gridTemplateColumns;
+    const currentGridGap = block[gridGapProp] || block.gridGap;
+    
     return `<div class="property-group">
-        <label class="property-label">Columnas (grid-template-columns)</label>
-        <input type="text" value="${block.gridTemplateColumns || 'repeat(3, 1fr)'}" class="property-input" onchange="updateBlockProperty('gridTemplateColumns', this.value)" placeholder="repeat(3, 1fr)">
+        <label class="property-label">Columnas (grid-template-columns) - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
+        <input type="text" value="${currentGridTemplateColumns || 'repeat(3, 1fr)'}" class="property-input" onchange="updateGridProperty('gridTemplateColumns', this.value)" placeholder="repeat(3, 1fr)">
         <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
             💡 Ejemplos: repeat(2, 1fr), repeat(4, 200px), 1fr 2fr 1fr
         </p>
     </div>
     <div class="property-group">
-        <label class="property-label">Espacio entre elementos (Gap)</label>
-        <input type="number" value="${block.gridGap || '16'}" class="property-input" onchange="updateBlockProperty('gridGap', this.value)" placeholder="16">
+        <label class="property-label">Espacio entre elementos (Gap) - ${mode === 'desktop' ? '🖥️' : mode === 'tablet' ? '📱' : '📲'}</label>
+        <input type="number" value="${currentGridGap || '16'}" class="property-input" onchange="updateGridProperty('gridGap', this.value)" placeholder="16">
     </div>
     <div class="property-group">
         <label class="property-label">Color de Fondo</label>
@@ -738,6 +765,98 @@ function updateBlockProperty(prop, value) {
         } else {
             block[prop] = value;
         }
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de dirección responsive (container, flex, grid)
+ */
+function updateDirectionProperty(value) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    if (block) {
+        const mode = state.responsiveMode;
+        const prop = mode === 'desktop' ? 'directionDesktop' : `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+        block[prop] = value;
+        // También actualizar direction como fallback para la primera vez
+        if (mode === 'desktop') {
+            block.direction = value;
+        }
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de dirección para flex (row/column)
+ */
+function updateFlexDirectionProperty(value) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    if (block && (block.type === 'flex' || block.type === 'grid')) {
+        const mode = state.responsiveMode;
+        const prop = mode === 'desktop' ? 'directionDesktop' : `direction${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+        block[prop] = value;
+        // También actualizar direction como fallback para la primera vez
+        if (mode === 'desktop') {
+            block.direction = value;
+        }
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de flex responsive (justifyContent, alignItems, flexWrap, gap)
+ */
+function updateFlexProperty(prop, value) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    if (block && (block.type === 'flex' || block.type === 'grid')) {
+        const mode = state.responsiveMode;
+        const fullProp = mode === 'desktop' ? `${prop}Desktop` : `${prop}${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+        block[fullProp] = value;
+        if (current.isComponent) {
+            current.editorState.dirty = true;
+            saveComponentFromEditor(current.tabId);
+        } else {
+            autoSave();
+        }
+        renderCurrentBlocks();
+        renderProperties();
+    }
+}
+
+/**
+ * Actualiza propiedad de grid responsive (gridTemplateColumns, gridGap)
+ */
+function updateGridProperty(prop, value) {
+    const current = getCurrentState();
+    const block = findBlockById(current.state, current.selectedBlockId);
+    if (block && block.type === 'grid') {
+        const mode = state.responsiveMode;
+        const fullProp = mode === 'desktop' ? `${prop}Desktop` : `${prop}${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+        block[fullProp] = value;
         if (current.isComponent) {
             current.editorState.dirty = true;
             saveComponentFromEditor(current.tabId);

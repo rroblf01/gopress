@@ -256,11 +256,11 @@ function createBlockHTML(block) {
 
     const responsiveCSS = generateResponsiveCSS(block);
     const directionCSS = generateDirectionCSS(block);
-    const allCSS = responsiveCSS + directionCSS;
+    const flexCSS = generateFlexCSS(block);
+    const gridCSS = generateGridCSS(block);
+    const allCSS = responsiveCSS + directionCSS + flexCSS + gridCSS;
 
-    const currentDirection = getCurrentDirection(block);
     const isHidden = getIsHidden(block);
-    const directionStyle = currentDirection ? `flex-direction: ${currentDirection === 'horizontal' ? 'row' : 'column'};` : '';
     const hiddenStyle = isHidden ? 'display: none;' : '';
 
     if (block.type === 'container') {
@@ -314,7 +314,7 @@ function createBlockHTML(block) {
                 data-parent-id="${block.id}"
                 ${sectionIdAttr}
                 ${sectionIdLabel}
-                style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}"
+                style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${hiddenStyle}"
                 ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over'); return false;"
                 ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;"
                 ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;">
@@ -415,17 +415,23 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 ? block.children.map(child => createBlockHTML(child)).join('')
                 : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
 
+            // Obtener valores actuales según modo responsive
+            const currentDirection = block.direction || 'row';
+            const currentJustifyContent = block.justifyContent || 'center';
+            const currentAlignItems = block.alignItems || 'center';
+            const currentFlexWrap = block.flexWrap || 'nowrap';
+            const currentGap = block.gap || '16';
 
             return `<style id="${cssId}">
                 .${blockClass} {
                     ${block.customCSS}
                     ${allCSS}
                     display: flex !important;
-                    flex-direction: ${block.direction === 'column' ? 'column' : 'row'} !important;
-                    justify-content: ${block.justifyContent || 'center'} !important;
-                    align-items: ${block.alignItems || 'center'} !important;
-                    gap: ${block.gap || '16'}px !important;
-                    flex-wrap: ${block.flexWrap || 'nowrap'} !important;
+                    flex-direction: ${currentDirection === 'column' ? 'column' : 'row'} !important;
+                    justify-content: ${currentJustifyContent} !important;
+                    align-items: ${currentAlignItems} !important;
+                    gap: ${currentGap}px !important;
+                    flex-wrap: ${currentFlexWrap} !important;
                     background: ${block.backgroundColor || 'transparent'};
                     color: ${block.textColor || '#1f2937'};
                     min-height: 150px !important;
@@ -463,7 +469,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass}" 
+            <div class="${blockClass}"
                 style="position: relative; min-height: 150px; ${hiddenStyle}"
                 ondragenter="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.add('drag-over'); dz.style.pointerEvents = 'auto'; } return false;"
                 ondragover="event.preventDefault(); return false;"
@@ -485,13 +491,17 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 ? block.children.map(child => createBlockHTML(child)).join('')
                 : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
 
+            // Obtener valores actuales según modo responsive
+            const currentGridTemplateColumns = block.gridTemplateColumns || 'repeat(3, 1fr)';
+            const currentGridGap = block.gridGap || '16';
+
             return `<style id="${cssId}">
                 .${blockClass} {
                     ${block.customCSS}
                     ${allCSS}
                     display: grid !important;
-                    grid-template-columns: ${block.gridTemplateColumns || 'repeat(3, 1fr)'} !important;
-                    gap: ${block.gridGap || '16'}px !important;
+                    grid-template-columns: ${currentGridTemplateColumns} !important;
+                    gap: ${currentGridGap}px !important;
                     background: ${block.backgroundColor || 'transparent'};
                     color: ${block.textColor || '#1f2937'};
                     min-height: 150px !important;
@@ -529,7 +539,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass}" 
+            <div class="${blockClass}"
                 style="position: relative; min-height: 150px; ${hiddenStyle}"
                 ondragenter="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.add('drag-over'); dz.style.pointerEvents = 'auto'; } return false;"
                 ondragover="event.preventDefault(); return false;"

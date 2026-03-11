@@ -480,6 +480,132 @@ func generateResponsiveCSS(block Block, blockClass string) string {
 		css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { padding: %spx %spx %spx %spx; } } ", blockClass, paddingTop, paddingRight, paddingBottom, paddingLeft))
 	}
 
+	// CSS responsive para FLEX
+	if block.Type == "flex" {
+		// Desktop (base)
+		baseDirection := block.DirectionDesktop
+		if baseDirection == "" {
+			baseDirection = block.Direction
+		}
+		if baseDirection != "" {
+			flexDir := "column"
+			if baseDirection == "row" {
+				flexDir = "row"
+			}
+			css.WriteString(fmt.Sprintf(".%s { flex-direction: %s; } ", blockClass, flexDir))
+		}
+		
+		baseJustifyContent := block.JustifyContentDesktop
+		if baseJustifyContent == "" {
+			baseJustifyContent = block.JustifyContent
+		}
+		if baseJustifyContent != "" {
+			css.WriteString(fmt.Sprintf(".%s { justify-content: %s; } ", blockClass, baseJustifyContent))
+		}
+		
+		baseAlignItems := block.AlignItemsDesktop
+		if baseAlignItems == "" {
+			baseAlignItems = block.AlignItems
+		}
+		if baseAlignItems != "" {
+			css.WriteString(fmt.Sprintf(".%s { align-items: %s; } ", blockClass, baseAlignItems))
+		}
+		
+		baseFlexWrap := block.FlexWrapDesktop
+		if baseFlexWrap == "" {
+			baseFlexWrap = block.FlexWrap
+		}
+		if baseFlexWrap != "" {
+			css.WriteString(fmt.Sprintf(".%s { flex-wrap: %s; } ", blockClass, baseFlexWrap))
+		}
+		
+		baseGap := block.GapDesktop
+		if baseGap == "" {
+			baseGap = block.Gap
+		}
+		if baseGap != "" {
+			css.WriteString(fmt.Sprintf(".%s { gap: %spx; } ", blockClass, baseGap))
+		}
+
+		// Tablet
+		if block.DirectionTablet != "" {
+			flexDir := "column"
+			if block.DirectionTablet == "row" {
+				flexDir = "row"
+			}
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+		}
+		if block.JustifyContentTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { justify-content: %s; } } ", blockClass, block.JustifyContentTablet))
+		}
+		if block.AlignItemsTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { align-items: %s; } } ", blockClass, block.AlignItemsTablet))
+		}
+		if block.FlexWrapTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { flex-wrap: %s; } } ", blockClass, block.FlexWrapTablet))
+		}
+		if block.GapTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { gap: %spx; } } ", blockClass, block.GapTablet))
+		}
+
+		// Mobile
+		if block.DirectionMobile != "" {
+			flexDir := "column"
+			if block.DirectionMobile == "row" {
+				flexDir = "row"
+			}
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { flex-direction: %s; } } ", blockClass, flexDir))
+		}
+		if block.JustifyContentMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { justify-content: %s; } } ", blockClass, block.JustifyContentMobile))
+		}
+		if block.AlignItemsMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { align-items: %s; } } ", blockClass, block.AlignItemsMobile))
+		}
+		if block.FlexWrapMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { flex-wrap: %s; } } ", blockClass, block.FlexWrapMobile))
+		}
+		if block.GapMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { gap: %spx; } } ", blockClass, block.GapMobile))
+		}
+	}
+
+	// CSS responsive para GRID
+	if block.Type == "grid" {
+		// Desktop (base)
+		baseGridTemplateColumns := block.GridTemplateColumnsDesktop
+		if baseGridTemplateColumns == "" {
+			baseGridTemplateColumns = block.GridTemplateColumns
+		}
+		if baseGridTemplateColumns != "" {
+			css.WriteString(fmt.Sprintf(".%s { grid-template-columns: %s; } ", blockClass, baseGridTemplateColumns))
+		}
+		
+		baseGridGap := block.GridGapDesktop
+		if baseGridGap == "" {
+			baseGridGap = block.GridGap
+		}
+		if baseGridGap != "" {
+			css.WriteString(fmt.Sprintf(".%s { gap: %spx; } ", blockClass, baseGridGap))
+		}
+
+		// Tablet
+		if block.GridTemplateColumnsTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { grid-template-columns: %s; } } ", blockClass, block.GridTemplateColumnsTablet))
+		}
+		if block.GridGapTablet != "" {
+			css.WriteString(fmt.Sprintf("@media (min-width: 769px) and (max-width: 1024px) { .%s { gap: %spx; } } ", blockClass, block.GridGapTablet))
+		}
+
+		// Mobile
+		if block.GridTemplateColumnsMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { grid-template-columns: %s; } } ", blockClass, block.GridTemplateColumnsMobile))
+		}
+		if block.GridGapMobile != "" {
+			css.WriteString(fmt.Sprintf("@media (max-width: 768px) { .%s { gap: %spx; } } ", blockClass, block.GridGapMobile))
+		}
+	}
+
 	return css.String()
 }
 

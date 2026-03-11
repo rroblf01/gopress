@@ -62,9 +62,29 @@ type Block struct {
 	AlignItems      string `json:"alignItems"`
 	Gap             string `json:"gap"`
 	FlexWrap        string `json:"flexWrap"`
+	// Flex responsive
+	JustifyContentDesktop  string `json:"justifyContentDesktop"`
+	AlignItemsDesktop      string `json:"alignItemsDesktop"`
+	GapDesktop             string `json:"gapDesktop"`
+	FlexWrapDesktop        string `json:"flexWrapDesktop"`
+	JustifyContentTablet   string `json:"justifyContentTablet"`
+	AlignItemsTablet       string `json:"alignItemsTablet"`
+	GapTablet              string `json:"gapTablet"`
+	FlexWrapTablet         string `json:"flexWrapTablet"`
+	JustifyContentMobile   string `json:"justifyContentMobile"`
+	AlignItemsMobile       string `json:"alignItemsMobile"`
+	GapMobile              string `json:"gapMobile"`
+	FlexWrapMobile         string `json:"flexWrapMobile"`
 	// Grid properties
 	GridTemplateColumns string `json:"gridTemplateColumns"`
 	GridGap             string `json:"gridGap"`
+	// Grid responsive
+	GridTemplateColumnsDesktop string `json:"gridTemplateColumnsDesktop"`
+	GridGapDesktop             string `json:"gridGapDesktop"`
+	GridTemplateColumnsTablet  string `json:"gridTemplateColumnsTablet"`
+	GridGapTablet              string `json:"gridGapTablet"`
+	GridTemplateColumnsMobile  string `json:"gridTemplateColumnsMobile"`
+	GridGapMobile              string `json:"gridGapMobile"`
 }
 
 type Styles struct {
