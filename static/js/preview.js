@@ -32,8 +32,9 @@ function renderBlockPreview(block) {
         const childrenHtml = (block.children && block.children.length > 0)
             ? block.children.map(child => renderBlockPreview(child)).join('')
             : '';
+        const sectionIdAttr = block.sectionId && block.sectionId.trim() !== '' ? `id="${block.sectionId}"` : '';
         html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style>
-            <div class="${blockClass}" style="background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px;">
+            <div class="${blockClass}" ${sectionIdAttr} style="background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || 'inherit'}; padding: 12px; border-radius: 4px; margin-bottom: 24px;">
                 ${childrenHtml}
             </div>`;
     } else {
@@ -119,8 +120,9 @@ function renderBlockPreview(block) {
                 break;
             
             case 'button':
+                const scrollAttr = block.scrollToId ? `onclick="scrollToSection('${block.scrollToId}')"` : '';
                 html = `<style id="${cssId}">${block.customCSS} ${allCSS}</style>
-                    <a class="${blockClass}" href="${block.link}" style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">
+                    <a class="${blockClass}" href="${block.link}" ${scrollAttr} style="display: inline-block; padding: 12px 24px; background: ${block.backgroundColor}; color: ${block.textColor}; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; text-decoration: none; margin-bottom: 16px;">
                         ${escapeHTML(block.text)}
                     </a>`;
                 break;

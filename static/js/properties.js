@@ -304,6 +304,13 @@ function createGlobalComponentList(isComponentEditor = false) {
  */
 function renderContainerProperties(block) {
     return `<div class="property-group">
+        <label class="property-label">ID de Sección</label>
+        <input type="text" value="${block.sectionId || ''}" class="property-input" placeholder="ej: contacto, servicios" onchange="updateBlockProperty('sectionId', this.value)">
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            💡 Este ID se usa para el scroll: #${block.sectionId || 'seccion'}
+        </p>
+    </div>
+    <div class="property-group">
         <label class="property-label">Dirección</label>
         <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
             <option value="vertical" ${block.direction === 'vertical' ? 'selected' : ''}>Vertical</option>
@@ -314,7 +321,7 @@ function renderContainerProperties(block) {
         <label style="display: flex; align-items: center; justify-content: space-between;">
             <span class="property-label" style="margin: 0;">Estado Hover</span>
             <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()" 
+                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()"
                     style="width: 36px; height: 20px; margin-right: 8px;">
                 <span style="font-size: 11px; color: var(--text-secondary);">${state.hoverMode ? 'ON' : 'OFF'}</span>
             </label>
@@ -323,18 +330,18 @@ function renderContainerProperties(block) {
     <div class="property-group">
         <label class="property-label">Color de Fondo ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
-            <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}" 
+            <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}"
                 onchange="updateColorProperty('backgroundColor', this.value)">
-            <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}" 
+            <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#ffffff') : (block.backgroundColor || '#ffffff')}"
                 class="property-input" onchange="updateColorProperty('backgroundColor', this.value)">
         </div>
     </div>
     <div class="property-group">
         <label class="property-label">Color de Texto ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
-            <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}" 
+            <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}"
                 onchange="updateColorProperty('textColor', this.value)">
-            <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}" 
+            <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#1f2937') : (block.textColor || '#1f2937')}"
                 class="property-input" onchange="updateColorProperty('textColor', this.value)">
         </div>
     </div>`;
@@ -514,11 +521,15 @@ function renderCarouselProperties(block) {
  * Propiedades para botón
  */
 function renderButtonProperties(block) {
+    // Obtener todos los contenedores con sectionId para la lista de secciones
+    const allBlocks = getAllBlocksFlat(false);
+    const containersWithSectionId = allBlocks.filter(b => b.type === 'container' && b.sectionId && b.sectionId.trim() !== '');
+
     return `<div class="property-group">
         <label style="display: flex; align-items: center; justify-content: space-between;">
             <span class="property-label" style="margin: 0;">Estado Hover</span>
             <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()" 
+                <input type="checkbox" ${state.hoverMode ? 'checked' : ''} onchange="toggleHoverMode()"
                     style="width: 36px; height: 20px; margin-right: 8px;">
                 <span style="font-size: 11px; color: var(--text-secondary);">${state.hoverMode ? 'ON' : 'OFF'}</span>
             </label>
@@ -529,26 +540,36 @@ function renderButtonProperties(block) {
         <input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)">
     </div>
     <div class="property-group">
-        <label class="property-label">Link</label>
-        <input type="text" value="${block.link}" class="property-input" onchange="updateBlockProperty('link', this.value)">
+        <label class="property-label">Link URL</label>
+        <input type="text" value="${block.link}" class="property-input" placeholder="https://ejemplo.com" onchange="updateBlockProperty('link', this.value)">
+    </div>
+    <div class="property-group">
+        <label class="property-label">Ir a Sección (Scroll)</label>
+        <select class="property-select" onchange="updateBlockProperty('scrollToId', this.value)">
+            <option value="">-- Ninguna --</option>
+            ${containersWithSectionId.map(c => `<option value="${c.sectionId}" ${block.scrollToId === c.sectionId ? 'selected' : ''}>#${c.sectionId}</option>`).join('')}
+        </select>
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            💡 Al hacer click, la página hará scroll a la sección seleccionada
+        </p>
     </div>
     <div class="property-group">
         <label class="property-label">Color de Fondo ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
-            <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}" 
+            <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}"
                 onchange="updateColorProperty('backgroundColor', this.value)">
-            <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}" 
+            <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}"
                 class="property-input" onchange="updateColorProperty('backgroundColor', this.value)">
-            <button class="property-input" style="width: auto; cursor: pointer;" 
+            <button class="property-input" style="width: auto; cursor: pointer;"
                 onclick="updateColorProperty('backgroundColor', 'transparent')">Transparente</button>
         </div>
     </div>
     <div class="property-group">
         <label class="property-label">Color de Texto ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
-            <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}" 
+            <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}"
                 onchange="updateColorProperty('textColor', this.value)">
-            <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}" 
+            <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}"
                 class="property-input" onchange="updateColorProperty('textColor', this.value)">
         </div>
     </div>`;

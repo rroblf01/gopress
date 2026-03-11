@@ -338,6 +338,12 @@ function createBlockHTML(block) {
             ? block.children.map(child => createBlockHTML(child)).join('')
             : '<div style="display: flex; align-items: center; justify-content: center; min-height: 80px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; margin: 8px;">📦 Arrastra bloques aquí</div>';
 
+        const sectionIdAttr = block.sectionId && block.sectionId.trim() !== '' ? `id="${block.sectionId}"` : '';
+        const sectionIdLabel = block.sectionId && block.sectionId.trim() !== '' ? `data-section-id="${block.sectionId}"` : '';
+        const sectionIdBadge = block.sectionId && block.sectionId.trim() !== '' 
+            ? `<div style="position: absolute; top: -10px; right: 10px; background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">#${block.sectionId}</div>` 
+            : '';
+
         preview = `
             <style id="${cssId}">
                 .${blockClass} { ${block.customCSS} ${allCSS} }
@@ -361,7 +367,7 @@ function createBlockHTML(block) {
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" style="min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}">${childrenContent}</div>`;
+            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" ${sectionIdAttr} ${sectionIdLabel} style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}">${sectionIdBadge}${childrenContent}</div>`;
     } else {
         preview = createBlockPreviewHTML(block, allCSS, isHidden);
     }
@@ -439,8 +445,9 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 </div>`;
 
         case 'button':
+            const scrollAttr = block.scrollToId ? `onclick="scrollToSection('${block.scrollToId}')"` : '';
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} background: ${block.backgroundColor || 'transparent'}; color: ${block.textColor || '#ffffff'}; }</style>
-                <button class="${blockClass}" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; ${hiddenStyle}">
+                <button class="${blockClass}" style="padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; ${hiddenStyle}" ${scrollAttr}>
                     ${escapeHTML(block.text)}
                 </button>`;
 
@@ -458,5 +465,15 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
 
         default:
             return '';
+    }
+}
+
+/**
+ * Función para hacer scroll suave a una sección
+ */
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }

@@ -58,6 +58,20 @@ function initializeBlockProperties(blocks) {
         // Inicializar hover si no existe
         if (block.hoverBackgroundColor === undefined) block.hoverBackgroundColor = '';
         if (block.hoverTextColor === undefined) block.hoverTextColor = '';
+        // Migrar 'id' a 'sectionId' para contenedores (cambio de nombre de propiedad)
+        // Si block.id es string, era el ID de sección definido por el usuario
+        if (block.type === 'container' && typeof block.id === 'string') {
+            block.sectionId = block.id;
+            block.id = Date.now() + Math.random(); // Generar nuevo ID interno
+        }
+        // Inicializar sectionId si no existe (para contenedores)
+        if (block.type === 'container' && block.sectionId === undefined) {
+            block.sectionId = '';
+        }
+        // Inicializar scrollToId si no existe (para botones)
+        if (block.type === 'button' && block.scrollToId === undefined) {
+            block.scrollToId = '';
+        }
     });
     return blocks;
 }

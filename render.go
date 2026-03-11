@@ -81,6 +81,14 @@ func BuildPageHTMLWithComponents(page PageData, db *sql.DB) string {
             }
         }
 
+        // Función para scroll suave a una sección
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         // Configurar event listeners para bloques interactivos
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('[data-toggle-target-id]').forEach(function(block) {
@@ -486,6 +494,11 @@ func renderContainer(html *strings.Builder, block Block, blockClass string, db *
 	html.WriteString(blockClass)
 	html.WriteString(`" `)
 	html.WriteString(getBlockDataAttributes(block))
+	if block.SectionId != "" {
+		html.WriteString(` id="`)
+		html.WriteString(block.SectionId)
+		html.WriteString(`"`)
+	}
 	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
@@ -667,7 +680,13 @@ func renderButton(html *strings.Builder, block Block, blockClass string) {
 	html.WriteString(getBlockDataAttributes(block))
 	html.WriteString(` href="`)
 	html.WriteString(block.Link)
-	html.WriteString(`" style="`)
+	html.WriteString(`"`)
+	if block.ScrollToId != "" {
+		html.WriteString(` onclick="scrollToSection('`)
+		html.WriteString(block.ScrollToId)
+		html.WriteString(`'); return false;"`)
+	}
+	html.WriteString(` style="`)
 	if block.Width != "" {
 		html.WriteString(`width: `)
 		html.WriteString(block.Width)

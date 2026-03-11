@@ -4,6 +4,7 @@
 const blockTemplates = {
     container: {
         type: 'container',
+        sectionId: '',
         direction: 'vertical',
         directionMobile: '',
         directionTablet: '',
@@ -259,6 +260,7 @@ const blockTemplates = {
         type: 'button',
         text: 'Click aquí',
         link: '#',
+        scrollToId: '',
         backgroundColor: '#2563eb',
         textColor: '#ffffff',
         customCSS: '',

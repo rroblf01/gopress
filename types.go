@@ -55,6 +55,8 @@ type Block struct {
 	ComponentName       string           `json:"componentName"`
 	ComponentId         int64            `json:"componentId"`
 	ToggleTargetId      int64            `json:"toggleTargetId"`
+	SectionId           string           `json:"sectionId"`
+	ScrollToId          string           `json:"scrollToId"`
 }
 
 type Styles struct {
