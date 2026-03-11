@@ -436,9 +436,9 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     color: ${block.textColor || '#1f2937'};
                     min-height: 150px !important;
                 }
-                /* Por defecto, el dropzone no interfiere con clicks */
+                /* Por defecto, el dropzone puede recibir eventos de drag */
                 .${blockClass}-dropzone {
-                    pointer-events: none !important;
+                    pointer-events: auto !important;
                     border: 2px dashed #2563eb !important;
                     background: #f0f9ff !important;
                     padding: 16px;
@@ -449,12 +449,11 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     width: 100%;
                     box-sizing: border-box;
                 }
-                /* Durante drag-over, el dropzone recibe eventos */
+                /* Durante drag-over, el dropzone se resalta */
                 .${blockClass}-dropzone.drag-over {
-                    pointer-events: auto !important;
                     background: #e0f2fe !important;
                     border-color: #0284c7 !important;
-                    outline: 3px solid #0284c7 !important;
+                    outline: 3px solid #93c5fd !important;
                     outline-offset: 2px !important;
                 }
                 /* Los bloques hijos siempre pueden recibir clicks */
@@ -470,17 +469,13 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
             <div class="${blockClass}"
-                style="position: relative; min-height: 150px; ${hiddenStyle}"
-                ondragenter="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.add('drag-over'); dz.style.pointerEvents = 'auto'; } return false;"
-                ondragover="event.preventDefault(); return false;"
-                ondragleave="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz && !dz.matches(':hover')) { dz.classList.remove('drag-over'); dz.style.pointerEvents = 'none'; } return false;"
-                ondrop="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.remove('drag-over'); dz.style.pointerEvents = 'none'; } return false;">
+                style="position: relative; min-height: 150px; ${hiddenStyle}">
                 <div class="${blockClass}-dropzone flexgrid-dropzone"
                     data-parent-id="${block.id}"
                     data-block-type="flex"
-                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
-                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; return false;"
-                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); this.style.pointerEvents = 'none'; return false;">
+                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
+                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
+                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;">
                     ${childrenContent}
                 </div>
             </div>`;
@@ -506,9 +501,9 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     color: ${block.textColor || '#1f2937'};
                     min-height: 150px !important;
                 }
-                /* Por defecto, el dropzone no interfiere con clicks */
+                /* Por defecto, el dropzone puede recibir eventos de drag */
                 .${blockClass}-dropzone {
-                    pointer-events: none !important;
+                    pointer-events: auto !important;
                     border: 2px dashed #2563eb !important;
                     background: #f0f9ff !important;
                     padding: 16px;
@@ -519,12 +514,11 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     width: 100%;
                     box-sizing: border-box;
                 }
-                /* Durante drag-over, el dropzone recibe eventos */
+                /* Durante drag-over, el dropzone se resalta */
                 .${blockClass}-dropzone.drag-over {
-                    pointer-events: auto !important;
                     background: #e0f2fe !important;
                     border-color: #0284c7 !important;
-                    outline: 3px solid #0284c7 !important;
+                    outline: 3px solid #93c5fd !important;
                     outline-offset: 2px !important;
                 }
                 /* Los bloques hijos siempre pueden recibir clicks */
@@ -540,17 +534,13 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
             <div class="${blockClass}"
-                style="position: relative; min-height: 150px; ${hiddenStyle}"
-                ondragenter="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.add('drag-over'); dz.style.pointerEvents = 'auto'; } return false;"
-                ondragover="event.preventDefault(); return false;"
-                ondragleave="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz && !dz.matches(':hover')) { dz.classList.remove('drag-over'); dz.style.pointerEvents = 'none'; } return false;"
-                ondrop="const dz = this.querySelector('.${blockClass}-dropzone'); if(dz) { dz.classList.remove('drag-over'); dz.style.pointerEvents = 'none'; } return false;">
+                style="position: relative; min-height: 150px; ${hiddenStyle}">
                 <div class="${blockClass}-dropzone flexgrid-dropzone"
                     data-parent-id="${block.id}"
                     data-block-type="grid"
-                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
-                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; return false;"
-                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); this.style.pointerEvents = 'none'; return false;">
+                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
+                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
+                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;">
                     ${childrenContent}
                 </div>
             </div>`;

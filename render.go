@@ -919,30 +919,105 @@ func renderFlex(html *strings.Builder, block Block, blockClass string, db *sql.D
 		}
 	}
 
-	direction := "row"
-	if block.Direction == "column" {
-		direction = "column"
+	// Dirección base (desktop)
+	baseDirection := block.DirectionDesktop
+	if baseDirection == "" {
+		baseDirection = block.Direction
 	}
-	justifyContent := block.JustifyContent
-	if justifyContent == "" {
-		justifyContent = "center"
+	if baseDirection == "" {
+		baseDirection = "row"
 	}
-	alignItems := block.AlignItems
-	if alignItems == "" {
-		alignItems = "center"
+	flexDir := "row"
+	if baseDirection == "column" {
+		flexDir = "column"
 	}
-	gap := block.Gap
-	if gap == "" {
-		gap = "16"
+	
+	// JustifyContent base (desktop)
+	baseJustifyContent := block.JustifyContentDesktop
+	if baseJustifyContent == "" {
+		baseJustifyContent = block.JustifyContent
 	}
-	flexWrap := block.FlexWrap
-	if flexWrap == "" {
-		flexWrap = "nowrap"
+	if baseJustifyContent == "" {
+		baseJustifyContent = "center"
+	}
+	
+	// AlignItems base (desktop)
+	baseAlignItems := block.AlignItemsDesktop
+	if baseAlignItems == "" {
+		baseAlignItems = block.AlignItems
+	}
+	if baseAlignItems == "" {
+		baseAlignItems = "center"
+	}
+	
+	// Gap base (desktop)
+	baseGap := block.GapDesktop
+	if baseGap == "" {
+		baseGap = block.Gap
+	}
+	if baseGap == "" {
+		baseGap = "16"
+	}
+	
+	// FlexWrap base (desktop)
+	baseFlexWrap := block.FlexWrapDesktop
+	if baseFlexWrap == "" {
+		baseFlexWrap = block.FlexWrap
+	}
+	if baseFlexWrap == "" {
+		baseFlexWrap = "nowrap"
 	}
 
 	html.WriteString(`<style>`)
 	html.WriteString(generateResponsiveCSS(block, blockClass))
-	html.WriteString(fmt.Sprintf(`.%s { display: flex !important; flex-direction: %s !important; justify-content: %s !important; align-items: %s !important; gap: %spx !important; flex-wrap: %s !important; } `, blockClass, direction, justifyContent, alignItems, gap, flexWrap))
+	html.WriteString(fmt.Sprintf(`.%s { display: flex !important; flex-direction: %s !important; justify-content: %s !important; align-items: %s !important; gap: %spx !important; flex-wrap: %s !important; } `, blockClass, flexDir, baseJustifyContent, baseAlignItems, baseGap, baseFlexWrap))
+	
+	// Media query para tablet
+	if block.DirectionTablet != "" || block.JustifyContentTablet != "" || block.AlignItemsTablet != "" || block.GapTablet != "" {
+		tabletDir := flexDir
+		if block.DirectionTablet != "" {
+			if block.DirectionTablet == "column" {
+				tabletDir = "column"
+			}
+		}
+		tabletJustify := baseJustifyContent
+		if block.JustifyContentTablet != "" {
+			tabletJustify = block.JustifyContentTablet
+		}
+		tabletAlign := baseAlignItems
+		if block.AlignItemsTablet != "" {
+			tabletAlign = block.AlignItemsTablet
+		}
+		tabletGap := baseGap
+		if block.GapTablet != "" {
+			tabletGap = block.GapTablet
+		}
+		html.WriteString(fmt.Sprintf(`@media (min-width: 769px) and (max-width: 1024px) { .%s { flex-direction: %s !important; justify-content: %s !important; align-items: %s !important; gap: %spx !important; } } `, blockClass, tabletDir, tabletJustify, tabletAlign, tabletGap))
+	}
+	
+	// Media query para mobile
+	if block.DirectionMobile != "" || block.JustifyContentMobile != "" || block.AlignItemsMobile != "" || block.GapMobile != "" {
+		mobileDir := flexDir
+		if block.DirectionMobile != "" {
+			if block.DirectionMobile == "column" {
+				mobileDir = "column"
+			}
+		}
+		mobileJustify := baseJustifyContent
+		if block.JustifyContentMobile != "" {
+			mobileJustify = block.JustifyContentMobile
+		}
+		mobileAlign := baseAlignItems
+		if block.AlignItemsMobile != "" {
+			mobileAlign = block.AlignItemsMobile
+		}
+		mobileGap := baseGap
+		if block.GapMobile != "" {
+			mobileGap = block.GapMobile
+		}
+		html.WriteString(fmt.Sprintf(`@media (max-width: 768px) { .%s { flex-direction: %s !important; justify-content: %s !important; align-items: %s !important; gap: %spx !important; } } `, blockClass, mobileDir, mobileJustify, mobileAlign, mobileGap))
+	}
+	
 	html.WriteString(`</style>`)
 
 	html.WriteString(`<div class="`)
@@ -976,18 +1051,54 @@ func renderGrid(html *strings.Builder, block Block, blockClass string, db *sql.D
 		}
 	}
 
-	gridTemplateColumns := block.GridTemplateColumns
-	if gridTemplateColumns == "" {
-		gridTemplateColumns = "repeat(3, 1fr)"
+	// Grid Template Columns base (desktop)
+	baseGridTemplateColumns := block.GridTemplateColumnsDesktop
+	if baseGridTemplateColumns == "" {
+		baseGridTemplateColumns = block.GridTemplateColumns
 	}
-	gridGap := block.GridGap
-	if gridGap == "" {
-		gridGap = "16"
+	if baseGridTemplateColumns == "" {
+		baseGridTemplateColumns = "repeat(3, 1fr)"
+	}
+	
+	// Grid Gap base (desktop)
+	baseGridGap := block.GridGapDesktop
+	if baseGridGap == "" {
+		baseGridGap = block.GridGap
+	}
+	if baseGridGap == "" {
+		baseGridGap = "16"
 	}
 
 	html.WriteString(`<style>`)
 	html.WriteString(generateResponsiveCSS(block, blockClass))
-	html.WriteString(fmt.Sprintf(`.%s { display: grid !important; grid-template-columns: %s !important; gap: %spx !important; } `, blockClass, gridTemplateColumns, gridGap))
+	html.WriteString(fmt.Sprintf(`.%s { display: grid !important; grid-template-columns: %s !important; gap: %spx !important; } `, blockClass, baseGridTemplateColumns, baseGridGap))
+	
+	// Media query para tablet
+	if block.GridTemplateColumnsTablet != "" || block.GridGapTablet != "" {
+		tabletColumns := baseGridTemplateColumns
+		if block.GridTemplateColumnsTablet != "" {
+			tabletColumns = block.GridTemplateColumnsTablet
+		}
+		tabletGap := baseGridGap
+		if block.GridGapTablet != "" {
+			tabletGap = block.GridGapTablet
+		}
+		html.WriteString(fmt.Sprintf(`@media (min-width: 769px) and (max-width: 1024px) { .%s { grid-template-columns: %s !important; gap: %spx !important; } } `, blockClass, tabletColumns, tabletGap))
+	}
+	
+	// Media query para mobile
+	if block.GridTemplateColumnsMobile != "" || block.GridGapMobile != "" {
+		mobileColumns := baseGridTemplateColumns
+		if block.GridTemplateColumnsMobile != "" {
+			mobileColumns = block.GridTemplateColumnsMobile
+		}
+		mobileGap := baseGridGap
+		if block.GridGapMobile != "" {
+			mobileGap = block.GridGapMobile
+		}
+		html.WriteString(fmt.Sprintf(`@media (max-width: 768px) { .%s { grid-template-columns: %s !important; gap: %spx !important; } } `, blockClass, mobileColumns, mobileGap))
+	}
+	
 	html.WriteString(`</style>`)
 
 	html.WriteString(`<div class="`)
