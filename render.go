@@ -262,6 +262,10 @@ func renderBlockInternal(block Block, db *sql.DB) string {
 		renderCarousel(&html, block, blockClass)
 	case "divider":
 		renderDivider(&html, block, blockClass)
+	case "flex":
+		renderFlex(&html, block, blockClass, db)
+	case "grid":
+		renderGrid(&html, block, blockClass, db)
 	}
 
 	return html.String()
@@ -776,6 +780,108 @@ func renderCarousel(html *strings.Builder, block Block, blockClass string) {
 		html.WriteString(`<div style="padding: 40px; text-align: center; color: #6b7280;">Carrusel vacío</div>`)
 	}
 	html.WriteString(`</div></div>`)
+}
+
+func renderFlex(html *strings.Builder, block Block, blockClass string, db *sql.DB) {
+	var innerHTML strings.Builder
+
+	for _, child := range block.Children {
+		if db != nil {
+			innerHTML.WriteString(RenderBlockWithDB(child, db))
+		} else {
+			innerHTML.WriteString(RenderBlock(child))
+		}
+	}
+
+	direction := "row"
+	if block.Direction == "column" {
+		direction = "column"
+	}
+	justifyContent := block.JustifyContent
+	if justifyContent == "" {
+		justifyContent = "center"
+	}
+	alignItems := block.AlignItems
+	if alignItems == "" {
+		alignItems = "center"
+	}
+	gap := block.Gap
+	if gap == "" {
+		gap = "16"
+	}
+	flexWrap := block.FlexWrap
+	if flexWrap == "" {
+		flexWrap = "nowrap"
+	}
+
+	html.WriteString(`<style>`)
+	html.WriteString(generateResponsiveCSS(block, blockClass))
+	html.WriteString(fmt.Sprintf(`.%s { display: flex !important; flex-direction: %s !important; justify-content: %s !important; align-items: %s !important; gap: %spx !important; flex-wrap: %s !important; } `, blockClass, direction, justifyContent, alignItems, gap, flexWrap))
+	html.WriteString(`</style>`)
+
+	html.WriteString(`<div class="`)
+	html.WriteString(blockClass)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="padding: 16px; border-radius: 4px; `)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`">`)
+	html.WriteString(innerHTML.String())
+	html.WriteString(`</div>`)
+}
+
+func renderGrid(html *strings.Builder, block Block, blockClass string, db *sql.DB) {
+	var innerHTML strings.Builder
+
+	for _, child := range block.Children {
+		if db != nil {
+			innerHTML.WriteString(RenderBlockWithDB(child, db))
+		} else {
+			innerHTML.WriteString(RenderBlock(child))
+		}
+	}
+
+	gridTemplateColumns := block.GridTemplateColumns
+	if gridTemplateColumns == "" {
+		gridTemplateColumns = "repeat(3, 1fr)"
+	}
+	gridGap := block.GridGap
+	if gridGap == "" {
+		gridGap = "16"
+	}
+
+	html.WriteString(`<style>`)
+	html.WriteString(generateResponsiveCSS(block, blockClass))
+	html.WriteString(fmt.Sprintf(`.%s { display: grid !important; grid-template-columns: %s !important; gap: %spx !important; } `, blockClass, gridTemplateColumns, gridGap))
+	html.WriteString(`</style>`)
+
+	html.WriteString(`<div class="`)
+	html.WriteString(blockClass)
+	html.WriteString(`" `)
+	html.WriteString(getBlockDataAttributes(block))
+	html.WriteString(` style="padding: 16px; border-radius: 4px; `)
+	if block.Width != "" {
+		html.WriteString(`width: `)
+		html.WriteString(block.Width)
+		html.WriteString(`; `)
+	}
+	if block.Height != "" {
+		html.WriteString(`height: `)
+		html.WriteString(block.Height)
+		html.WriteString(`; `)
+	}
+	html.WriteString(`">`)
+	html.WriteString(innerHTML.String())
+	html.WriteString(`</div>`)
 }
 
 func renderDivider(html *strings.Builder, block Block, blockClass string) {

@@ -57,6 +57,14 @@ type Block struct {
 	ToggleTargetId      int64            `json:"toggleTargetId"`
 	SectionId           string           `json:"sectionId"`
 	ScrollToId          string           `json:"scrollToId"`
+	// Flex properties
+	JustifyContent  string `json:"justifyContent"`
+	AlignItems      string `json:"alignItems"`
+	Gap             string `json:"gap"`
+	FlexWrap        string `json:"flexWrap"`
+	// Grid properties
+	GridTemplateColumns string `json:"gridTemplateColumns"`
+	GridGap             string `json:"gridGap"`
 }
 
 type Styles struct {

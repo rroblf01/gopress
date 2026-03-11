@@ -1,6 +1,3 @@
-/**
- * Renderizado y gestión de bloques
- */
 
 /**
  * Añade un nuevo bloque
@@ -13,10 +10,11 @@ function addBlock(type, parentId = null) {
 
     const template = JSON.parse(JSON.stringify(blockTemplates[type]));
     template.id = Date.now();
-    
+
     if (parentId) {
         const parent = findBlockById(state.page.blocks, parentId);
-        if (parent && parent.type === 'container') {
+        // Soporte para container, flex y grid
+        if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
             parent.children = parent.children || [];
             parent.children.push(template);
         }
@@ -42,7 +40,8 @@ function moveBlockToContainer(blockId, parentId) {
 
     if (blockToRemove) {
         const parent = findBlockById(state.page.blocks, parentId);
-        if (parent && parent.type === 'container') {
+        // Soporte para container, flex y grid
+        if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
             parent.children = parent.children || [];
             parent.children.push(blockToRemove);
             renderBlocks();
@@ -238,82 +237,13 @@ function renderBlocks() {
         });
     });
 
-    // Eventos para drop zones de contenedores
-    document.querySelectorAll('.block-container-drop').forEach(dropZone => {
-        setupContainerDropZone(dropZone);
-    });
-    
+    // Eventos para dropzones de flex y grid (usan handlers inline en el HTML)
+    const flexGridDropZones = document.querySelectorAll('.flexgrid-dropzone');
+
     // Re-renderizar propiedades para actualizar la lista de componentes
     if (state.selectedBlockId) {
         renderProperties();
     }
-}
-
-/**
- * Configura una drop zone de contenedor
- */
-function setupContainerDropZone(dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        const componentId = e.dataTransfer.getData('componentId');
-        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) return;
-
-        e.dataTransfer.dropEffect = dragSource === 'sidebar' || componentId ? 'copy' : 'move';
-        dropZone.style.background = '#e0f2fe';
-        dropZone.style.borderColor = '#0284c7';
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        if (e.target === dropZone) {
-            dropZone.style.background = '#f0f9ff';
-            dropZone.style.borderColor = '#2563eb';
-        }
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        const componentId = e.dataTransfer.getData('componentId');
-        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) return;
-
-        dropZone.style.background = '#f0f9ff';
-        dropZone.style.borderColor = '#2563eb';
-
-        const parentId = parseInt(dropZone.dataset.parentId);
-
-        if (componentId) {
-            // Es un componente personalizado
-            addComponentFromDrag(componentId, dropZone);
-        } else if (dragSource === 'sidebar') {
-            const blockType = e.dataTransfer.getData('text/plain');
-            if (blockType && blockTemplates[blockType]) {
-                addBlock(blockType, parentId);
-            }
-        } else {
-            const blockId = parseInt(e.dataTransfer.getData('blockId'));
-            if (blockId && parentId) {
-                const parentBlock = findBlockById(state.page.blocks, parentId);
-                if (parentBlock && parentBlock.children) {
-                    const alreadyInContainer = parentBlock.children.some(b => b.id === blockId);
-                    if (!alreadyInContainer) {
-                        moveBlockToContainer(blockId, parentId);
-                    }
-                } else {
-                    moveBlockToContainer(blockId, parentId);
-                }
-            }
-        }
-    });
-
-    dropZone.addEventListener('click', (e) => {
-        if (e.target.closest('.block')) return;
-        e.stopPropagation();
-        const parentId = parseInt(dropZone.dataset.parentId);
-        selectBlock(parentId);
-    });
 }
 
 /**
@@ -336,18 +266,18 @@ function createBlockHTML(block) {
     if (block.type === 'container') {
         const childrenContent = (block.children && block.children.length > 0)
             ? block.children.map(child => createBlockHTML(child)).join('')
-            : '<div style="display: flex; align-items: center; justify-content: center; min-height: 80px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; margin: 8px;">📦 Arrastra bloques aquí</div>';
+            : '<div style="display: flex; align-items: center; justify-content: center; min-height: 80px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; margin: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
 
         const sectionIdAttr = block.sectionId && block.sectionId.trim() !== '' ? `id="${block.sectionId}"` : '';
         const sectionIdLabel = block.sectionId && block.sectionId.trim() !== '' ? `data-section-id="${block.sectionId}"` : '';
-        const sectionIdBadge = block.sectionId && block.sectionId.trim() !== '' 
-            ? `<div style="position: absolute; top: -10px; right: 10px; background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">#${block.sectionId}</div>` 
+        const sectionIdBadge = block.sectionId && block.sectionId.trim() !== ''
+            ? `<div style="position: absolute; top: -10px; right: 10px; background: #10b981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">#${block.sectionId}</div>`
             : '';
 
         preview = `
             <style id="${cssId}">
                 .${blockClass} { ${block.customCSS} ${allCSS} }
-                .${blockClass} .block-container-drop {
+                .${blockClass}.block-container-drop {
                     border: 2px dashed #2563eb !important;
                     margin-bottom: 8px;
                     background: #f0f9ff !important;
@@ -355,19 +285,43 @@ function createBlockHTML(block) {
                     min-height: 100px;
                     border-radius: 8px;
                     transition: all 0.2s;
+                    pointer-events: auto !important;
+                    box-sizing: border-box !important;
                 }
-                .${blockClass} .block-container-drop:hover {
+                .${blockClass}.block-container-drop:hover {
                     background: #e0f2fe !important;
                     border-color: #0284c7 !important;
                 }
-                .${blockClass} .block-container-drop > .block {
+                .${blockClass}.block-container-drop.drag-over {
+                    background: #e0f2fe !important;
+                    border: 2px solid #0284c7 !important;
+                    outline: 3px solid #93c5fd !important;
+                    outline-offset: 2px !important;
+                }
+                .${blockClass}.block-container-drop > .block {
                     width: 100%;
                     flex-shrink: 0;
                     margin-bottom: 16px;
+                    pointer-events: none !important;
+                }
+                .${blockClass}.block-container-drop > .block * {
+                    pointer-events: none !important;
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
-            <div class="${blockClass} block-container-drop" data-parent-id="${block.id}" ${sectionIdAttr} ${sectionIdLabel} style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}">${sectionIdBadge}${childrenContent}</div>`;
+            <div class="${blockClass} block-container-drop"
+                data-parent-id="${block.id}"
+                ${sectionIdAttr}
+                ${sectionIdLabel}
+                style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${directionStyle} ${hiddenStyle}"
+                ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over'); return false;"
+                ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;"
+                ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;">
+                ${sectionIdBadge}${childrenContent}
+            </div>`;
+    } else if (block.type === 'flex' || block.type === 'grid') {
+        // Flex y Grid usan su propio dropzone con clase específica
+        preview = createBlockPreviewHTML(block, allCSS, isHidden);
     } else {
         preview = createBlockPreviewHTML(block, allCSS, isHidden);
     }
@@ -455,6 +409,129 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
                 <hr class="${blockClass}" style="border: none; border-top: 1px solid ${block.borderColor || 'transparent'}; margin: 20px 0; background: ${block.borderColor || 'transparent'}; ${hiddenStyle}">`;
 
+        case 'flex': {
+            const childrenContent = (block.children && block.children.length > 0)
+                ? block.children.map(child => createBlockHTML(child)).join('')
+                : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
+
+
+            return `<style id="${cssId}">
+                .${blockClass} {
+                    ${block.customCSS}
+                    ${allCSS}
+                    display: flex !important;
+                    flex-direction: ${block.direction === 'column' ? 'column' : 'row'} !important;
+                    justify-content: ${block.justifyContent || 'center'} !important;
+                    align-items: ${block.alignItems || 'center'} !important;
+                    gap: ${block.gap || '16'}px !important;
+                    flex-wrap: ${block.flexWrap || 'nowrap'} !important;
+                    background: ${block.backgroundColor || 'transparent'};
+                    color: ${block.textColor || '#1f2937'};
+                    min-height: 150px !important;
+                }
+                .${blockClass}-dropzone {
+                    border: 2px dashed #2563eb !important;
+                    background: #f0f9ff !important;
+                    padding: 16px;
+                    min-height: 150px;
+                    border-radius: 8px;
+                    transition: all 0.2s;
+                    display: block !important;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .${blockClass}-dropzone.drag-over {
+                    background: #e0f2fe !important;
+                    border-color: #0284c7 !important;
+                    outline: 3px solid #0284c7 !important;
+                    outline-offset: 2px !important;
+                }
+                .${blockClass}-dropzone > .block {
+                    width: 100%;
+                    flex-shrink: 0;
+                    margin-bottom: 16px;
+                    pointer-events: none !important;
+                }
+                .${blockClass}-dropzone > .block * {
+                    pointer-events: none !important;
+                }
+                /* El dropzone siempre debe recibir eventos de drop */
+                .${blockClass}-dropzone {
+                    pointer-events: auto !important;
+                }
+                ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
+            </style>
+            <div class="${blockClass}" style="position: relative; min-height: 150px; ${hiddenStyle}">
+                <div class="${blockClass}-dropzone flexgrid-dropzone"
+                    data-parent-id="${block.id}"
+                    data-block-type="flex"
+                    style="pointer-events: auto;"
+                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
+                    ondragover="event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
+                    ondragleave="this.classList.remove('drag-over');">
+                    ${childrenContent}
+                </div>
+            </div>`;
+        }
+
+        case 'grid': {
+            const childrenContent = (block.children && block.children.length > 0)
+                ? block.children.map(child => createBlockHTML(child)).join('')
+                : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
+
+            return `<style id="${cssId}">
+                .${blockClass} {
+                    ${block.customCSS}
+                    ${allCSS}
+                    display: grid !important;
+                    grid-template-columns: ${block.gridTemplateColumns || 'repeat(3, 1fr)'} !important;
+                    gap: ${block.gridGap || '16'}px !important;
+                    background: ${block.backgroundColor || 'transparent'};
+                    color: ${block.textColor || '#1f2937'};
+                    min-height: 150px !important;
+                }
+                .${blockClass}-dropzone {
+                    border: 2px dashed #2563eb !important;
+                    background: #f0f9ff !important;
+                    padding: 16px;
+                    min-height: 150px;
+                    border-radius: 8px;
+                    transition: all 0.2s;
+                    display: block !important;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .${blockClass}-dropzone.drag-over {
+                    background: #e0f2fe !important;
+                    border-color: #0284c7 !important;
+                    outline: 3px solid #0284c7 !important;
+                    outline-offset: 2px !important;
+                }
+                .${blockClass}-dropzone > .block {
+                    width: 100%;
+                    flex-shrink: 0;
+                    margin-bottom: 16px;
+                    pointer-events: none !important;
+                }
+                /* El dropzone siempre debe recibir eventos de drop */
+                .${blockClass}-dropzone {
+                    pointer-events: auto !important;
+                }
+                ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
+            </style>
+            <div class="${blockClass}" style="position: relative; min-height: 150px; ${hiddenStyle}">
+                <div class="${blockClass}-dropzone flexgrid-dropzone"
+                    data-parent-id="${block.id}"
+                    data-block-type="grid"
+                    style="pointer-events: auto;"
+                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
+                    ondragover="event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
+                    ondragleave="this.classList.remove('drag-over');">
+                    ${childrenContent}
+                </div>
+            </div>`;
+        }
+
         case 'component':
             return `<style id="${cssId}">.${blockClass} { ${block.customCSS} ${allCSS} }</style>
                 <div class="${blockClass}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 8px; text-align: center; color: white; ${hiddenStyle}">
@@ -477,3 +554,120 @@ function scrollToSection(sectionId) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
+
+/**
+ * Configura dropzone para flex y grid
+ */
+function setupFlexGridDropZone(dropZone) {
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const dragSource = e.dataTransfer.getData('application/x-drag-source');
+        const componentId = e.dataTransfer.getData('componentId');
+        const blockId = e.dataTransfer.getData('blockId');
+        
+        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
+            return;
+        }
+        
+        e.dataTransfer.dropEffect = dragSource === 'sidebar' || componentId ? 'copy' : 'move';
+        dropZone.classList.add('drag-over');
+    });
+    
+    dropZone.addEventListener('dragleave', (e) => {
+        e.stopPropagation();
+        if (e.target === dropZone) {
+            dropZone.classList.remove('drag-over');
+        }
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const dragSource = e.dataTransfer.getData('application/x-drag-source');
+        const componentId = e.dataTransfer.getData('componentId');
+        const blockId = e.dataTransfer.getData('blockId');
+        
+        
+        if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
+            return;
+        }
+        
+        dropZone.classList.remove('drag-over');
+        
+        const parentId = parseInt(dropZone.dataset.parentId);
+        
+        if (componentId) {
+            addComponentFromDrag(componentId, dropZone);
+        } else if (dragSource === 'sidebar') {
+            const blockType = e.dataTransfer.getData('text/plain');
+            if (blockType && blockTemplates[blockType]) {
+                addBlock(blockType, parentId);
+            }
+        } else {
+            const blockIdNum = parseInt(e.dataTransfer.getData('blockId'));
+            if (blockIdNum && parentId) {
+                moveBlockToContainer(blockIdNum, parentId);
+            }
+        }
+    });
+    
+}
+
+/**
+ * Handlers inline para flex/grid (se usan directamente en el HTML)
+ */
+function handleFlexGridDragOverInline(event, parentId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const dragSource = event.dataTransfer.getData('application/x-drag-source');
+    const componentId = event.dataTransfer.getData('componentId');
+    
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
+        return;
+    }
+    
+    const dropZone = event.currentTarget;
+    dropZone.classList.add('drag-over');
+}
+
+function handleFlexGridDrop(event, parentId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const dragSource = event.dataTransfer.getData('application/x-drag-source');
+    const componentId = event.dataTransfer.getData('componentId');
+    const blockId = event.dataTransfer.getData('blockId');
+
+    if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
+        return;
+    }
+
+    const dropZone = event.currentTarget;
+    dropZone.classList.remove('drag-over');
+
+    if (componentId) {
+        addComponentFromDrag(componentId, dropZone);
+    } else if (dragSource === 'sidebar') {
+        const blockType = event.dataTransfer.getData('text/plain');
+        if (blockType && blockTemplates[blockType]) {
+            addBlock(blockType, parentId);
+        }
+    } else {
+        const blockIdNum = parseInt(event.dataTransfer.getData('blockId'));
+        if (blockIdNum && parentId) {
+            moveBlockToContainer(blockIdNum, parentId);
+        }
+    }
+}
+
+// Exponer funciones globalmente para handlers inline
+window.addBlock = addBlock;
+window.moveBlockToContainer = moveBlockToContainer;
+window.blockTemplates = blockTemplates;
+window.createBlockHTML = createBlockHTML;
+window.createBlockPreviewHTML = createBlockPreviewHTML;

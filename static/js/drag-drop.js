@@ -1,8 +1,4 @@
 /**
- * Gestión de Drag and Drop
- */
-
-/**
  * Configura los eventos de drag and drop
  */
 function setupDragAndDrop() {
@@ -79,21 +75,23 @@ function handleDragEnd() {
  * Maneja drag over en el canvas
  */
 function handleCanvasDragOver(e) {
+    // Si estamos dentro de un block-container-drop, no interferir - que lo maneje su propio handler
+    const containerDrop = e.target.closest('.block-container-drop');
+    if (containerDrop) {
+        return;
+    }
     
-    
-    // Si estamos sobre una dropzone de contenedor o un bloque, no hacer nada
-    if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
+    // Si estamos sobre una dropzone de flex/grid, no hacer nada - que lo maneje su propio handler
+    const flexGridDropzone = e.target.closest('[class*="-dropzone"]');
+    if (flexGridDropzone) {
         return;
     }
 
     // Solo permitir drop desde la sidebar o bloques existentes o componentes
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
     const componentId = e.dataTransfer.getData('componentId');
-    
-    
-    
+
     if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && dragSource !== 'component' && !componentId) {
-        
         return;
     }
 
@@ -113,22 +111,23 @@ function handleCanvasDragLeave() {
  * Maneja drop en el canvas
  */
 function handleCanvasDrop(e) {
+    // Si el drop es en una dropzone de contenedor, no hacer nada - que lo maneje su propio handler
+    const containerDrop = e.target.closest('.block-container-drop');
+    if (containerDrop) {
+        return;
+    }
     
-    
-    // Si el drop es en una dropzone o en un bloque, no hacer nada
-    if (e.target.closest('.block-container-drop') || e.target.closest('.block')) {
-        
+    // Si el drop es en una dropzone de flex/grid, no hacer nada
+    const flexGridDropzone = e.target.closest('[class*="-dropzone"]');
+    if (flexGridDropzone) {
         return;
     }
 
     // Solo procesar si es desde la sidebar o bloque existente o componente
     const dragSource = e.dataTransfer.getData('application/x-drag-source');
     const componentId = e.dataTransfer.getData('componentId');
-    
-    
 
     if (dragSource !== 'sidebar' && dragSource !== 'existing-block' && !componentId) {
-        
         return;
     }
 
@@ -136,16 +135,13 @@ function handleCanvasDrop(e) {
     document.getElementById('blocksContainer').style.background = '';
 
     if (componentId) {
-        
         // Es un componente personalizado - verificar si estamos en editor principal o de componente
         const tabsStateLocal = window.tabsState || tabsState;
         if (tabsStateLocal && tabsStateLocal.activeTabId !== 'main') {
             // Estamos en un editor de componente
-            
             addComponentFromDrag(componentId, null);
         } else {
             // Estamos en el editor principal
-            
             addComponentFromDrag(componentId, null);
         }
     } else if (dragSource === 'sidebar') {

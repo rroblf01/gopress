@@ -110,6 +110,12 @@ function renderProperties() {
         case 'divider':
             html += renderDividerProperties(block);
             break;
+        case 'flex':
+            html += renderFlexProperties(block);
+            break;
+        case 'grid':
+            html += renderGridProperties(block);
+            break;
         case 'component':
             html += renderComponentProperties(block);
             break;
@@ -584,8 +590,85 @@ function renderDividerProperties(block) {
         <div class="color-input">
             <input type="color" value="${block.borderColor || '#e5e7eb'}" onchange="updateBlockProperty('borderColor', this.value)">
             <input type="text" value="${block.borderColor || '#e5e7eb'}" class="property-input" onchange="updateBlockProperty('borderColor', this.value)">
-            <button class="property-input" style="width: auto; cursor: pointer;" 
+            <button class="property-input" style="width: auto; cursor: pointer;"
                 onclick="updateBlockProperty('borderColor', 'transparent')">Transparente</button>
+        </div>
+    </div>`;
+}
+
+/**
+ * Propiedades para flex
+ */
+function renderFlexProperties(block) {
+    return `<div class="property-group">
+        <label class="property-label">Dirección</label>
+        <select class="property-select" onchange="updateBlockProperty('direction', this.value)">
+            <option value="row" ${block.direction === 'row' ? 'selected' : ''}>Horizontal (Row)</option>
+            <option value="column" ${block.direction === 'column' ? 'selected' : ''}>Vertical (Column)</option>
+        </select>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Justificar Contenido</label>
+        <select class="property-select" onchange="updateBlockProperty('justifyContent', this.value)">
+            <option value="flex-start" ${block.justifyContent === 'flex-start' ? 'selected' : ''}>Inicio</option>
+            <option value="center" ${block.justifyContent === 'center' ? 'selected' : ''}>Centro</option>
+            <option value="flex-end" ${block.justifyContent === 'flex-end' ? 'selected' : ''}>Fin</option>
+            <option value="space-between" ${block.justifyContent === 'space-between' ? 'selected' : ''}>Entre espacios</option>
+            <option value="space-around" ${block.justifyContent === 'space-around' ? 'selected' : ''}>Alrededor</option>
+            <option value="space-evenly" ${block.justifyContent === 'space-evenly' ? 'selected' : ''}>Uniforme</option>
+        </select>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Alinear Elementos</label>
+        <select class="property-select" onchange="updateBlockProperty('alignItems', this.value)">
+            <option value="flex-start" ${block.alignItems === 'flex-start' ? 'selected' : ''}>Inicio</option>
+            <option value="center" ${block.alignItems === 'center' ? 'selected' : ''}>Centro</option>
+            <option value="flex-end" ${block.alignItems === 'flex-end' ? 'selected' : ''}>Fin</option>
+            <option value="stretch" ${block.alignItems === 'stretch' ? 'selected' : ''}>Estirar</option>
+            <option value="baseline" ${block.alignItems === 'baseline' ? 'selected' : ''}>Línea base</option>
+        </select>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Flex Wrap</label>
+        <select class="property-select" onchange="updateBlockProperty('flexWrap', this.value)">
+            <option value="nowrap" ${block.flexWrap === 'nowrap' ? 'selected' : ''}>No envolver</option>
+            <option value="wrap" ${block.flexWrap === 'wrap' ? 'selected' : ''}>Envolver</option>
+            <option value="wrap-reverse" ${block.flexWrap === 'wrap-reverse' ? 'selected' : ''}>Envolver inverso</option>
+        </select>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Espacio entre elementos (Gap)</label>
+        <input type="number" value="${block.gap || '16'}" class="property-input" onchange="updateBlockProperty('gap', this.value)" placeholder="16">
+    </div>
+    <div class="property-group">
+        <label class="property-label">Color de Fondo</label>
+        <div class="color-input">
+            <input type="color" value="${block.backgroundColor || '#ffffff'}" onchange="updateBlockProperty('backgroundColor', this.value)">
+            <input type="text" value="${block.backgroundColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)">
+        </div>
+    </div>`;
+}
+
+/**
+ * Propiedades para grid
+ */
+function renderGridProperties(block) {
+    return `<div class="property-group">
+        <label class="property-label">Columnas (grid-template-columns)</label>
+        <input type="text" value="${block.gridTemplateColumns || 'repeat(3, 1fr)'}" class="property-input" onchange="updateBlockProperty('gridTemplateColumns', this.value)" placeholder="repeat(3, 1fr)">
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            💡 Ejemplos: repeat(2, 1fr), repeat(4, 200px), 1fr 2fr 1fr
+        </p>
+    </div>
+    <div class="property-group">
+        <label class="property-label">Espacio entre elementos (Gap)</label>
+        <input type="number" value="${block.gridGap || '16'}" class="property-input" onchange="updateBlockProperty('gridGap', this.value)" placeholder="16">
+    </div>
+    <div class="property-group">
+        <label class="property-label">Color de Fondo</label>
+        <div class="color-input">
+            <input type="color" value="${block.backgroundColor || '#ffffff'}" onchange="updateBlockProperty('backgroundColor', this.value)">
+            <input type="text" value="${block.backgroundColor || '#ffffff'}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)">
         </div>
     </div>`;
 }
