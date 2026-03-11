@@ -237,8 +237,91 @@ function renderBlocks() {
         });
     });
 
-    // Eventos para dropzones de flex y grid (usan handlers inline en el HTML)
-    const flexGridDropZones = document.querySelectorAll('.flexgrid-dropzone');
+    // Eventos para dropzones de flex y grid - usar capture: true para ejecutar antes que el padre
+    document.querySelectorAll('.flexgrid-dropzone').forEach(dropZone => {
+        console.log('🔵 Configurando dropzone flex/grid - parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
+        
+        dropZone.addEventListener('dragover', (e) => {
+            console.log('🟢 [FLEX/GRID dragover] parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            dropZone.classList.add('drag-over');
+        }, { capture: true });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        }, { capture: true });
+        
+        dropZone.addEventListener('drop', (e) => {
+            console.log('🔴 [FLEX/GRID DROP] parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
+            const ds = e.dataTransfer.getData('application/x-drag-source');
+            const bt = e.dataTransfer.getData('text/plain');
+            const bid = parseInt(e.dataTransfer.getData('blockId'));
+            console.log('  dragSource:', ds, 'blockType:', bt, 'blockId:', bid);
+            
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+            
+            const ptId = parseInt(dropZone.dataset.parentId);
+            
+            if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
+                console.log('  ✅ Añadiendo bloque:', bt, 'al padre:', ptId);
+                addBlock(bt, ptId);
+            } else if (ds === 'existing-block' && bid) {
+                console.log('  ✅ Moviendo bloque:', bid, 'al padre:', ptId);
+                moveBlockToContainer(bid, ptId);
+            } else {
+                console.log('  ⚠️ No se pudo añadir - ds:', ds, 'bt:', bt, 'bid:', bid);
+            }
+        }, { capture: true });
+    });
+
+    // Eventos para dropzones de contenedores - SOLO si no hay flex/grid dentro
+    document.querySelectorAll('.block-container-drop[data-drop-type="container"]').forEach(dropZone => {
+        console.log('🟠 Configurando dropzone container - parentId:', dropZone.dataset.parentId);
+        
+        // Verificar si este contenedor tiene un flex/grid dentro
+        const hasFlexGrid = dropZone.querySelector('.flexgrid-dropzone');
+        if (hasFlexGrid) {
+            console.log('  ⚠️ Contenedor tiene flex/grid dentro, no configurando eventos');
+            return;
+        }
+        
+        dropZone.addEventListener('dragover', (e) => {
+            console.log('🟠 [CONTAINER dragover] parentId:', dropZone.dataset.parentId);
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            console.log('🟠 [CONTAINER DROP] parentId:', dropZone.dataset.parentId);
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+            
+            const ptId = parseInt(dropZone.dataset.parentId);
+            const ds = e.dataTransfer.getData('application/x-drag-source');
+            const bt = e.dataTransfer.getData('text/plain');
+            const bid = parseInt(e.dataTransfer.getData('blockId'));
+            
+            if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
+                console.log('  ✅ Añadiendo bloque:', bt, 'al padre:', ptId);
+                addBlock(bt, ptId);
+            } else if (ds === 'existing-block' && bid) {
+                console.log('  ✅ Moviendo bloque:', bid, 'al padre:', ptId);
+                moveBlockToContainer(bid, ptId);
+            }
+        });
+    });
 
     // Re-renderizar propiedades para actualizar la lista de componentes
     if (state.selectedBlockId) {
@@ -312,12 +395,10 @@ function createBlockHTML(block) {
             </style>
             <div class="${blockClass} block-container-drop"
                 data-parent-id="${block.id}"
+                data-drop-type="container"
                 ${sectionIdAttr}
                 ${sectionIdLabel}
-                style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${hiddenStyle}"
-                ondragover="event.preventDefault(); event.stopPropagation(); this.classList.add('drag-over'); return false;"
-                ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;"
-                ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;">
+                style="position: relative; min-height:100px; margin-bottom: 8px; padding: 16px; display: flex; gap: 12px; ${hiddenStyle}">
                 ${sectionIdBadge}${childrenContent}
             </div>`;
     } else if (block.type === 'flex' || block.type === 'grid') {
@@ -448,6 +529,8 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     display: block !important;
                     width: 100%;
                     box-sizing: border-box;
+                    position: relative !important;
+                    z-index: 10 !important;
                 }
                 /* Durante drag-over, el dropzone se resalta */
                 .${blockClass}-dropzone.drag-over {
@@ -462,6 +545,8 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     flex-shrink: 0;
                     margin-bottom: 16px;
                     pointer-events: auto !important;
+                    position: relative !important;
+                    z-index: 5 !important;
                 }
                 .${blockClass}-dropzone > .block * {
                     pointer-events: auto !important;
@@ -473,9 +558,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 <div class="${blockClass}-dropzone flexgrid-dropzone"
                     data-parent-id="${block.id}"
                     data-block-type="flex"
-                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
-                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
-                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;">
+                    style="pointer-events: auto; min-height: 150px; display: block;">
                     ${childrenContent}
                 </div>
             </div>`;
@@ -513,6 +596,8 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     display: block !important;
                     width: 100%;
                     box-sizing: border-box;
+                    position: relative !important;
+                    z-index: 10 !important;
                 }
                 /* Durante drag-over, el dropzone se resalta */
                 .${blockClass}-dropzone.drag-over {
@@ -527,6 +612,8 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     flex-shrink: 0;
                     margin-bottom: 16px;
                     pointer-events: auto !important;
+                    position: relative !important;
+                    z-index: 5 !important;
                 }
                 .${blockClass}-dropzone > .block * {
                     pointer-events: auto !important;
@@ -538,9 +625,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 <div class="${blockClass}-dropzone flexgrid-dropzone"
                     data-parent-id="${block.id}"
                     data-block-type="grid"
-                    ondrop="const ptId = ${block.id}; const ds = event.dataTransfer.getData('application/x-drag-source'); const bt = event.dataTransfer.getData('text/plain'); const bid = parseInt(event.dataTransfer.getData('blockId')); event.preventDefault(); event.stopPropagation(); this.classList.remove('drag-over'); if(ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) { addBlock(bt, ptId); } else if(ds === 'existing-block' && bid) { moveBlockToContainer(bid, ptId); } return false;"
-                    ondragover="event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'copy'; this.classList.add('drag-over'); return false;"
-                    ondragleave="event.stopPropagation(); this.classList.remove('drag-over'); return false;">
+                    style="pointer-events: auto;">
                     ${childrenContent}
                 </div>
             </div>`;
