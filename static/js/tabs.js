@@ -344,8 +344,6 @@ function renderComponentEditorBlocks(tabId) {
                 const parentId = parseInt(flexGridDropzone.dataset.parentId);
                 const editorState = tabsState.componentEditors[tabId];
 
-                console.log('🔷 [CONTAINER DROP - flex/grid] parentId:', parentId, 'dragSource:', dragSource, 'componentId:', componentId, 'blockId:', blockId);
-
                 if (!editorState) return;
 
                 if (componentId) {
@@ -444,15 +442,12 @@ function setupComponentContainerDropZone(tabId, dropZone) {
  * Añade un bloque a un contenedor en el editor de componente
  */
 function addBlockToContainer(editorState, blockType, parentId, tabId) {
-    console.log('🔷 [addBlockToContainer] blockType:', blockType, 'parentId:', parentId, 'tabId:', tabId);
     const parent = findBlockById(editorState.blocks, parentId);
-    console.log('🔷 [addBlockToContainer] parent:', parent ? { id: parent.id, type: parent.type } : 'null');
     if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
         const newBlock = JSON.parse(JSON.stringify(blockTemplates[blockType]));
         newBlock.id = Date.now();
         parent.children = parent.children || [];
         parent.children.push(newBlock);
-        console.log('🔷 [addBlockToContainer] Bloque añadido. Children count:', parent.children.length);
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
         saveComponentFromEditor(tabId);

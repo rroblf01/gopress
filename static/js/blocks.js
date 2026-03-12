@@ -357,8 +357,6 @@ function renderBlocks() {
             const bid = parseInt(e.dataTransfer.getData('blockId'));
             const componentId = e.dataTransfer.getData('componentId');
 
-            console.log('🟠 [CONTAINER DROP] Añadiendo:', bt || componentId, 'al padre:', ptId);
-
             if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
                 addBlock(bt, ptId);
             } else if (ds === 'existing-block' && bid) {
