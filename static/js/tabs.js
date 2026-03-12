@@ -340,10 +340,11 @@ function renderComponentEditorBlocks(tabId) {
 
                 const dragSource = e.dataTransfer.getData('application/x-drag-source');
                 const componentId = e.dataTransfer.getData('componentId');
+                const blockId = parseInt(e.dataTransfer.getData('blockId'));
                 const parentId = parseInt(flexGridDropzone.dataset.parentId);
                 const editorState = tabsState.componentEditors[tabId];
 
-                console.log('🔷 [CONTAINER DROP - flex/grid] parentId:', parentId, 'dragSource:', dragSource, 'componentId:', componentId);
+                console.log('🔷 [CONTAINER DROP - flex/grid] parentId:', parentId, 'dragSource:', dragSource, 'componentId:', componentId, 'blockId:', blockId);
 
                 if (!editorState) return;
 
@@ -354,6 +355,8 @@ function renderComponentEditorBlocks(tabId) {
                     if (blockType && blockTemplates[blockType]) {
                         addBlockToContainer(editorState, blockType, parentId, tabId);
                     }
+                } else if (dragSource === 'existing-block' && blockId) {
+                    moveBlockToContainer(blockId, parentId);
                 }
                 return;
             }
@@ -364,6 +367,7 @@ function renderComponentEditorBlocks(tabId) {
 
             const dragSource = e.dataTransfer.getData('application/x-drag-source');
             const componentId = e.dataTransfer.getData('componentId');
+            const blockId = parseInt(e.dataTransfer.getData('blockId'));
 
             if (dragSource === 'sidebar') {
                 const blockType = e.dataTransfer.getData('text/plain');
@@ -372,6 +376,8 @@ function renderComponentEditorBlocks(tabId) {
                 }
             } else if (componentId) {
                 addComponentFromDrag(componentId, null);
+            } else if (dragSource === 'existing-block' && blockId) {
+                moveBlockToRoot(blockId);
             }
         });
     }
@@ -384,34 +390,35 @@ function setupComponentContainerDropZone(tabId, dropZone) {
     // Evitar listeners duplicados
     if (dropZone._componentContainerListenerConfigured) return;
     dropZone._componentContainerListenerConfigured = true;
-    
+
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const dragSource = e.dataTransfer.getData('application/x-drag-source');
         const componentId = e.dataTransfer.getData('componentId');
-        if (dragSource !== 'sidebar' && !componentId) return;
+        const blockId = e.dataTransfer.getData('blockId');
+        
+        // Permitir sidebar, componentes y bloques existentes
+        if (dragSource !== 'sidebar' && !componentId && dragSource !== 'existing-block') return;
 
-        dropZone.style.background = '#e0f2fe';
-        dropZone.style.borderColor = '#0284c7';
+        dropZone.classList.add('drag-over');
     });
 
     dropZone.addEventListener('dragleave', (e) => {
         if (e.target === dropZone) {
-            dropZone.style.background = '#f0f9ff';
-            dropZone.style.borderColor = '#2563eb';
+            dropZone.classList.remove('drag-over');
         }
     });
 
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const dragSource = e.dataTransfer.getData('application/x-drag-source');
         const componentId = e.dataTransfer.getData('componentId');
-        
-        dropZone.style.background = '#f0f9ff';
-        dropZone.style.borderColor = '#2563eb';
+        const blockId = parseInt(e.dataTransfer.getData('blockId'));
+
+        dropZone.classList.remove('drag-over');
 
         const parentId = parseInt(dropZone.dataset.parentId);
         const editorState = tabsState.componentEditors[tabId];
@@ -426,6 +433,9 @@ function setupComponentContainerDropZone(tabId, dropZone) {
             if (blockType && blockTemplates[blockType]) {
                 addBlockToContainer(editorState, blockType, parentId, tabId);
             }
+        } else if (dragSource === 'existing-block' && blockId) {
+            // Mover bloque existente dentro del mismo editor
+            moveBlockToContainer(blockId, parentId);
         }
     });
 }

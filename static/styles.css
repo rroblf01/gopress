@@ -1012,3 +1012,12 @@ body {
     opacity: 1;
     pointer-events: all;
 }
+
+/* Drag and Drop Feedback para editores de componentes */
+.block-container-drop.drag-over,
+.flexgrid-dropzone.drag-over {
+    background: rgba(224, 242, 254, 0.5) !important;
+    border: 2px solid #0284c7 !important;
+    outline: 3px solid #93c5fd !important;
+    outline-offset: 2px !important;
+}
