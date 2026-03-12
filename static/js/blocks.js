@@ -237,87 +237,134 @@ function renderBlocks() {
         });
     });
 
-    // Eventos para dropzones de flex y grid - usar capture: true para ejecutar antes que el padre
+    // Eventos para dropzones de flex y grid - detectar el dropzone más interno usando e.target
     document.querySelectorAll('.flexgrid-dropzone').forEach(dropZone => {
         console.log('🔵 Configurando dropzone flex/grid - parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
-        
+
         dropZone.addEventListener('dragover', (e) => {
-            console.log('🟢 [FLEX/GRID dragover] parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
+            console.log('🟢 [FLEX/GRID dragover] parentId:', dropZone.dataset.parentId, 'e.target:', e.target.className);
+            
+            // Encontrar el dropzone de flex/grid más interno desde e.target
+            const innermostFlexGrid = e.target.closest('.flexgrid-dropzone');
+            console.log('  innermostFlexGrid:', innermostFlexGrid ? innermostFlexGrid.dataset.parentId : 'null');
+            
+            // Si el dropzone más interno no es este, dejar que el más interno lo maneje
+            if (innermostFlexGrid && innermostFlexGrid !== dropZone) {
+                console.log('  ⚠️ Ignorando - hay dropzone más interno');
+                return;
+            }
+            
+            // Verificar si hay un contenedor hijo bajo el cursor - dejar que el hijo lo maneje
+            const targetContainer = e.target.closest('.block-container-drop[data-drop-type="container"]');
+            if (targetContainer) {
+                console.log('  ⚠️ Ignorando - target es contenedor hijo:', targetContainer.dataset.parentId);
+                return;
+            }
+            
             e.preventDefault();
             e.stopPropagation();
             e.dataTransfer.dropEffect = 'copy';
             dropZone.classList.add('drag-over');
-        }, { capture: true });
-        
+        });
+
         dropZone.addEventListener('dragleave', (e) => {
             e.stopPropagation();
             dropZone.classList.remove('drag-over');
-        }, { capture: true });
-        
+        });
+
         dropZone.addEventListener('drop', (e) => {
-            console.log('🔴 [FLEX/GRID DROP] parentId:', dropZone.dataset.parentId, 'type:', dropZone.dataset.blockType);
-            const ds = e.dataTransfer.getData('application/x-drag-source');
-            const bt = e.dataTransfer.getData('text/plain');
-            const bid = parseInt(e.dataTransfer.getData('blockId'));
-            console.log('  dragSource:', ds, 'blockType:', bt, 'blockId:', bid);
+            console.log('🔴 [FLEX/GRID DROP] parentId:', dropZone.dataset.parentId, 'e.target:', e.target.className);
+            
+            // Encontrar el dropzone de flex/grid más interno desde e.target
+            const innermostFlexGrid = e.target.closest('.flexgrid-dropzone');
+            console.log('  innermostFlexGrid:', innermostFlexGrid ? innermostFlexGrid.dataset.parentId : 'null');
+            
+            // Si el dropzone más interno no es este, dejar que el más interno lo maneje
+            if (innermostFlexGrid && innermostFlexGrid !== dropZone) {
+                console.log('  ⚠️ Ignorando - hay dropzone más interno');
+                return;
+            }
+            
+            // Verificar si hay un contenedor hijo bajo el cursor - dejar que el hijo lo maneje
+            const targetContainer = e.target.closest('.block-container-drop[data-drop-type="container"]');
+            if (targetContainer) {
+                console.log('  ⚠️ Ignorando - target es contenedor hijo:', targetContainer.dataset.parentId);
+                return;
+            }
             
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('drag-over');
-            
+
             const ptId = parseInt(dropZone.dataset.parentId);
-            
+            const ds = e.dataTransfer.getData('application/x-drag-source');
+            const bt = e.dataTransfer.getData('text/plain');
+
             if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
                 console.log('  ✅ Añadiendo bloque:', bt, 'al padre:', ptId);
                 addBlock(bt, ptId);
-            } else if (ds === 'existing-block' && bid) {
-                console.log('  ✅ Moviendo bloque:', bid, 'al padre:', ptId);
-                moveBlockToContainer(bid, ptId);
-            } else {
-                console.log('  ⚠️ No se pudo añadir - ds:', ds, 'bt:', bt, 'bid:', bid);
             }
-        }, { capture: true });
+        });
     });
 
-    // Eventos para dropzones de contenedores - SOLO si no hay flex/grid dentro
+    // Eventos para dropzones de contenedores - detectar el dropzone más interno usando e.target
     document.querySelectorAll('.block-container-drop[data-drop-type="container"]').forEach(dropZone => {
         console.log('🟠 Configurando dropzone container - parentId:', dropZone.dataset.parentId);
-        
-        // Verificar si este contenedor tiene un flex/grid dentro
-        const hasFlexGrid = dropZone.querySelector('.flexgrid-dropzone');
-        if (hasFlexGrid) {
-            console.log('  ⚠️ Contenedor tiene flex/grid dentro, no configurando eventos');
-            return;
-        }
-        
+
         dropZone.addEventListener('dragover', (e) => {
-            console.log('🟠 [CONTAINER dragover] parentId:', dropZone.dataset.parentId);
+            // Encontrar el contenedor más interno desde e.target
+            const innermostContainer = e.target.closest('.block-container-drop[data-drop-type="container"]');
+            
+            // Si el contenedor más interno no es este, dejar que el más interno lo maneje
+            if (innermostContainer && innermostContainer !== dropZone) {
+                return;
+            }
+            
+            // Verificar si hay un dropzone de flex/grid bajo el cursor - dejar que lo maneje
+            const flexGridTarget = e.target.closest('.flexgrid-dropzone');
+            if (flexGridTarget) {
+                return; // Dejar que el flex/grid lo maneje
+            }
+
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.add('drag-over');
         });
-        
+
         dropZone.addEventListener('dragleave', (e) => {
             e.stopPropagation();
             dropZone.classList.remove('drag-over');
         });
-        
+
         dropZone.addEventListener('drop', (e) => {
-            console.log('🟠 [CONTAINER DROP] parentId:', dropZone.dataset.parentId);
+            // Encontrar el contenedor más interno desde e.target
+            const innermostContainer = e.target.closest('.block-container-drop[data-drop-type="container"]');
+            
+            // Si el contenedor más interno no es este, dejar que el más interno lo maneje
+            if (innermostContainer && innermostContainer !== dropZone) {
+                console.log('  ⚠️ [CONTAINER DROP] Ignorando - target es contenedor hijo:', innermostContainer.dataset.parentId);
+                return;
+            }
+            
+            // Verificar si hay un dropzone de flex/grid bajo el cursor - dejar que lo maneje
+            const flexGridTarget = e.target.closest('.flexgrid-dropzone');
+            if (flexGridTarget) {
+                console.log('  ⚠️ [CONTAINER DROP] Ignorando - realTarget es flex/grid:', flexGridTarget.dataset.parentId);
+                return;
+            }
+
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('drag-over');
-            
+
             const ptId = parseInt(dropZone.dataset.parentId);
             const ds = e.dataTransfer.getData('application/x-drag-source');
             const bt = e.dataTransfer.getData('text/plain');
             const bid = parseInt(e.dataTransfer.getData('blockId'));
-            
+
             if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
-                console.log('  ✅ Añadiendo bloque:', bt, 'al padre:', ptId);
                 addBlock(bt, ptId);
             } else if (ds === 'existing-block' && bid) {
-                console.log('  ✅ Moviendo bloque:', bid, 'al padre:', ptId);
                 moveBlockToContainer(bid, ptId);
             }
         });
@@ -361,35 +408,29 @@ function createBlockHTML(block) {
             <style id="${cssId}">
                 .${blockClass} { ${block.customCSS} ${allCSS} }
                 .${blockClass}.block-container-drop {
-                    border: 2px dashed #2563eb !important;
+                    border: 2px dashed transparent !important;
                     margin-bottom: 8px;
-                    background: #f0f9ff !important;
+                    background: transparent !important;
                     padding: 16px;
                     min-height: 100px;
                     border-radius: 8px;
                     transition: all 0.2s;
                     pointer-events: auto !important;
                     box-sizing: border-box !important;
+                    position: relative !important;
                 }
-                .${blockClass}.block-container-drop:hover {
-                    background: #e0f2fe !important;
-                    border-color: #0284c7 !important;
+                /* El contenido interior (incluyendo contenedores hijos) SIEMPRE puede recibir eventos */
+                .${blockClass}.block-container-drop > * {
+                    pointer-events: auto !important;
+                    position: relative !important;
+                    z-index: 2 !important;
                 }
+                /* Durante drag-over, resaltar pero sin bloquear hijos */
                 .${blockClass}.block-container-drop.drag-over {
-                    background: #e0f2fe !important;
+                    background: rgba(224, 242, 254, 0.5) !important;
                     border: 2px solid #0284c7 !important;
                     outline: 3px solid #93c5fd !important;
                     outline-offset: 2px !important;
-                }
-                /* Durante drag-over, los bloques hijos no interfieren */
-                .${blockClass}.block-container-drop.drag-over > .block {
-                    width: 100% !important;
-                    flex-shrink: 0 !important;
-                    margin-bottom: 16px !important;
-                    pointer-events: none !important;
-                }
-                .${blockClass}.block-container-drop.drag-over > .block * {
-                    pointer-events: none !important;
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
@@ -494,7 +535,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
         case 'flex': {
             const childrenContent = (block.children && block.children.length > 0)
                 ? block.children.map(child => createBlockHTML(child)).join('')
-                : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
+                : '<div class="flex-empty-placeholder" style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
 
             // Obtener valores actuales según modo responsive
             const currentDirection = block.direction || 'row';
@@ -539,7 +580,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     outline: 3px solid #93c5fd !important;
                     outline-offset: 2px !important;
                 }
-                /* Los bloques hijos siempre pueden recibir clicks */
+                /* Los bloques hijos siempre pueden recibir eventos */
                 .${blockClass}-dropzone > .block {
                     width: 100%;
                     flex-shrink: 0;
@@ -550,6 +591,11 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 }
                 .${blockClass}-dropzone > .block * {
                     pointer-events: auto !important;
+                }
+                /* IMPORTANTE: Los contenedores hijos dentro de flex/grid también reciben eventos */
+                .${blockClass}-dropzone .block-container-drop {
+                    pointer-events: auto !important;
+                    z-index: 20 !important;
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>
@@ -567,7 +613,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
         case 'grid': {
             const childrenContent = (block.children && block.children.length > 0)
                 ? block.children.map(child => createBlockHTML(child)).join('')
-                : '<div style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
+                : '<div class="flex-empty-placeholder" style="display: flex; align-items: center; justify-content: center; min-height: 150px; color:#94a3b8;font-size:13px; border: 2px dashed #cbd5e1; border-radius: 8px; pointer-events: none;">📦 Arrastra bloques aquí</div>';
 
             // Obtener valores actuales según modo responsive
             const currentGridTemplateColumns = block.gridTemplateColumns || 'repeat(3, 1fr)';
@@ -606,7 +652,7 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                     outline: 3px solid #93c5fd !important;
                     outline-offset: 2px !important;
                 }
-                /* Los bloques hijos siempre pueden recibir clicks */
+                /* Los bloques hijos siempre pueden recibir eventos */
                 .${blockClass}-dropzone > .block {
                     width: 100%;
                     flex-shrink: 0;
@@ -617,6 +663,11 @@ function createBlockPreviewHTML(block, allCSS, isHidden = false) {
                 }
                 .${blockClass}-dropzone > .block * {
                     pointer-events: auto !important;
+                }
+                /* IMPORTANTE: Los contenedores hijos dentro de flex/grid también reciben eventos */
+                .${blockClass}-dropzone .block-container-drop {
+                    pointer-events: auto !important;
+                    z-index: 20 !important;
                 }
                 ${isHidden ? `.${blockClass} { opacity: 0.3 !important; }` : ''}
             </style>

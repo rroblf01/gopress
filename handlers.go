@@ -622,3 +622,19 @@ func CheckAuthStatus(db *sql.DB) fiber.Handler {
 		})
 	}
 }
+
+// Check if first user setup is needed (public endpoint, no redirect)
+func CheckNeedsFirstUser(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		count, err := GetUserCount(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"needsSetup": count == 0,
+		})
+	}
+}

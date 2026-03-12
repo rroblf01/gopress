@@ -18,7 +18,7 @@ function autoSave() {
     if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(() => {
         savePage();
-    }, 1000); // Guardar 1 segundo después de la última modificación
+    }, 300); // Guardar 1 segundo después de la última modificación
 }
 
 /**

@@ -191,15 +191,21 @@
             }
         });
 
-        // Check if already logged in
-        fetch('/api/auth/status')
-            .then(res => res.json())
-            .then(data => {
-                if (data.authenticated) {
-                    window.location.href = '/cms';
-                }
-            })
-            .catch(() => {});
+        // Check if already logged in or if first user setup is needed
+        Promise.all([
+            fetch('/api/auth/status').then(res => res.ok ? res.json() : Promise.resolve({ authenticated: false })).catch(() => ({ authenticated: false })),
+            fetch('/api/auth/needs-setup').then(res => res.ok ? res.json() : Promise.resolve({ needsSetup: false })).catch(() => ({ needsSetup: false }))
+        ])
+        .then(([authData, setupData]) => {
+            if (authData.authenticated) {
+                // Already logged in, redirect to CMS
+                window.location.href = '/cms';
+            } else if (setupData.needsSetup) {
+                // No users exist, redirect to first user setup
+                window.location.href = '/first-user';
+            }
+        })
+        .catch(() => {});
     </script>
 </body>
 </html>

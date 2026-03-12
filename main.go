@@ -28,15 +28,16 @@ func main() {
 
 	app := fiber.New()
 
-	// Public routes (no auth required)
+	// Static files (public) - must be first
+	app.Use("/static", static.New("./static"))
+
+	// Public routes (no auth required) - must be before groups
 	app.Get("/login", ServeLoginPage())
 	app.Get("/first-user", ServeFirstUserPage())
 	app.Post("/api/login", LoginHandler(db))
 	app.Post("/api/first-user", CreateFirstUserHandler(db))
 	app.Get("/api/auth/status", CheckAuthStatus(db))
-
-	// Static files (public)
-	app.Use("/static", static.New("./static"))
+	app.Get("/api/auth/needs-setup", CheckNeedsFirstUser(db))
 
 	// Protected routes (auth required)
 	cmsGroup := app.Group("/cms")
@@ -49,7 +50,7 @@ func main() {
 	previewGroup.Use(AuthMiddleware(db))
 	previewGroup.Get("/", ServePreview(db))
 
-	// Protected API routes
+	// Protected API routes - all /api/* except the public ones above
 	apiGroup := app.Group("/api")
 	apiGroup.Use(NeedsFirstUser(db))  // Check if first user exists FIRST
 	apiGroup.Use(AuthMiddleware(db))   // Then check auth

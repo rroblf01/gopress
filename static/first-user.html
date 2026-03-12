@@ -214,15 +214,28 @@
             }
         });
 
-        // Check if users already exist
-        fetch('/api/auth/status')
-            .then(res => res.json())
+        // Check if users already exist using the dedicated endpoint
+        // Only redirect if users exist and we're not in the middle of setup
+        fetch('/api/auth/needs-setup')
+            .then(res => {
+                if (!res.ok) {
+                    console.log('Error en needs-setup:', res.status);
+                    return { needsSetup: true };
+                }
+                return res.json();
+            })
             .then(data => {
-                if (data.authenticated) {
+                console.log('needsSetup:', data.needsSetup);
+                if (!data.needsSetup) {
+                    // Users already exist, redirect to CMS
                     window.location.href = '/cms';
                 }
+                // If needsSetup is true, stay on this page
             })
-            .catch(() => {});
+            .catch(err => {
+                console.log('Error checking setup status:', err);
+                // On error, stay on this page (assume setup is needed)
+            });
     </script>
 </body>
 </html>
