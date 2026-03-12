@@ -59,6 +59,10 @@ func main() {
 	apiGroup.Post("/pages", CreatePageHandler(db))
 	apiGroup.Delete("/pages/:id", DeletePageHandler(db))
 	apiGroup.Post("/logout", LogoutHandler())
+	
+	// Site config routes
+	apiGroup.Get("/site-config", GetSiteConfigHandler(db))
+	apiGroup.Post("/site-config", UpdateSiteConfigHandler(db))
 
 	// Template routes (protected)
 	templatesGroup := app.Group("/api/templates")
@@ -79,6 +83,9 @@ func main() {
 	componentsGroup.Put("/:id", UpdateComponentHandler(db))
 	componentsGroup.Delete("/:id", DeleteComponentHandler(db))
 
+	// SEO routes (public) - must be before catch-all slug route
+	app.Get("/sitemap.xml", GenerateSitemapHandler(db))
+	app.Get("/robots.txt", GenerateRobotsHandler(db))
 
 	// Public website (páginas dinámicas por slug)
 	app.Get("/:slug?", RenderPageHandler(db))

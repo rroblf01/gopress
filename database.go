@@ -56,6 +56,13 @@ func CreateTable(db *sql.DB) error {
 		password VARCHAR(255) NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
+	CREATE TABLE IF NOT EXISTS site_config (
+		id SERIAL PRIMARY KEY,
+		key VARCHAR(255) NOT NULL UNIQUE,
+		value TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
 	CREATE INDEX IF NOT EXISTS idx_pages_created_at ON pages(created_at);
 	CREATE INDEX IF NOT EXISTS idx_templates_created_at ON templates(created_at);
 	CREATE INDEX IF NOT EXISTS idx_components_created_at ON components(created_at);
@@ -504,4 +511,50 @@ func GetUserByID(db *sql.DB, id int64) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+// Funciones para SiteConfig
+func GetSiteConfig(db *sql.DB, key string) (string, error) {
+	query := `SELECT value FROM site_config WHERE key = $1`
+	var value string
+	err := db.QueryRow(query, key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", nil // Retornar vacío si no existe
+	} else if err != nil {
+		return "", fmt.Errorf("error obteniendo configuración: %w", err)
+	}
+	return value, nil
+}
+
+func UpdateSiteConfig(db *sql.DB, key string, value string) error {
+	query := `
+	INSERT INTO site_config (key, value, updated_at) 
+	VALUES ($1, $2, CURRENT_TIMESTAMP)
+	ON CONFLICT (key) 
+	DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP
+	`
+	_, err := db.Exec(query, key, value)
+	if err != nil {
+		return fmt.Errorf("error actualizando configuración: %w", err)
+	}
+	return nil
+}
+
+func GetAllSiteConfig(db *sql.DB) (map[string]string, error) {
+	query := `SELECT key, value FROM site_config`
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo configuración: %w", err)
+	}
+	defer rows.Close()
+
+	config := make(map[string]string)
+	for rows.Next() {
+		var key, value string
+		if err := rows.Scan(&key, &value); err != nil {
+			return nil, fmt.Errorf("error escaneando configuración: %w", err)
+		}
+		config[key] = value
+	}
+	return config, nil
 }

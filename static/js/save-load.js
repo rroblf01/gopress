@@ -79,6 +79,8 @@ function loadPageData() {
             loadGlobalStyles();
             renderBlocks();
             showToast('Página cargada', 'success');
+            
+            loadSiteConfig();
         }
     })
     .catch(err => {
@@ -94,6 +96,43 @@ function updateSiteTitle(value) {
 }
 
 /**
+ * Actualiza el dominio del sitio
+ */
+function updateSiteDomain(value) {
+    // Guardar en la configuración del sitio
+    fetch('/api/site-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: value })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Dominio actualizado:', data);
+        showToast('Dominio actualizado correctamente', 'success');
+    })
+    .catch(err => {
+        console.error('Error al actualizar dominio:', err);
+        showToast('Error al actualizar dominio', 'error');
+    });
+}
+
+/**
+ * Carga la configuración del sitio
+ */
+function loadSiteConfig() {
+    fetch('/api/site-config')
+    .then(res => res.json())
+    .then(config => {
+        if (config.domain) {
+            document.getElementById('siteDomain').value = config.domain;
+        }
+    })
+    .catch(err => {
+        console.error('Error al cargar configuración:', err);
+    });
+}
+
+/**
  * Actualiza el favicon del sitio
  */
 function updateSiteFavicon(event) {
@@ -106,7 +145,7 @@ function updateSiteFavicon(event) {
             link.rel = 'icon';
             link.href = e.target.result;
             document.head.appendChild(link);
-            
+
             const preview = document.getElementById('faviconPreview');
             preview.src = e.target.result;
             preview.style.display = 'block';

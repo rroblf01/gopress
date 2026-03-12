@@ -2,11 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -676,6 +678,180 @@ func CheckNeedsFirstUser(db *sql.DB) fiber.Handler {
 
 		return c.JSON(fiber.Map{
 			"needsSetup": count == 0,
+		})
+	}
+}
+
+// SitemapEntry representa una entrada en el sitemap XML
+type SitemapEntry struct {
+	XMLName    xml.Name `xml:"url"`
+	Loc        string   `xml:"loc"`
+	LastMod    string   `xml:"lastmod,omitempty"`
+	ChangeFreq string   `xml:"changefreq,omitempty"`
+	Priority   string   `xml:"priority,omitempty"`
+}
+
+// Sitemap representa el sitemap XML completo
+type Sitemap struct {
+	XMLName  xml.Name         `xml:"urlset"`
+	Xmlns    string           `xml:"xmlns,attr"`
+	URLs     []SitemapEntry   `xml:"url"`
+}
+
+// GenerateSitemapHandler genera dinámicamente el sitemap.xml
+func GenerateSitemapHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		// Obtener dominio desde la configuración del sitio
+		domain, err := GetSiteConfig(db, "domain")
+		if err != nil || domain == "" {
+			domain = os.Getenv("DOMAIN")
+		}
+		if domain == "" {
+			// Usar dominio por defecto basado en el host de la petición
+			domain = "https://" + c.Hostname()
+		}
+		// Asegurar que el dominio tenga protocolo
+		if !strings.HasPrefix(domain, "http://") && !strings.HasPrefix(domain, "https://") {
+			domain = "https://" + domain
+		}
+
+		// Obtener todas las páginas
+		pages, err := GetAllPagesFromDB(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString("Error generating sitemap")
+		}
+
+		// Crear entradas del sitemap
+		urls := []SitemapEntry{
+			// Página de inicio siempre incluida
+			{
+				Loc:        domain + "/",
+				LastMod:    time.Now().Format("2006-01-02"),
+				ChangeFreq: "daily",
+				Priority:   "1.0",
+			},
+		}
+
+		// Añadir páginas dinámicas
+		for _, page := range pages {
+			// Excluir slug raíz "/" porque ya está añadido
+			if page.Slug == "/" || page.Slug == "" {
+				continue
+			}
+
+			// Determinar prioridad y frecuencia según el tipo de página
+			priority := "0.5"
+			changeFreq := "monthly"
+
+			// Páginas especiales con mayor prioridad
+			if strings.Contains(page.Slug, "contact") {
+				priority = "0.8"
+				changeFreq = "weekly"
+			} else if strings.Contains(page.Slug, "about") {
+				priority = "0.7"
+				changeFreq = "monthly"
+			} else if strings.Contains(page.Slug, "blog") || strings.Contains(page.Slug, "news") {
+				priority = "0.6"
+				changeFreq = "weekly"
+			}
+
+			urls = append(urls, SitemapEntry{
+				Loc:        domain + "/" + strings.TrimPrefix(page.Slug, "/"),
+				LastMod:    page.UpdatedAt[:10], // Solo la fecha YYYY-MM-DD
+				ChangeFreq: changeFreq,
+				Priority:   priority,
+			})
+		}
+
+		// Crear sitemap
+		sitemap := Sitemap{
+			Xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
+			URLs:  urls,
+		}
+
+		// Generar XML
+		c.Set("Content-Type", "application/xml; charset=utf-8")
+		xmlData, err := xml.MarshalIndent(sitemap, "", "  ")
+		if err != nil {
+			log.Printf("Error generating sitemap XML: %v", err)
+			return c.Status(fiber.StatusInternalServerError).SendString("Error generating sitemap")
+		}
+		return c.SendString(xml.Header + string(xmlData))
+	}
+}
+
+// GenerateRobotsHandler genera dinámicamente el robots.txt
+func GenerateRobotsHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		// Obtener dominio desde la configuración del sitio
+		domain, err := GetSiteConfig(db, "domain")
+		if err != nil || domain == "" {
+			domain = os.Getenv("DOMAIN")
+		}
+		if domain == "" {
+			domain = "https://" + c.Hostname()
+		}
+		// Asegurar que el dominio tenga protocolo
+		if !strings.HasPrefix(domain, "http://") && !strings.HasPrefix(domain, "https://") {
+			domain = "https://" + domain
+		}
+
+		// Obtener sitemap URL
+		sitemapURL := domain + "/sitemap.xml"
+
+		// Generar robots.txt
+		robots := `User-agent: *
+Allow: /
+
+Disallow: /cms
+Disallow: /preview
+Disallow: /api
+Disallow: /login
+Disallow: /first-user
+Disallow: /*.json$
+Disallow: /*.sql$
+
+Sitemap: ` + sitemapURL + `
+`
+
+		c.Set("Content-Type", "text/plain; charset=utf-8")
+		return c.SendString(robots)
+	}
+}
+
+// GetSiteConfigHandler obtiene la configuración del sitio
+func GetSiteConfigHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		config, err := GetAllSiteConfig(db)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(config)
+	}
+}
+
+// UpdateSiteConfigHandler actualiza la configuración del sitio
+func UpdateSiteConfigHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		var config map[string]string
+		if err := c.Bind().JSON(&config); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Datos inválidos: " + err.Error(),
+			})
+		}
+
+		for key, value := range config {
+			if err := UpdateSiteConfig(db, key, value); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": fmt.Sprintf("Error actualizando %s: %v", key, err),
+				})
+			}
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "Configuración actualizada correctamente",
 		})
 	}
 }

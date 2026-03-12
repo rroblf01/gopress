@@ -23,6 +23,9 @@
             <label for="siteTitle" class="toolbar-label">Título del sitio:</label>
             <input type="text" id="siteTitle" class="toolbar-input" placeholder="Título del sitio"
                 onchange="updateSiteTitle(this.value)">
+            <label for="siteDomain" class="toolbar-label">Dominio:</label>
+            <input type="text" id="siteDomain" class="toolbar-input" placeholder="https://tudominio.com"
+                onchange="updateSiteDomain(this.value)">
             <label for="siteFavicon" class="toolbar-label">Favicon:</label>
             <div class="favicon-input-container">
                 <input type="file" id="siteFavicon" class="toolbar-input" accept="image/*"
