@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -15,13 +16,25 @@ func AuthMiddleware(db *sql.DB) fiber.Handler {
 		// Check if user is authenticated via cookie
 		session := c.Cookies("session")
 		if session == "" {
-			// Redirect to login
-			c.Redirect().Status(fiber.StatusMovedPermanently).To("/login")
-			return nil
+			// No session cookie, redirect to login
+			log.Println("⚠️ AuthMiddleware: No session cookie")
+			return c.Redirect().To("/login")
 		}
 
-		// Validate session (you could store sessions in DB)
-		// For now, just check if cookie exists
+		// Validate session by checking if user exists
+		userID, err := strconv.ParseInt(session, 10, 64)
+		if err != nil {
+			log.Println("⚠️ AuthMiddleware: Invalid session ID:", session)
+			return c.Redirect().To("/login")
+		}
+
+		user, err := GetUserByID(db, userID)
+		if err != nil {
+			log.Println("⚠️ AuthMiddleware: User not found:", userID)
+			return c.Redirect().To("/login")
+		}
+
+		log.Printf("✓ AuthMiddleware: User authenticated (ID: %d, Username: %s)", user.ID, user.Username)
 		return c.Next()
 	}
 }
@@ -31,6 +44,7 @@ func NeedsFirstUser(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		count, err := GetUserCount(db)
 		if err != nil {
+			log.Println("⚠️ NeedsFirstUser: Error getting user count:", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
 			})
@@ -38,10 +52,11 @@ func NeedsFirstUser(db *sql.DB) fiber.Handler {
 
 		if count == 0 {
 			// No users exist, redirect to first user setup
-			c.Redirect().Status(fiber.StatusMovedPermanently).To("/first-user")
-			return nil
+			log.Println("⚠️ NeedsFirstUser: No users, redirecting to /first-user")
+			return c.Redirect().To("/first-user")
 		}
 
+		log.Printf("✓ NeedsFirstUser: Users exist (count: %d), continuing", count)
 		return c.Next()
 	}
 }
@@ -548,31 +563,30 @@ func CreateFirstUserHandler(db *sql.DB) fiber.Handler {
 			})
 		}
 
-		_, err = CreateUser(db, req.Username, req.Password)
+		userID, err := CreateUser(db, req.Username, req.Password)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 
-		// Auto-login after creating first user
-		user, _ := ValidateUser(db, req.Username, req.Password)
-		if user != nil {
-			c.Cookie(&fiber.Cookie{
-				Name:     "session",
-				Value:    fmt.Sprintf("%d", user.ID),
-				Path:     "/",
-				MaxAge:   86400 * 7, // 7 days
-				HTTPOnly: true,
-				SameSite: "Lax",
-			})
-		}
+		// Set session cookie directly with the new user ID
+		c.Cookie(&fiber.Cookie{
+			Name:     "session",
+			Value:    fmt.Sprintf("%d", userID),
+			Path:     "/",
+			MaxAge:   86400 * 7, // 7 days
+			HTTPOnly: true,
+			SameSite: "Lax",
+		})
+
+		log.Printf("✓ Primer usuario creado (ID: %d): %s", userID, req.Username)
 
 		return c.JSON(fiber.Map{
 			"message": "Usuario creado exitosamente",
 			"user": fiber.Map{
-				"id":       user.ID,
-				"username": user.Username,
+				"id":       userID,
+				"username": req.Username,
 			},
 		})
 	}
