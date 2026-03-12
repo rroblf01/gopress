@@ -22,13 +22,15 @@ async function savePage() {
             body: JSON.stringify(pageData)
         });
 
+        const responseData = await response.json();
+
         if (response.ok) {
             showToast('Página guardada correctamente', 'success');
         } else {
-            showToast('Error al guardar', 'error');
+            showToast('Error al guardar: ' + (responseData.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ [SAVE] Error:', error);
         showToast('Error de conexión', 'error');
     }
 }

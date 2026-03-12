@@ -29,7 +29,8 @@ function showToast(message, type = 'info') {
 function findBlockById(blocks, id) {
     for (const block of blocks) {
         if (block.id === id) return block;
-        if (block.type === 'container' && block.children) {
+        // Buscar recursivamente en container, flex y grid
+        if ((block.type === 'container' || block.type === 'flex' || block.type === 'grid') && block.children) {
             const found = findBlockById(block.children, id);
             if (found) return found;
         }

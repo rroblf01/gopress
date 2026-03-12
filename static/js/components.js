@@ -74,8 +74,12 @@ async function saveBlockAsComponent() {
             return;
         }
 
-        // Si es un contenedor, guardamos solo sus hijos como componente
-        componentBlocks = block.type === 'container' && block.children ? block.children : [block];
+        // Si es un contenedor, flex o grid, guardamos solo sus hijos como componente
+        if ((block.type === 'container' || block.type === 'flex' || block.type === 'grid') && block.children) {
+            componentBlocks = block.children;
+        } else {
+            componentBlocks = [block];
+        }
     } else {
         // Si no hay bloque seleccionado, crear un contenedor vacío por defecto
         const defaultContainer = JSON.parse(JSON.stringify(blockTemplates.container));

@@ -570,7 +570,7 @@ function deleteComponentBlock(tabId, blockId) {
  */
 function deleteComponentBlockFromChildren(blocks, blockId) {
     for (const block of blocks) {
-        if (block.type === 'container' && block.children) {
+        if ((block.type === 'container' || block.type === 'flex' || block.type === 'grid') && block.children) {
             const childIdx = block.children.findIndex(b => b.id === blockId);
             if (childIdx !== -1) {
                 block.children.splice(childIdx, 1);
@@ -617,7 +617,7 @@ function duplicateComponentBlock(tabId, blockId) {
  */
 function duplicateComponentBlockFromChildren(blocks, blockId) {
     for (const block of blocks) {
-        if (block.type === 'container' && block.children) {
+        if ((block.type === 'container' || block.type === 'flex' || block.type === 'grid') && block.children) {
             const childIdx = block.children.findIndex(b => b.id === blockId);
             if (childIdx !== -1) {
                 const copy = JSON.parse(JSON.stringify(block.children[childIdx]));
@@ -665,7 +665,7 @@ function moveComponentBlock(tabId, blockId, direction) {
  */
 function moveComponentBlockFromChildren(blocks, blockId, direction) {
     for (const block of blocks) {
-        if (block.type === 'container' && block.children) {
+        if ((block.type === 'container' || block.type === 'flex' || block.type === 'grid') && block.children) {
             const childIdx = block.children.findIndex(b => b.id === blockId);
             if (childIdx !== -1) {
                 const newIdx = childIdx + direction;

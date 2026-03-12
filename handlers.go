@@ -75,7 +75,7 @@ func ServePreview(db *sql.DB) fiber.Handler {
 
 func SavePageHandler(db *sql.DB) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		
+
 		var pageData PageData
 
 		if err := c.Bind().JSON(&pageData); err != nil {
@@ -84,7 +84,7 @@ func SavePageHandler(db *sql.DB) fiber.Handler {
 				"error": "Datos inválidos: " + err.Error(),
 			})
 		}
-		
+
 		pageID, err := SavePageToDB(db, pageData)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

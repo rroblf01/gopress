@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -131,6 +132,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="setup-container">
         <div class="setup-header">
@@ -154,13 +156,15 @@
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" required minlength="6" placeholder="Elige una contraseña">
+                <input type="password" id="password" name="password" required minlength="6"
+                    placeholder="Elige una contraseña">
                 <div class="hint">Mínimo 6 caracteres</div>
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Confirmar Contraseña</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Repite la contraseña">
+                <input type="password" id="confirmPassword" name="confirmPassword" required
+                    placeholder="Repite la contraseña">
             </div>
 
             <button type="submit" class="setup-btn" id="setupBtn">Crear Usuario y Acceder</button>
@@ -170,7 +174,7 @@
     <script>
         document.getElementById('setupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -219,13 +223,11 @@
         fetch('/api/auth/needs-setup')
             .then(res => {
                 if (!res.ok) {
-                    console.log('Error en needs-setup:', res.status);
                     return { needsSetup: true };
                 }
                 return res.json();
             })
             .then(data => {
-                console.log('needsSetup:', data.needsSetup);
                 if (!data.needsSetup) {
                     // Users already exist, redirect to CMS
                     window.location.href = '/cms';
@@ -238,4 +240,5 @@
             });
     </script>
 </body>
+
 </html>
