@@ -24,7 +24,7 @@ function setupDragAndDrop() {
     // Drag over en el canvas principal (solo para root level, no para dropzones)
     blocksContainer.addEventListener('dragover', handleCanvasDragOver);
     blocksContainer.addEventListener('dragleave', handleCanvasDragLeave);
-    // NO registrar handleCanvasDrop - los dropzones específicos manejan el drop
+    blocksContainer.addEventListener('drop', handleCanvasDrop);
 }
 
 /**
