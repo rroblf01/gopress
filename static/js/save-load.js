@@ -89,6 +89,7 @@ function loadPageData() {
  */
 function updateSiteTitle(value) {
     state.page.title = value;
+    if (typeof autoSave === 'function') autoSave();
 }
 
 /**
