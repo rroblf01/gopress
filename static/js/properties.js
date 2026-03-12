@@ -1048,7 +1048,7 @@ function addCardItem() {
             autoSave();
         }
         renderCurrentBlocks();
-        // renderProperties();
+        renderProperties();
     }
 }
 
@@ -1067,7 +1067,7 @@ function updateCardItem(idx, prop, value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // NO renderProperties aquí para no perder el foco
     }
 }
 
