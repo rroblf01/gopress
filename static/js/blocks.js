@@ -193,7 +193,7 @@ function moveBlockFromChildren(blocks, blockId, direction) {
 function selectBlock(blockId) {
     state.selectedBlockId = blockId;
     renderBlocks();
-    renderProperties();
+    renderProperties(); // Mostrar el panel de propiedades al seleccionar un bloque
 }
 
 /**
@@ -367,10 +367,7 @@ function renderBlocks() {
         });
     });
 
-    // Re-renderizar propiedades para actualizar la lista de componentes
-    if (state.selectedBlockId) {
-        renderProperties();
-    }
+    // No llamar a renderProperties() aquí para evitar perder el foco en los inputs
 }
 
 /**

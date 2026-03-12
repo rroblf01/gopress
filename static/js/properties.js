@@ -124,7 +124,7 @@ function renderProperties() {
     // CSS Personalizado
     html += `<div class="property-group">
         <label class="property-label">CSS Personalizado</label>
-        <textarea class="property-textarea" onchange="updateBlockProperty('customCSS', this.value)">${block.customCSS || ''}</textarea>
+        <textarea class="property-textarea" oninput="updateBlockProperty('customCSS', this.value)">${block.customCSS || ''}</textarea>
     </div>`;
 
     // Interactividad
@@ -145,9 +145,9 @@ function createDimensionProperties(block, isComponentEditor = false) {
         <label class="property-label">Dimensiones - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <input type="text" value="${block[widthProp] || block.width || ''}" class="property-input"
-                placeholder="Ancho (px, %)" onchange="updateDimensionProperty('width', this.value, ${isComponentEditor})">
+                placeholder="Ancho (px, %)" oninput="updateDimensionProperty('width', this.value, ${isComponentEditor})">
             <input type="text" value="${block[heightProp] || block.height || ''}" class="property-input"
-                placeholder="Alto (px, %)" onchange="updateDimensionProperty('height', this.value, ${isComponentEditor})">
+                placeholder="Alto (px, %)" oninput="updateDimensionProperty('height', this.value, ${isComponentEditor})">
         </div>
     </div>`;
 }
@@ -166,13 +166,13 @@ function createPaddingProperties(block, isComponentEditor = false) {
         <label class="property-label">Padding - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <input type="number" value="${block[paddingTopProp] || block.paddingTop || ''}" class="property-input"
-                placeholder="Top" onchange="updatePaddingProperty('paddingTop', this.value, ${isComponentEditor})">
+                placeholder="Top" oninput="updatePaddingProperty('paddingTop', this.value, ${isComponentEditor})">
             <input type="number" value="${block[paddingRightProp] || block.paddingRight || ''}" class="property-input"
-                placeholder="Right" onchange="updatePaddingProperty('paddingRight', this.value, ${isComponentEditor})">
+                placeholder="Right" oninput="updatePaddingProperty('paddingRight', this.value, ${isComponentEditor})">
             <input type="number" value="${block[paddingBottomProp] || block.paddingBottom || ''}" class="property-input"
-                placeholder="Bottom" onchange="updatePaddingProperty('paddingBottom', this.value, ${isComponentEditor})">
+                placeholder="Bottom" oninput="updatePaddingProperty('paddingBottom', this.value, ${isComponentEditor})">
             <input type="number" value="${block[paddingLeftProp] || block.paddingLeft || ''}" class="property-input"
-                placeholder="Left" onchange="updatePaddingProperty('paddingLeft', this.value, ${isComponentEditor})">
+                placeholder="Left" oninput="updatePaddingProperty('paddingLeft', this.value, ${isComponentEditor})">
         </div>
     </div>`;
 }
@@ -315,7 +315,7 @@ function renderContainerProperties(block) {
     
     return `<div class="property-group">
         <label class="property-label">ID de Sección</label>
-        <input type="text" value="${block.sectionId || ''}" class="property-input" placeholder="ej: contacto, servicios" onchange="updateBlockProperty('sectionId', this.value)">
+        <input type="text" value="${block.sectionId || ''}" class="property-input" placeholder="ej: contacto, servicios" oninput="updateBlockProperty('sectionId', this.value)">
         <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
             💡 Este ID se usa para el scroll: #${block.sectionId || 'seccion'}
         </p>
@@ -366,24 +366,24 @@ function renderContainerProperties(block) {
 function renderHeroProperties(block) {
     return `<div class="property-group">
         <label class="property-label">Título</label>
-        <input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)">
+        <input type="text" value="${block.content}" class="property-input" oninput="updateBlockProperty('content', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Subtítulo</label>
-        <input type="text" value="${block.subContent}" class="property-input" onchange="updateBlockProperty('subContent', this.value)">
+        <input type="text" value="${block.subContent}" class="property-input" oninput="updateBlockProperty('subContent', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Color de Fondo</label>
         <div class="color-input">
-            <input type="color" value="${block.backgroundColor}" onchange="updateBlockProperty('backgroundColor', this.value)">
-            <input type="text" value="${block.backgroundColor}" class="property-input" onchange="updateBlockProperty('backgroundColor', this.value)">
+            <input type="color" value="${block.backgroundColor}" oninput="updateBlockProperty('backgroundColor', this.value)">
+            <input type="text" value="${block.backgroundColor}" class="property-input" oninput="updateBlockProperty('backgroundColor', this.value)">
         </div>
     </div>
     <div class="property-group">
         <label class="property-label">Color de Texto</label>
         <div class="color-input">
-            <input type="color" value="${block.textColor}" onchange="updateBlockProperty('textColor', this.value)">
-            <input type="text" value="${block.textColor}" class="property-input" onchange="updateBlockProperty('textColor', this.value)">
+            <input type="color" value="${block.textColor}" oninput="updateBlockProperty('textColor', this.value)">
+            <input type="text" value="${block.textColor}" class="property-input" oninput="updateBlockProperty('textColor', this.value)">
         </div>
     </div>`;
 }
@@ -394,7 +394,7 @@ function renderHeroProperties(block) {
 function renderParagraphProperties(block) {
     return `<div class="property-group">
         <label class="property-label">Contenido</label>
-        <textarea class="property-textarea" onchange="updateBlockProperty('content', this.value)">${block.content}</textarea>
+        <textarea class="property-textarea" oninput="updateBlockProperty('content', this.value)">${block.content}</textarea>
     </div>`;
 }
 
@@ -404,11 +404,11 @@ function renderParagraphProperties(block) {
 function renderHeadingProperties(block) {
     return `<div class="property-group">
         <label class="property-label">Contenido</label>
-        <input type="text" value="${block.content}" class="property-input" onchange="updateBlockProperty('content', this.value)">
+        <input type="text" value="${block.content}" class="property-input" oninput="updateBlockProperty('content', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Nivel</label>
-        <select class="property-select" onchange="updateBlockProperty('level', this.value)">
+        <select class="property-select" oninput="updateBlockProperty('level', this.value)">
             <option value="1" ${block.level === 1 ? 'selected' : ''}>H1</option>
             <option value="2" ${block.level === 2 ? 'selected' : ''}>H2</option>
             <option value="3" ${block.level === 3 ? 'selected' : ''}>H3</option>
@@ -433,11 +433,11 @@ function renderImageProperties(block) {
     </div>
     <div class="property-group">
         <label class="property-label">URL de Imagen</label>
-        <input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" onchange="updateBlockProperty('src', this.value)">
+        <input type="text" value="${block.src}" class="property-input" placeholder="https://ejemplo.com/imagen.jpg" oninput="updateBlockProperty('src', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Alt Text</label>
-        <input type="text" value="${block.alt}" class="property-input" onchange="updateBlockProperty('alt', this.value)">
+        <input type="text" value="${block.alt}" class="property-input" oninput="updateBlockProperty('alt', this.value)">
     </div>`;
 }
 
@@ -465,13 +465,13 @@ function renderIconProperties(block) {
     <div class="property-group">
         <label class="property-label">Tamaño (px) - ${mode === 'desktop' ? '🖥️ Ordenador' : mode === 'tablet' ? '📱 Tablet' : '📲 Móvil'}</label>
         <input type="number" value="${block[fontSizeProp] || block.fontSize || 48}" class="property-input" 
-            onchange="updateIconFontSize(this.value)" placeholder="48">
+            oninput="updateIconFontSize(this.value)" placeholder="48">
     </div>
     <div class="property-group">
         <label class="property-label">Color</label>
         <div class="color-input">
-            <input type="color" value="${block.color || '#2563eb'}" onchange="updateBlockProperty('color', this.value)">
-            <input type="text" value="${block.color || '#2563eb'}" class="property-input" onchange="updateBlockProperty('color', this.value)">
+            <input type="color" value="${block.color || '#2563eb'}" oninput="updateBlockProperty('color', this.value)">
+            <input type="text" value="${block.color || '#2563eb'}" class="property-input" oninput="updateBlockProperty('color', this.value)">
         </div>
     </div>`;
 }
@@ -486,9 +486,9 @@ function renderCardsProperties(block) {
             ${block.items.map((item, idx) => `
                 <div class="card-item">
                     <input type="text" class="card-item-input" value="${escapeHTML(item.title)}" 
-                        placeholder="Título" onchange="updateCardItem(${idx}, 'title', this.value)">
+                        placeholder="Título" oninput="updateCardItem(${idx}, 'title', this.value)">
                     <input type="text" class="card-item-input" value="${escapeHTML(item.description)}" 
-                        placeholder="Descripción" onchange="updateCardItem(${idx}, 'description', this.value)">
+                        placeholder="Descripción" oninput="updateCardItem(${idx}, 'description', this.value)">
                     <div class="card-item-buttons">
                         <button class="card-item-btn danger" onclick="deleteCardItem(${idx})">Eliminar</button>
                     </div>
@@ -550,15 +550,15 @@ function renderButtonProperties(block) {
     </div>
     <div class="property-group">
         <label class="property-label">Texto</label>
-        <input type="text" value="${block.text}" class="property-input" onchange="updateBlockProperty('text', this.value)">
+        <input type="text" value="${block.text}" class="property-input" oninput="updateBlockProperty('text', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Link URL</label>
-        <input type="text" value="${block.link}" class="property-input" placeholder="https://ejemplo.com" onchange="updateBlockProperty('link', this.value)">
+        <input type="text" value="${block.link}" class="property-input" placeholder="https://ejemplo.com" oninput="updateBlockProperty('link', this.value)">
     </div>
     <div class="property-group">
         <label class="property-label">Ir a Sección (Scroll)</label>
-        <select class="property-select" onchange="updateBlockProperty('scrollToId', this.value)">
+        <select class="property-select" oninput="updateBlockProperty('scrollToId', this.value)">
             <option value="">-- Ninguna --</option>
             ${containersWithSectionId.map(c => `<option value="${c.sectionId}" ${block.scrollToId === c.sectionId ? 'selected' : ''}>#${c.sectionId}</option>`).join('')}
         </select>
@@ -570,9 +570,9 @@ function renderButtonProperties(block) {
         <label class="property-label">Color de Fondo ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
             <input type="color" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}"
-                onchange="updateColorProperty('backgroundColor', this.value)">
+                oninput="updateColorProperty('backgroundColor', this.value)">
             <input type="text" value="${state.hoverMode ? (block.hoverBackgroundColor || '#2563eb') : (block.backgroundColor || '#2563eb')}"
-                class="property-input" onchange="updateColorProperty('backgroundColor', this.value)">
+                class="property-input" oninput="updateColorProperty('backgroundColor', this.value)">
             <button class="property-input" style="width: auto; cursor: pointer;"
                 onclick="updateColorProperty('backgroundColor', 'transparent')">Transparente</button>
         </div>
@@ -581,9 +581,9 @@ function renderButtonProperties(block) {
         <label class="property-label">Color de Texto ${state.hoverMode ? '(Hover)' : ''}</label>
         <div class="color-input">
             <input type="color" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}"
-                onchange="updateColorProperty('textColor', this.value)">
+                oninput="updateColorProperty('textColor', this.value)">
             <input type="text" value="${state.hoverMode ? (block.hoverTextColor || '#ffffff') : (block.textColor || '#ffffff')}"
-                class="property-input" onchange="updateColorProperty('textColor', this.value)">
+                class="property-input" oninput="updateColorProperty('textColor', this.value)">
         </div>
     </div>`;
 }
@@ -595,8 +595,8 @@ function renderDividerProperties(block) {
     return `<div class="property-group">
         <label class="property-label">Color</label>
         <div class="color-input">
-            <input type="color" value="${block.borderColor || '#e5e7eb'}" onchange="updateBlockProperty('borderColor', this.value)">
-            <input type="text" value="${block.borderColor || '#e5e7eb'}" class="property-input" onchange="updateBlockProperty('borderColor', this.value)">
+            <input type="color" value="${block.borderColor || '#e5e7eb'}" oninput="updateBlockProperty('borderColor', this.value)">
+            <input type="text" value="${block.borderColor || '#e5e7eb'}" class="property-input" oninput="updateBlockProperty('borderColor', this.value)">
             <button class="property-input" style="width: auto; cursor: pointer;"
                 onclick="updateBlockProperty('borderColor', 'transparent')">Transparente</button>
         </div>
@@ -772,7 +772,7 @@ function updateBlockProperty(prop, value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties(); // No volver a renderizar el panel tras cada pulsación
     }
 }
 
@@ -797,7 +797,7 @@ function updateDirectionProperty(value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -822,7 +822,7 @@ function updateFlexDirectionProperty(value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -843,7 +843,7 @@ function updateFlexProperty(prop, value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -864,7 +864,7 @@ function updateGridProperty(prop, value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -885,7 +885,7 @@ function updateDimensionProperty(dim, value, isComponentEditor = false) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -906,7 +906,7 @@ function updatePaddingProperty(pad, value, isComponentEditor = false) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -927,7 +927,7 @@ function updateIconFontSize(value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -950,7 +950,7 @@ function updateColorProperty(prop, value) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -969,7 +969,7 @@ function updateHiddenProperty(prop, value, isComponentEditor = false) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -994,7 +994,7 @@ function toggleComponentVisibility(blockId, isComponentEditor = false) {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
@@ -1048,7 +1048,7 @@ function addCardItem() {
             autoSave();
         }
         renderCurrentBlocks();
-        renderProperties();
+        // renderProperties();
     }
 }
 
