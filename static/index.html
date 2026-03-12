@@ -18,7 +18,8 @@
                 <select id="pageSelector" class="toolbar-select" onchange="switchPage(this.value)">
                     <option value="/">Cargando...</option>
                 </select>
-                <button class="toolbar-btn" id="newPageBtn" title="Nueva página" style="padding: 6px 12px; font-size: 13px;">+</button>
+                <button class="toolbar-btn" id="newPageBtn" title="Nueva página"
+                    style="padding: 6px 12px; font-size: 13px;">+</button>
             </div>
             <label for="siteTitle" class="toolbar-label">Título del sitio:</label>
             <input type="text" id="siteTitle" class="toolbar-input" placeholder="Título del sitio"
@@ -221,12 +222,17 @@
             <button class="modal-close" onclick="closeComponentsModal()">×</button>
             <h2 style="margin-bottom: 20px;">🧩 Gestionar Componentes</h2>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 16px; background: var(--secondary); border-radius: 8px;">
+            <div
+                style="display: flex; gap: 10px; margin-bottom: 20px; padding: 16px; background: var(--secondary); border-radius: 8px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nombre del componente</label>
-                    <input type="text" id="componentNameInput" class="property-input" placeholder="Ej: Header, Footer, CTA..." style="width: 100%;">
+                    <label
+                        style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nombre
+                        del componente</label>
+                    <input type="text" id="componentNameInput" class="property-input"
+                        placeholder="Ej: Header, Footer, CTA..." style="width: 100%;">
                     <p style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
-                        💡 Selecciona un bloque en el canvas para guardarlo como componente. Si no hay selección, se creará un contenedor vacío.
+                        💡 Selecciona un bloque en el canvas para guardarlo como componente. Si no hay selección, se
+                        creará un contenedor vacío.
                     </p>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -253,7 +259,8 @@
 
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="toolbar-btn" onclick="closeEditComponentModal()" style="flex: 1;">Cancelar</button>
-                <button class="toolbar-btn primary" onclick="updateComponent()" style="flex: 1;">Guardar Cambios</button>
+                <button class="toolbar-btn primary" onclick="updateComponent()" style="flex: 1;">Guardar
+                    Cambios</button>
             </div>
         </div>
     </div>
@@ -264,7 +271,8 @@
             <h2 style="margin-bottom: 20px;">📄 Gestionar Páginas</h2>
 
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="newPageSlug" class="property-input" placeholder="Slug (ej: servicios, contacto)" style="flex: 1;">
+                <input type="text" id="newPageSlug" class="property-input" placeholder="Slug (ej: servicios, contacto)"
+                    style="flex: 1;">
                 <input type="text" id="newPageTitle" class="property-input" placeholder="Título" style="width: 150px;">
                 <button class="toolbar-btn primary" onclick="createNewPage()">Crear Página</button>
             </div>

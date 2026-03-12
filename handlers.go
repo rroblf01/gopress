@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/base64"
 	"encoding/xml"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -853,5 +857,33 @@ func UpdateSiteConfigHandler(db *sql.DB) fiber.Handler {
 		return c.JSON(fiber.Map{
 			"message": "Configuración actualizada correctamente",
 		})
+	}
+}
+
+func FaviconHandler(db *sql.DB) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		page, err := GetPageBySlugFromDB(db, "/")
+		if err != nil || page == nil || page.Favicon == "" {
+			// Si no hay favicon, intentar servir el estático por defecto
+			return c.SendFile("./static/favicon.ico")
+		}
+
+		// Esperamos un DataURL tipo "data:image/x-icon;base64,..." o similar
+		dataURL := page.Favicon
+		re := regexp.MustCompile(`^data:(image/[^;]+);base64,(.*)$`)
+		matches := re.FindStringSubmatch(dataURL)
+		if len(matches) != 3 {
+			// No es un dataURL válido, intentar servir como archivo
+			return c.Status(http.StatusBadRequest).SendString("Favicon guardado no es un DataURL válido")
+		}
+		mimeType := matches[1]
+		b64data := matches[2]
+		data, err := base64.StdEncoding.DecodeString(b64data)
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).SendString("Error decodificando favicon")
+		}
+		c.Set("Content-Type", mimeType)
+		c.Set("Cache-Control", "public, max-age=86400")
+		return c.SendStream(bytes.NewReader(data))
 	}
 }

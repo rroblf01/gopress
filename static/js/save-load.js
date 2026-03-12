@@ -66,11 +66,7 @@ function loadPageData() {
             document.getElementById('siteTitle').value = data.title || '';
 
             if (data.favicon) {
-                const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
-                link.rel = 'icon';
-                link.href = data.favicon;
-                document.head.appendChild(link);
-
+                // Solo actualizar el preview, no el favicon global
                 const preview = document.getElementById('faviconPreview');
                 preview.src = data.favicon;
                 preview.style.display = 'block';
@@ -141,14 +137,12 @@ function updateSiteFavicon(event) {
         const reader = new FileReader();
         reader.onload = (e) => {
             state.page.favicon = e.target.result;
-            const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
-            link.rel = 'icon';
-            link.href = e.target.result;
-            document.head.appendChild(link);
-
+            // Solo actualizar el preview, no el favicon global
             const preview = document.getElementById('faviconPreview');
             preview.src = e.target.result;
             preview.style.display = 'block';
+            // Guardar automáticamente el favicon al cambiar
+            if (typeof autoSave === 'function') autoSave();
         };
         reader.readAsDataURL(file);
     }
