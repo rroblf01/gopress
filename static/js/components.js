@@ -323,6 +323,8 @@ async function loadCustomComponentsList() {
  * Añade un componente al canvas desde el drag
  */
 async function addComponentFromDrag(componentId, dropTarget) {
+    console.log('🧩 [addComponentFromDrag] componentId:', componentId, 'dropTarget:', dropTarget?.dataset?.parentId);
+    
     try {
         const response = await fetch(`/api/components/${componentId}`);
         if (!response.ok) {
@@ -370,10 +372,12 @@ async function addComponentFromDrag(componentId, dropTarget) {
         const isComponentEditor = tabsStateLocal && tabsStateLocal.activeTabId !== 'main';
 
         if (isComponentEditor) {
+            console.log('🧩 [addComponentFromDrag] Editor de componente:', tabsStateLocal.activeTabId);
             // Estamos en un editor de componente
             const editorState = tabsStateLocal.componentEditors[tabsStateLocal.activeTabId];
             if (editorState) {
                 editorState.blocks.push(componentBlock);
+                console.log('🧩 [addComponentFromDrag] Bloque añadido al editor. Total bloques:', editorState.blocks.length);
                 editorState.dirty = true;
                 renderComponentEditorBlocks(tabsStateLocal.activeTabId);
                 saveComponentFromEditor(tabsStateLocal.activeTabId);
@@ -381,18 +385,22 @@ async function addComponentFromDrag(componentId, dropTarget) {
                 console.error('editorState no encontrado para tabId:', tabsStateLocal.activeTabId);
             }
         } else {
+            console.log('🧩 [addComponentFromDrag] Editor principal');
             // Estamos en el editor principal
-            // Si hay un target de drop (contenedor), añadir como hijo
+            // Si hay un target de drop (contenedor, flex o grid), añadir como hijo
             if (dropTarget && dropTarget.dataset.parentId) {
                 const parentId = parseInt(dropTarget.dataset.parentId);
                 const parent = findBlockById(state.page.blocks, parentId);
-                if (parent && parent.type === 'container') {
+                console.log('🧩 [addComponentFromDrag] Parent:', parent ? { id: parent.id, type: parent.type } : 'null');
+                if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
                     parent.children = parent.children || [];
                     parent.children.push(componentBlock);
+                    console.log('🧩 [addComponentFromDrag] Añadido como hijo. Children count:', parent.children.length);
                 }
             } else {
                 // Añadir al root
                 state.page.blocks.push(componentBlock);
+                console.log('🧩 [addComponentFromDrag] Añadido al root. Total bloques:', state.page.blocks.length);
             }
             renderBlocks();
             autoSave();

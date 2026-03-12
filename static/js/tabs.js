@@ -310,44 +310,81 @@ function renderComponentEditorBlocks(tabId) {
         setupComponentContainerDropZone(tabId, dropZone);
     });
 
-    // Configurar drop zone principal del editor
-    container.addEventListener('dragover', (e) => {
-        if (e.target.closest('.block-container-drop')) return;
-        e.preventDefault();
-        const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        const componentId = e.dataTransfer.getData('componentId');
-        if (dragSource === 'sidebar' || componentId) {
-            container.style.background = 'rgba(37, 99, 235, 0.05)';
-        }
-    });
+    // Configurar drop zone principal del editor (solo una vez)
+    if (!container._componentEditorListenersConfigured) {
+        container._componentEditorListenersConfigured = true;
 
-    container.addEventListener('dragleave', () => {
-        container.style.background = '';
-    });
-
-    container.addEventListener('drop', (e) => {
-        if (e.target.closest('.block-container-drop')) return;
-        e.preventDefault();
-        container.style.background = '';
-        
-        const dragSource = e.dataTransfer.getData('application/x-drag-source');
-        const componentId = e.dataTransfer.getData('componentId');
-        
-        if (dragSource === 'sidebar') {
-            const blockType = e.dataTransfer.getData('text/plain');
-            if (blockType && blockTemplates[blockType]) {
-                addBlockToComponentEditor(blockType);
+        container.addEventListener('dragover', (e) => {
+            if (e.target.closest('.block-container-drop')) return;
+            e.preventDefault();
+            const dragSource = e.dataTransfer.getData('application/x-drag-source');
+            const componentId = e.dataTransfer.getData('componentId');
+            if (dragSource === 'sidebar' || componentId) {
+                container.style.background = 'rgba(37, 99, 235, 0.05)';
             }
-        } else if (componentId) {
-            addComponentFromDrag(componentId, null);
-        }
-    });
+        });
+
+        container.addEventListener('dragleave', () => {
+            container.style.background = '';
+        });
+
+        container.addEventListener('drop', (e) => {
+            // Si el drop es en un contenedor, dejar que lo maneje su propio handler
+            if (e.target.closest('.block-container-drop')) return;
+
+            // Si el drop es en un flex/grid dropzone, manejarlo aquí
+            const flexGridDropzone = e.target.closest('.flexgrid-dropzone');
+            if (flexGridDropzone) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const dragSource = e.dataTransfer.getData('application/x-drag-source');
+                const componentId = e.dataTransfer.getData('componentId');
+                const parentId = parseInt(flexGridDropzone.dataset.parentId);
+                const editorState = tabsState.componentEditors[tabId];
+
+                console.log('🔷 [CONTAINER DROP - flex/grid] parentId:', parentId, 'dragSource:', dragSource, 'componentId:', componentId);
+
+                if (!editorState) return;
+
+                if (componentId) {
+                    addComponentToContainer(editorState, componentId, parentId, tabId);
+                } else if (dragSource === 'sidebar') {
+                    const blockType = e.dataTransfer.getData('text/plain');
+                    if (blockType && blockTemplates[blockType]) {
+                        addBlockToContainer(editorState, blockType, parentId, tabId);
+                    }
+                }
+                return;
+            }
+
+            // Drop en root level del editor de componente
+            e.preventDefault();
+            container.style.background = '';
+
+            const dragSource = e.dataTransfer.getData('application/x-drag-source');
+            const componentId = e.dataTransfer.getData('componentId');
+
+            if (dragSource === 'sidebar') {
+                const blockType = e.dataTransfer.getData('text/plain');
+                if (blockType && blockTemplates[blockType]) {
+                    addBlockToComponentEditor(blockType);
+                }
+            } else if (componentId) {
+                addComponentFromDrag(componentId, null);
+            }
+        });
+    }
 }
 
 /**
  * Configura drop zone para contenedores en editor de componente
  */
 function setupComponentContainerDropZone(tabId, dropZone) {
+    // Evitar listeners duplicados
+    if (dropZone._componentContainerListenerConfigured) return;
+    dropZone._componentContainerListenerConfigured = true;
+    
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -397,12 +434,15 @@ function setupComponentContainerDropZone(tabId, dropZone) {
  * Añade un bloque a un contenedor en el editor de componente
  */
 function addBlockToContainer(editorState, blockType, parentId, tabId) {
+    console.log('🔷 [addBlockToContainer] blockType:', blockType, 'parentId:', parentId, 'tabId:', tabId);
     const parent = findBlockById(editorState.blocks, parentId);
-    if (parent && parent.type === 'container') {
+    console.log('🔷 [addBlockToContainer] parent:', parent ? { id: parent.id, type: parent.type } : 'null');
+    if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
         const newBlock = JSON.parse(JSON.stringify(blockTemplates[blockType]));
         newBlock.id = Date.now();
         parent.children = parent.children || [];
         parent.children.push(newBlock);
+        console.log('🔷 [addBlockToContainer] Bloque añadido. Children count:', parent.children.length);
         editorState.dirty = true;
         renderComponentEditorBlocks(tabId);
         saveComponentFromEditor(tabId);
@@ -416,11 +456,11 @@ async function addComponentToContainer(editorState, componentId, parentId, tabId
     try {
         const response = await fetch(`/api/components/${componentId}`);
         if (!response.ok) return;
-        
+
         const component = await response.json();
         const parent = findBlockById(editorState.blocks, parentId);
-        
-        if (parent && parent.type === 'container') {
+
+        if (parent && (parent.type === 'container' || parent.type === 'flex' || parent.type === 'grid')) {
             const componentBlock = {
                 id: Date.now(),
                 type: 'component',

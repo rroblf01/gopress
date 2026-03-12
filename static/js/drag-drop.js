@@ -21,10 +21,10 @@ function setupDragAndDrop() {
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('dragend', handleDragEnd);
 
-    // Drag over en el canvas principal
+    // Drag over en el canvas principal (solo para root level, no para dropzones)
     blocksContainer.addEventListener('dragover', handleCanvasDragOver);
     blocksContainer.addEventListener('dragleave', handleCanvasDragLeave);
-    blocksContainer.addEventListener('drop', handleCanvasDrop);
+    // NO registrar handleCanvasDrop - los dropzones específicos manejan el drop
 }
 
 /**
@@ -116,9 +116,9 @@ function handleCanvasDrop(e) {
     if (containerDrop) {
         return;
     }
-    
+
     // Si el drop es en una dropzone de flex/grid, no hacer nada
-    const flexGridDropzone = e.target.closest('[class*="-dropzone"]');
+    const flexGridDropzone = e.target.closest('.flexgrid-dropzone');
     if (flexGridDropzone) {
         return;
     }

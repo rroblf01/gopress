@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -79,23 +80,49 @@ func SavePageHandler(db *sql.DB) fiber.Handler {
 		var pageData PageData
 
 		if err := c.Bind().JSON(&pageData); err != nil {
-			fmt.Println("Error al parsear JSON:", err)
+			fmt.Println("❌ [BACKEND] Error al parsear JSON:", err)
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Datos inválidos: " + err.Error(),
 			})
 		}
 
+		fmt.Println("💾 [BACKEND] Recibido POST /cms:")
+		fmt.Println("   - Slug:", pageData.Slug)
+		fmt.Println("   - Title:", pageData.Title)
+		fmt.Println("   - Blocks count:", len(pageData.Blocks))
+		
+		// Log detallado de cada bloque
+		for i, block := range pageData.Blocks {
+			fmt.Printf("   - Block[%d]: ID=%d, Type=%s, Children=%d\n", i, block.ID, block.Type, len(block.Children))
+			// Log recursivo de children
+			logBlockChildren(block.Children, 2)
+		}
+
 		pageID, err := SavePageToDB(db, pageData)
 		if err != nil {
+			fmt.Println("❌ [BACKEND] Error al guardar en DB:", err)
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 
+		fmt.Println("✅ [BACKEND] Página guardada correctamente, pageID:", pageID)
+
 		return c.JSON(fiber.Map{
 			"id":      pageID,
 			"message": "Página guardada correctamente",
 		})
+	}
+}
+
+// Función auxiliar para loggear children recursivamente
+func logBlockChildren(children []Block, indent int) {
+	for i, child := range children {
+		prefix := strings.Repeat("   ", indent)
+		fmt.Printf("%s- Child[%d]: ID=%d, Type=%s, Children=%d\n", prefix, i, child.ID, child.Type, len(child.Children))
+		if len(child.Children) > 0 {
+			logBlockChildren(child.Children, indent+1)
+		}
 	}
 }
 

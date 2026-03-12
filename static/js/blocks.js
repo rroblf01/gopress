@@ -239,7 +239,10 @@ function renderBlocks() {
 
     // Eventos para dropzones de flex y grid
     document.querySelectorAll('.flexgrid-dropzone').forEach(dropZone => {
-
+        // Evitar listeners duplicados usando un flag en el elemento
+        if (dropZone._flexGridListenerConfigured) return;
+        dropZone._flexGridListenerConfigured = true;
+        
         dropZone.addEventListener('dragover', (e) => {
             // Encontrar el dropzone más interno usando elementFromPoint
             const elem = document.elementFromPoint(e.clientX, e.clientY);
@@ -277,22 +280,25 @@ function renderBlocks() {
             const ptId = parseInt(dropZone.dataset.parentId);
             const ds = e.dataTransfer.getData('application/x-drag-source');
             const bt = e.dataTransfer.getData('text/plain');
+            const componentId = e.dataTransfer.getData('componentId');
 
+            // Manejar bloques de la sidebar
             if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
                 addBlock(bt, ptId);
+            }
+            // Manejar componentes personalizados
+            else if (componentId) {
+                addComponentFromDrag(componentId, dropZone);
             }
         });
     });
 
-    // Listener global para depurar eventos drop
-    document.addEventListener('drop', (e) => {
-        const flexDropzone = e.target.closest('.flexgrid-dropzone');
-
-    });
-
     // Eventos para dropzones de contenedores - detectar el dropzone más interno usando e.target
     document.querySelectorAll('.block-container-drop[data-drop-type="container"]').forEach(dropZone => {
-
+        // Evitar listeners duplicados usando un flag en el elemento
+        if (dropZone._containerListenerConfigured) return;
+        dropZone._containerListenerConfigured = true;
+        
         dropZone.addEventListener('dragover', (e) => {
             // Encontrar el contenedor más interno desde e.target
             const innermostContainer = e.target.closest('.block-container-drop[data-drop-type="container"]');
@@ -349,11 +355,16 @@ function renderBlocks() {
             const ds = e.dataTransfer.getData('application/x-drag-source');
             const bt = e.dataTransfer.getData('text/plain');
             const bid = parseInt(e.dataTransfer.getData('blockId'));
+            const componentId = e.dataTransfer.getData('componentId');
+
+            console.log('🟠 [CONTAINER DROP] Añadiendo:', bt || componentId, 'al padre:', ptId);
 
             if (ds === 'sidebar' && bt && window.blockTemplates && blockTemplates[bt]) {
                 addBlock(bt, ptId);
             } else if (ds === 'existing-block' && bid) {
                 moveBlockToContainer(bid, ptId);
+            } else if (componentId) {
+                addComponentFromDrag(componentId, dropZone);
             }
         });
     });
